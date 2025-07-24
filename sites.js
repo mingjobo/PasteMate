@@ -45,12 +45,11 @@ const SUPPORTED_SITES = {
   "www.kimi.com": {
     name: "Kimi",
     selectors: [
-      // 优先使用更精确的AI回复选择器
       "[data-role='assistant'] .segment-content-box",
       "[data-author='assistant'] .segment-content-box",
       ".ai-response .segment-content-box",
       ".assistant-message .segment-content-box",
-      // 备用选择器（会通过isAIResponse函数进一步过滤）
+      // 下面这些宽泛的选择器放最后
       ".segment-content-box",
       ".markdown-container",
       ".markdown",

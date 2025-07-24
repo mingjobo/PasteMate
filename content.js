@@ -1230,7 +1230,17 @@ class ButtonInjector {
                 const className = current.className?.toLowerCase() || '';
                 const dataRole = current.getAttribute('data-role')?.toLowerCase() || '';
                 const dataAuthor = current.getAttribute('data-author')?.toLowerCase() || '';
-                
+
+                // 新增：如果 className 包含 user 或 user-content，直接判定为用户消息
+                if (className.includes('user')) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '❌ 识别为用户消息（className含user）');
+                    return false;
+                }
+                if (className.includes('user-content')) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '❌ 识别为用户消息（user-content）');
+                    return false;
+                }
+
                 // 明确的AI回复标识
                 if (dataRole === 'assistant' || dataAuthor === 'assistant' || 
                     className.includes('assistant') || className.includes('ai-response') ||
@@ -1238,7 +1248,7 @@ class ButtonInjector {
                     debugLog(DEBUG_LEVEL.DEBUG, '✅ 通过属性识别为AI回复');
                     return true;
                 }
-                
+
                 // 明确的用户消息标识
                 if (dataRole === 'user' || dataAuthor === 'user' || 
                     className.includes('user-message') || className.includes('human-message') ||
@@ -1246,7 +1256,7 @@ class ButtonInjector {
                     debugLog(DEBUG_LEVEL.DEBUG, '❌ 通过属性识别为用户消息');
                     return false;
                 }
-                
+
                 current = current.parentElement;
             }
 
