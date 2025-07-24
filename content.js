@@ -557,6 +557,11 @@ class ClipboardManager {
         const copyButtons = clonedElement.querySelectorAll('.puretext-copy-btn');
         copyButtons.forEach(button => button.remove());
 
+        // 特殊处理 Kimi 网站 - 移除推荐问题区域
+        if (window.location.hostname === 'www.kimi.com') {
+            this.removeKimiSuggestedQuestions(clonedElement);
+        }
+
         // 获取元素的文本内容（自动去除HTML标签）
         let text = clonedElement.innerText || clonedElement.textContent || '';
 
@@ -565,6 +570,11 @@ class ClipboardManager {
 
         // 清理多余的空白字符
         text = this.cleanWhitespace(text);
+
+        // 特殊处理 Kimi 网站 - 进一步清理文本
+        if (window.location.hostname === 'www.kimi.com') {
+            text = this.cleanKimiText(text);
+        }
 
         return text;
     }
@@ -690,6 +700,192 @@ class ClipboardManager {
         // 使用chrome.i18n API获取本地化消息
         const message = chrome.i18n ? chrome.i18n.getMessage('copyFailed') : 'Copy failed';
         this.showToast(message, 'error');
+    }
+
+    /**
+     * 移除Kimi网站的推荐问题区域
+     * @param {HTMLElement} clonedElement - 克隆的DOM元素
+     */
+    static removeKimiSuggestedQuestions(clonedElement) {
+        try {
+            // 查找并移除推荐问题相关的元素
+            const questionSelectors = [
+                // 推荐问题容器的常见选择器
+                '[class*="question"]',
+                '[class*="suggest"]',
+                '[class*="recommend"]',
+                '[class*="related"]',
+                // 包含问号的按钮或链接
+                'button:contains("?")',
+                'a:contains("?")',
+                // 特定的Kimi推荐问题区域
+                '.segment-content-box .segment-content:last-child',
+                // 其他可能的推荐问题容器
+                '[data-testid*="question"]',
+                '[data-testid*="suggest"]'
+            ];
+
+            questionSelectors.forEach(selector => {
+                try {
+                    const elements = clonedElement.querySelectorAll(selector);
+                    elements.forEach(element => {
+                        const text = element.textContent?.trim();
+                        // 如果元素包含问号且文本较短，可能是推荐问题
+                        if (text && text.includes('？') && text.length < 100) {
+                            element.remove();
+                        }
+                    });
+                } catch (error) {
+                    // 忽略选择器错误
+                }
+            });
+
+            // 移除包含特定文本模式的元素
+            const allElements = clonedElement.querySelectorAll('*');
+            allElements.forEach(element => {
+                const text = element.textContent?.trim();
+                if (text && this.isKimiSuggestedQuestion(text)) {
+                    element.remove();
+                }
+            });
+
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.DEBUG, '⚠️ Error removing Kimi suggested questions:', error);
+        }
+    }
+
+    /**
+     * 判断文本是否是Kimi推荐问题
+     * @param {string} text - 要检查的文本
+     * @returns {boolean} 是否是推荐问题
+     */
+    static isKimiSuggestedQuestion(text) {
+        if (!text || text.length > 100) return false;
+
+        // 推荐问题的特征
+        const questionPatterns = [
+            /^[^。！]{10,60}[？?]$/,  // 以问号结尾的短句
+            /^(?:如何|怎么|什么是|为什么|哪些|多少|何时|在哪|是否)/,  // 疑问词开头
+            /(?:保证金|强平|期货|交易|风险|合约|平仓|开仓)[^。！]*[？?]$/,  // 金融相关问题
+            /[^。！]*(?:多久|什么时候|何时|时间)[^。！]*[？?]$/,  // 时间相关问题
+            /[^。！]*(?:多少|比例|费用|成本|价格)[^。！]*[？?]$/  // 数量相关问题
+        ];
+
+        return questionPatterns.some(pattern => pattern.test(text));
+    }
+
+    /**
+     * 清理Kimi网站的文本内容
+     * @param {string} text - 要清理的文本
+     * @returns {string} 清理后的文本
+     */
+    static cleanKimiText(text) {
+        if (!text) return '';
+
+        let cleanedText = text;
+
+        // 第一步：去除明确的界面元素
+        cleanedText = cleanedText
+            // 去除 AI 生成声明
+            .replace(/\s*本回答由\s*AI\s*生成[，,，。]*\s*内容仅供参考\s*/g, '')
+            
+            // 去除按钮文字
+            .replace(/\s*(复制|重试|分享|编辑|搜索一下|点赞|踩|收藏|删除|举报)\s*/g, '')
+            
+            // 去除其他界面元素
+            .replace(/\s*(查看更多|展开全部|收起|相关推荐)\s*/g, '');
+
+        // 第二步：智能识别和去除推荐问题
+        cleanedText = this.removeRecommendedQuestions(cleanedText);
+
+        // 第三步：清理多余的空白字符
+        cleanedText = cleanedText
+            .replace(/\n\s*\n\s*\n/g, '\n\n')  // 多个空行变成两个
+            .replace(/[ \t]+/g, ' ')           // 多个空格变成一个
+            .trim();                           // 去除首尾空白
+
+        return cleanedText;
+    }
+
+    /**
+     * 智能识别和去除推荐问题
+     * @param {string} text - 要处理的文本
+     * @returns {string} 处理后的文本
+     */
+    static removeRecommendedQuestions(text) {
+        // 推荐问题的特征模式
+        const questionPatterns = [
+            // 1. 以问号结尾的短句（通常是推荐问题）
+            /\s*[^\n。！]{10,50}[？?]\s*/g,
+            
+            // 2. 常见的推荐问题开头
+            /\s*(?:如何|怎么|什么是|为什么|哪些|多少|何时|在哪|是否)[^\n。！]{5,40}[？?]\s*/g,
+            
+            // 3. 疑问词开头的问题
+            /\s*(?:保证金|强平|期货|交易|风险|合约|平仓|开仓)[^\n。！]{5,40}[？?]\s*/g,
+            
+            // 4. 时间相关的问题
+            /\s*[^\n。！]*(?:多久|什么时候|何时|时间)[^\n。！]*[？?]\s*/g,
+            
+            // 5. 数量/比例相关的问题
+            /\s*[^\n。！]*(?:多少|比例|费用|成本|价格)[^\n。！]*[？?]\s*/g
+        ];
+
+        let cleanedText = text;
+
+        // 应用所有模式
+        questionPatterns.forEach(pattern => {
+            cleanedText = cleanedText.replace(pattern, '');
+        });
+
+        // 更精确的方法：分析文本结构
+        cleanedText = this.removeQuestionsByStructure(cleanedText);
+
+        return cleanedText;
+    }
+
+    /**
+     * 基于文本结构去除推荐问题
+     * @param {string} text - 要处理的文本
+     * @returns {string} 处理后的文本
+     */
+    static removeQuestionsByStructure(text) {
+        // 将文本按行分割
+        const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+        
+        const cleanedLines = [];
+        let foundMainContent = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            
+            // 检查是否是推荐问题的特征
+            const isQuestion = line.endsWith('？') || line.endsWith('?');
+            const isShort = line.length < 60; // 推荐问题通常比较短
+            const hasQuestionWords = /(?:如何|怎么|什么|为什么|哪些|多少|何时|在哪|是否)/.test(line);
+            const isStandalone = i === lines.length - 1 || (i < lines.length - 1 && lines[i + 1].endsWith('？'));
+            
+            // 如果是问题且符合推荐问题特征，跳过
+            if (isQuestion && isShort && (hasQuestionWords || isStandalone)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '跳过推荐问题:', line);
+                continue;
+            }
+            
+            // 检查是否是主要内容
+            if (line.length > 20 && !isQuestion) {
+                foundMainContent = true;
+            }
+            
+            // 如果已经找到主要内容，且当前行是短问题，可能是推荐问题
+            if (foundMainContent && isQuestion && isShort) {
+                debugLog(DEBUG_LEVEL.DEBUG, '跳过末尾推荐问题:', line);
+                continue;
+            }
+            
+            cleanedLines.push(line);
+        }
+        
+        return cleanedLines.join('\n');
     }
 
     /**
@@ -935,6 +1131,12 @@ class ButtonInjector {
                 return false;
             }
 
+            // 🔥 关键修复：检查是否是AI回复而不是用户消息
+            if (!this.isAIResponse(bubble)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⚠️ 检测到用户消息，跳过按钮注入');
+                return false;
+            }
+
             // 找到最合适的容器元素（AI 回复的完整容器）
             const targetContainer = this.findBestContainer(bubble);
 
@@ -1013,6 +1215,147 @@ class ButtonInjector {
         const canPosition = style.position !== 'static' || candidate.tagName !== 'SPAN';
 
         return hasMessageKeyword && reasonableSize && canPosition;
+    }
+
+    /**
+     * 判断元素是否是AI回复（而不是用户消息）
+     * @param {HTMLElement} element - 要检查的元素
+     * @returns {boolean} 是否是AI回复
+     */
+    isAIResponse(element) {
+        try {
+            // 方法1: 检查元素及其父元素的类名和属性
+            let current = element;
+            for (let i = 0; i < 5 && current; i++) {
+                const className = current.className?.toLowerCase() || '';
+                const dataRole = current.getAttribute('data-role')?.toLowerCase() || '';
+                const dataAuthor = current.getAttribute('data-author')?.toLowerCase() || '';
+                
+                // 明确的AI回复标识
+                if (dataRole === 'assistant' || dataAuthor === 'assistant' || 
+                    className.includes('assistant') || className.includes('ai-response') ||
+                    className.includes('bot-message') || className.includes('kimi-response')) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ 通过属性识别为AI回复');
+                    return true;
+                }
+                
+                // 明确的用户消息标识
+                if (dataRole === 'user' || dataAuthor === 'user' || 
+                    className.includes('user-message') || className.includes('human-message') ||
+                    className.includes('user-input') || className.includes('user-bubble')) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '❌ 通过属性识别为用户消息');
+                    return false;
+                }
+                
+                current = current.parentElement;
+            }
+
+            // 方法2: 通过文本内容特征判断
+            const text = element.textContent?.trim() || '';
+            if (text.length > 0) {
+                // AI回复的特征词汇
+                const aiIndicators = [
+                    '我是', '我可以', '根据', '建议', '您可以', '建议您',
+                    '以下是', '具体来说', '需要注意', '总结一下',
+                    '首先', '其次', '最后', '另外', '此外',
+                    '如果您', '您需要', '您可以', '为您',
+                    'Kimi', '助手', '人工智能', 'AI'
+                ];
+                
+                // 用户消息的特征词汇
+                const userIndicators = [
+                    '我想', '我需要', '请问', '能否', '可以吗',
+                    '怎么办', '如何', '为什么', '什么是',
+                    '帮我', '告诉我', '我该', '我应该'
+                ];
+                
+                const hasAIIndicators = aiIndicators.some(indicator => text.includes(indicator));
+                const hasUserIndicators = userIndicators.some(indicator => text.includes(indicator));
+                
+                if (hasAIIndicators && !hasUserIndicators) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ 通过文本特征识别为AI回复');
+                    return true;
+                }
+                
+                if (hasUserIndicators && !hasAIIndicators) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '❌ 通过文本特征识别为用户消息');
+                    return false;
+                }
+            }
+
+            // 方法3: 通过位置和结构判断（Kimi特定）
+            if (window.location.hostname === 'www.kimi.com') {
+                return this.isKimiAIResponse(element);
+            }
+
+            // 方法4: 通过文本长度和复杂度判断（AI回复通常更长更详细）
+            if (text.length > 100) {
+                const sentences = text.split(/[。！？.!?]/).filter(s => s.trim().length > 10);
+                const hasStructuredContent = /[：:]\s*\n|^\s*[•\-\*]\s+|^\s*\d+[\.\)]\s+/m.test(text);
+                
+                if (sentences.length >= 3 || hasStructuredContent) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ 通过内容复杂度识别为AI回复');
+                    return true;
+                }
+            }
+
+            // 默认情况：如果无法确定，倾向于认为是AI回复（避免漏掉）
+            debugLog(DEBUG_LEVEL.DEBUG, '⚠️ 无法明确判断，默认为AI回复');
+            return true;
+
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.DEBUG, '⚠️ AI回复判断出错，默认为AI回复:', error);
+            return true;
+        }
+    }
+
+    /**
+     * Kimi网站特定的AI回复判断逻辑
+     * @param {HTMLElement} element - 要检查的元素
+     * @returns {boolean} 是否是AI回复
+     */
+    isKimiAIResponse(element) {
+        try {
+            // 检查元素在页面中的位置
+            const rect = element.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // Kimi中，用户消息通常在右侧，AI回复在左侧或占据更多宽度
+            const isOnRight = rect.left > viewportWidth * 0.6;
+            const isFullWidth = rect.width > viewportWidth * 0.7;
+            
+            if (isOnRight && !isFullWidth) {
+                debugLog(DEBUG_LEVEL.DEBUG, '❌ Kimi: 位置判断为用户消息（右侧且窄）');
+                return false;
+            }
+
+            // 检查是否包含Kimi特有的AI回复元素
+            const hasKimiFeatures = element.querySelector('.segment-content-box') ||
+                                  element.querySelector('.markdown-container') ||
+                                  element.closest('.segment-content-box');
+            
+            if (hasKimiFeatures) {
+                debugLog(DEBUG_LEVEL.DEBUG, '✅ Kimi: 包含AI回复特征元素');
+                return true;
+            }
+
+            // 检查文本内容是否像用户输入
+            const text = element.textContent?.trim() || '';
+            const looksLikeUserInput = text.length < 100 && 
+                                     (text.endsWith('？') || text.endsWith('?')) &&
+                                     !text.includes('根据') && !text.includes('建议');
+            
+            if (looksLikeUserInput) {
+                debugLog(DEBUG_LEVEL.DEBUG, '❌ Kimi: 文本特征判断为用户消息');
+                return false;
+            }
+
+            return true;
+
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.DEBUG, '⚠️ Kimi AI回复判断出错:', error);
+            return true;
+        }
     }
 
 

@@ -1,310 +1,358 @@
-// 专门找到 Kimi 纯文本内容的调试脚本
+// 调试Kimi纯文本复制功能 - 综合测试
 (function() {
-  console.log('🎯 查找 Kimi 纯文本内容...');
-  
-  // 清除之前的高亮
-  document.querySelectorAll('*').forEach(el => {
-    el.style.outline = '';
-    el.style.outlineOffset = '';
-  });
+    console.log('🔍 开始调试Kimi纯文本复制功能...');
+    
+    // 1. 检查扩展是否正确加载
+    function checkExtensionStatus() {
+        console.log('\n=== 1. 扩展状态检查 ===');
+        
+        // 检查全局变量
+        const checks = {
+            'SUPPORTED_SITES': typeof SUPPORTED_SITES !== 'undefined',
+            'ClipboardManager': typeof ClipboardManager !== 'undefined',
+            'CopyButton': typeof CopyButton !== 'undefined',
+            'pureTextExtension': typeof pureTextExtension !== 'undefined'
+        };
+        
+        Object.entries(checks).forEach(([name, exists]) => {
+            console.log(`${exists ? '✅' : '❌'} ${name}: ${exists ? '已加载' : '未加载'}`);
+        });
+        
+        // 检查扩展状态
+        if (typeof pureTextExtension !== 'undefined' && pureTextExtension) {
+            const status = pureTextExtension.getStatus();
+            console.log('\n扩展状态:', status);
+        }
+        
+        return checks;
+    }
+    
+    // 2. 检查Kimi网站配置
+    function checkKimiConfig() {
+        console.log('\n=== 2. Kimi网站配置检查 ===');
+        
+        if (typeof SUPPORTED_SITES === 'undefined') {
+            console.log('❌ SUPPORTED_SITES未定义');
+            return null;
+        }
+        
+        const kimiConfig = SUPPORTED_SITES['www.kimi.com'];
+        if (!kimiConfig) {
+            console.log('❌ Kimi配置不存在');
+            return null;
+        }
+        
+        console.log('✅ Kimi配置存在');
+        console.log('站点名称:', kimiConfig.name);
+        console.log('选择器数量:', kimiConfig.selectors?.length || 0);
+        console.log('选择器列表:', kimiConfig.selectors);
+        
+        return kimiConfig;
+    }
+    
+    // 3. 测试选择器有效性
+    function testSelectors(config) {
+        console.log('\n=== 3. 选择器有效性测试 ===');
+        
+        if (!config || !config.selectors) {
+            console.log('❌ 无可用选择器');
+            return [];
+        }
+        
+        const results = [];
+        
+        config.selectors.forEach((selector, index) => {
+            try {
+                const elements = document.querySelectorAll(selector);
+                const result = {
+                    selector,
+                    elementCount: elements.length,
+                    hasContent: false,
+                    hasQuestions: false,
+                    elements: []
+                };
+                
+                if (elements.length > 0) {
+                    elements.forEach((el, elIndex) => {
+                        const text = el.textContent?.trim();
+                        if (text && text.length > 50) {
+                            result.hasContent = true;
+                            result.hasQuestions = /[？?]/.test(text);
+                            result.elements.push({
+                                index: elIndex,
+                                textLength: text.length,
+                                hasQuestions: /[？?]/.test(text),
+                                preview: text.substring(0, 100) + '...'
+                            });
+                        }
+                    });
+                }
+                
+                results.push(result);
+                
+                console.log(`选择器 ${index + 1}: ${selector}`);
+                console.log(`  元素数量: ${result.elementCount}`);
+                console.log(`  有内容: ${result.hasContent}`);
+                console.log(`  包含问题: ${result.hasQuestions}`);
+                
+                if (result.elements.length > 0) {
+                    console.log(`  内容元素: ${result.elements.length}个`);
+                    result.elements.forEach(el => {
+                        console.log(`    元素${el.index}: 长度${el.textLength}, 问题${el.hasQuestions}`);
+                    });
+                }
+                
+            } catch (error) {
+                console.log(`❌ 选择器 ${index + 1} 无效: ${selector}`);
+                results.push({ selector, error: error.message });
+            }
+        });
+        
+        return results;
+    }
+    
+    // 4. 测试文本清理功能
+    function testTextCleaning() {
+        console.log('\n=== 4. 文本清理功能测试 ===');
+        
+        if (typeof ClipboardManager === 'undefined' || !ClipboardManager.cleanKimiText) {
+            console.log('❌ ClipboardManager.cleanKimiText 不可用');
+            return false;
+        }
+        
+        // 测试用例
+        const testCases = [
+            {
+                name: '包含推荐问题的文本',
+                input: `这是主要内容。
 
-  // 分析当前页面结构
-  function analyzePureTextStructure() {
-    const results = [];
-    
-    // 查找所有可能的容器
-    const containers = document.querySelectorAll('.markdown-container, .markdown, .segment-content-box');
-    
-    console.log(`找到 ${containers.length} 个容器`);
-    
-    containers.forEach((container, index) => {
-      console.log(`\n=== 分析容器 ${index + 1} ===`);
-      console.log(`容器类名: ${container.className}`);
-      console.log(`容器标签: ${container.tagName}`);
-      
-      const containerText = container.textContent?.trim();
-      console.log(`容器总文本长度: ${containerText?.length || 0}`);
-      
-      // 检查是否包含多余内容
-      const hasButtons = /(?:复制|重试|分享|搜索一下|本回答由 AI 生成|内容仅供参考)/.test(containerText);
-      const hasUserQuestions = /(?:保证金比例是多少|强平后多久能拿回)/.test(containerText);
-      
-      console.log(`包含按钮文字: ${hasButtons}`);
-      console.log(`包含用户问题: ${hasUserQuestions}`);
-      
-      if (hasButtons || hasUserQuestions) {
-        console.log('❌ 此容器包含多余内容，需要查找子元素');
+审核结果在哪里查？
+
+如果审核不通过怎么办？
+
+失业登记证明的有效期是多久？`,
+                expectedRemovals: ['审核结果在哪里查？', '如果审核不通过怎么办？', '失业登记证明的有效期是多久？']
+            },
+            {
+                name: '包含按钮文字的文本',
+                input: '这是内容 复制 重试 分享 本回答由 AI 生成，内容仅供参考',
+                expectedRemovals: ['复制', '重试', '分享', '本回答由 AI 生成，内容仅供参考']
+            }
+        ];
         
-        // 在容器内查找纯文本子元素
-        const children = container.querySelectorAll('*');
+        let allPassed = true;
         
-        children.forEach(child => {
-          const childText = child.textContent?.trim();
-          if (!childText || childText.length < 50) return;
-          
-          // 检查子元素是否是纯文本
-          const childHasButtons = /(?:复制|重试|分享|搜索一下|本回答由 AI 生成|内容仅供参考)/.test(childText);
-          const childHasUserQuestions = /(?:保证金比例是多少|强平后多久能拿回)/.test(childText);
-          const childHasAIContent = /(?:强平|期货|交易所|保证金|合约)/.test(childText);
-          
-          if (childHasAIContent && !childHasButtons && !childHasUserQuestions) {
-            // 检查是否是最小的纯文本容器
-            const grandChildren = child.querySelectorAll('*');
-            const hasComplexStructure = grandChildren.length > 5;
+        testCases.forEach((testCase, index) => {
+            console.log(`\n测试用例 ${index + 1}: ${testCase.name}`);
+            console.log('输入:', testCase.input);
             
-            results.push({
-              element: child,
-              text: childText.substring(0, 300),
-              textLength: childText.length,
-              tagName: child.tagName,
-              className: child.className,
-              hasButtons: childHasButtons,
-              hasUserQuestions: childHasUserQuestions,
-              hasAIContent: childHasAIContent,
-              hasComplexStructure,
-              parentContainer: container,
-              selector: generateOptimalSelector(child),
-              score: calculatePurityScore(child, childText, childHasAIContent, childHasButtons, childHasUserQuestions, hasComplexStructure)
+            const cleaned = ClipboardManager.cleanKimiText(testCase.input);
+            console.log('输出:', cleaned);
+            
+            let passed = true;
+            testCase.expectedRemovals.forEach(removal => {
+                if (cleaned.includes(removal)) {
+                    console.log(`❌ 未能移除: ${removal}`);
+                    passed = false;
+                } else {
+                    console.log(`✅ 成功移除: ${removal}`);
+                }
             });
-          }
+            
+            if (!passed) allPassed = false;
         });
-      } else {
-        console.log('✅ 此容器可能是纯文本容器');
         
-        results.push({
-          element: container,
-          text: containerText.substring(0, 300),
-          textLength: containerText.length,
-          tagName: container.tagName,
-          className: container.className,
-          hasButtons: false,
-          hasUserQuestions: false,
-          hasAIContent: true,
-          hasComplexStructure: false,
-          parentContainer: null,
-          selector: generateOptimalSelector(container),
-          score: calculatePurityScore(container, containerText, true, false, false, false)
-        });
-      }
-    });
-    
-    return results.sort((a, b) => b.score - a.score);
-  }
-  
-  function generateOptimalSelector(element) {
-    const selectors = [];
-    
-    // 优先使用有意义的类名
-    if (element.className && typeof element.className === 'string') {
-      const classes = element.className.split(' ')
-        .filter(c => c.trim() && !c.match(/^(css-|_|\d|ng-)/))
-        .slice(0, 2);
-      
-      if (classes.length > 0) {
-        selectors.push(`.${classes.join('.')}`);
-        
-        // 单个类名
-        classes.forEach(cls => {
-          if (cls.length > 3) {
-            selectors.push(`.${cls}`);
-          }
-        });
-      }
+        return allPassed;
     }
     
-    // 属性选择器
-    const attrs = ['data-role', 'data-type', 'data-content', 'role'];
-    attrs.forEach(attr => {
-      const value = element.getAttribute(attr);
-      if (value) {
-        selectors.push(`[${attr}="${value}"]`);
-      }
-    });
-    
-    // 结构选择器
-    const parent = element.parentElement;
-    if (parent && parent.className) {
-      const parentClasses = parent.className.split(' ').filter(c => c.trim());
-      if (parentClasses.length > 0) {
-        const parentClass = parentClasses[0];
-        selectors.push(`.${parentClass} > ${element.tagName.toLowerCase()}`);
+    // 5. 检查现有按钮
+    function checkExistingButtons() {
+        console.log('\n=== 5. 现有按钮检查 ===');
         
-        if (element.className) {
-          const childClass = element.className.split(' ')[0];
-          if (childClass) {
-            selectors.push(`.${parentClass} .${childClass}`);
-          }
+        const buttons = document.querySelectorAll('.puretext-copy-btn');
+        console.log(`找到 ${buttons.length} 个复制按钮`);
+        
+        buttons.forEach((button, index) => {
+            console.log(`按钮 ${index + 1}:`);
+            console.log(`  文本: ${button.textContent}`);
+            console.log(`  位置: ${button.style.position || '默认'}`);
+            
+            // 查找对应的内容容器
+            let container = button.closest('.segment-content-box');
+            if (!container) {
+                container = button.parentElement;
+                while (container && container !== document.body) {
+                    const text = container.textContent?.trim();
+                    if (text && text.length > 100) {
+                        break;
+                    }
+                    container = container.parentElement;
+                }
+            }
+            
+            if (container) {
+                const text = container.textContent?.trim();
+                const hasQuestions = /[？?]/.test(text);
+                console.log(`  内容长度: ${text?.length || 0}`);
+                console.log(`  包含问题: ${hasQuestions}`);
+            } else {
+                console.log(`  ❌ 未找到对应的内容容器`);
+            }
+        });
+        
+        return buttons;
+    }
+    
+    // 6. 创建测试按钮
+    function createTestButtons(selectorResults) {
+        console.log('\n=== 6. 创建测试按钮 ===');
+        
+        let buttonCount = 0;
+        
+        selectorResults.forEach((result, index) => {
+            if (result.hasContent && result.hasQuestions && result.elements.length > 0) {
+                result.elements.forEach((elementInfo, elIndex) => {
+                    if (elementInfo.hasQuestions) {
+                        const elements = document.querySelectorAll(result.selector);
+                        const element = elements[elementInfo.index];
+                        
+                        if (element) {
+                            buttonCount++;
+                            createTestButton(element, buttonCount, `选择器${index + 1}-元素${elIndex + 1}`);
+                        }
+                    }
+                });
+            }
+        });
+        
+        console.log(`创建了 ${buttonCount} 个测试按钮`);
+    }
+    
+    // 创建单个测试按钮
+    function createTestButton(element, index, label) {
+        const testButton = document.createElement('button');
+        testButton.textContent = `🧪 ${label}`;
+        testButton.style.cssText = `
+            position: fixed;
+            top: ${20 + (index - 1) * 45}px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            min-width: 120px;
+            text-align: center;
+        `;
+        
+        testButton.addEventListener('mouseenter', () => {
+            testButton.style.transform = 'translateY(-2px)';
+            testButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+        });
+        
+        testButton.addEventListener('mouseleave', () => {
+            testButton.style.transform = 'translateY(0)';
+            testButton.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+        });
+        
+        testButton.addEventListener('click', async () => {
+            try {
+                const originalText = element.textContent?.trim();
+                let cleanedText = originalText;
+                
+                // 使用ClipboardManager清理
+                if (typeof ClipboardManager !== 'undefined' && ClipboardManager.cleanKimiText) {
+                    cleanedText = ClipboardManager.cleanKimiText(originalText);
+                }
+                
+                await navigator.clipboard.writeText(cleanedText);
+                
+                // 反馈
+                const originalBtnText = testButton.textContent;
+                testButton.textContent = '✅ 成功';
+                testButton.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                
+                setTimeout(() => {
+                    testButton.textContent = originalBtnText;
+                    testButton.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                }, 2000);
+                
+                // 统计
+                const originalQuestions = (originalText.match(/[？?]/g) || []).length;
+                const cleanedQuestions = (cleanedText.match(/[？?]/g) || []).length;
+                
+                console.log(`✅ ${label} 复制成功`);
+                console.log(`原始问号: ${originalQuestions}, 清理后问号: ${cleanedQuestions}`);
+                console.log(`文本长度: ${originalText.length} -> ${cleanedText.length}`);
+                
+            } catch (error) {
+                console.error(`❌ ${label} 复制失败:`, error);
+                testButton.textContent = '❌ 失败';
+                testButton.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                
+                setTimeout(() => {
+                    testButton.textContent = `🧪 ${label}`;
+                    testButton.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                }, 2000);
+            }
+        });
+        
+        document.body.appendChild(testButton);
+        
+        // 20秒后自动移除
+        setTimeout(() => {
+            if (testButton.parentNode) {
+                testButton.parentNode.removeChild(testButton);
+            }
+        }, 20000);
+    }
+    
+    // 执行所有检查
+    function runAllChecks() {
+        const extensionStatus = checkExtensionStatus();
+        const kimiConfig = checkKimiConfig();
+        const selectorResults = testSelectors(kimiConfig);
+        const textCleaningPassed = testTextCleaning();
+        const existingButtons = checkExistingButtons();
+        
+        // 创建测试按钮
+        createTestButtons(selectorResults);
+        
+        // 总结
+        console.log('\n=== 🎯 调试总结 ===');
+        console.log(`扩展加载: ${extensionStatus.pureTextExtension ? '✅' : '❌'}`);
+        console.log(`Kimi配置: ${kimiConfig ? '✅' : '❌'}`);
+        console.log(`文本清理: ${textCleaningPassed ? '✅' : '❌'}`);
+        console.log(`现有按钮: ${existingButtons.length}个`);
+        
+        const validSelectors = selectorResults.filter(r => r.hasContent && !r.error);
+        console.log(`有效选择器: ${validSelectors.length}个`);
+        
+        const questionsFound = selectorResults.some(r => r.hasQuestions);
+        console.log(`发现推荐问题: ${questionsFound ? '✅' : '❌'}`);
+        
+        if (questionsFound && textCleaningPassed) {
+            console.log('\n🎉 修复应该有效！请点击右侧测试按钮验证。');
+        } else if (!questionsFound) {
+            console.log('\n💡 当前页面可能没有推荐问题，或者选择器需要调整。');
+        } else {
+            console.log('\n⚠️ 文本清理功能有问题，需要进一步调试。');
         }
-      }
     }
     
-    return selectors[0] || element.tagName.toLowerCase();
-  }
-  
-  function calculatePurityScore(element, text, hasAIContent, hasButtons, hasUserQuestions, hasComplexStructure) {
-    let score = 0;
+    // 开始调试
+    runAllChecks();
     
-    // AI 内容加分
-    if (hasAIContent) score += 2.0;
+    console.log('\n💡 使用说明:');
+    console.log('- 查看控制台输出了解详细的调试信息');
+    console.log('- 右侧会出现测试按钮，点击测试清理效果');
+    console.log('- 测试按钮会显示清理前后的问号数量对比');
+    console.log('- 如果发现问题，请根据调试信息进行相应修复');
     
-    // 没有按钮文字加分
-    if (!hasButtons) score += 2.0;
-    
-    // 没有用户问题加分
-    if (!hasUserQuestions) score += 1.0;
-    
-    // 文本长度适中加分
-    if (text.length > 100 && text.length < 2000) {
-      score += 1.0;
-    }
-    
-    // 结构简单加分
-    if (!hasComplexStructure) {
-      score += 0.5;
-    }
-    
-    // 包含完整句子加分
-    if (/[。！？]/.test(text) && text.split(/[。！？]/).length > 2) {
-      score += 0.5;
-    }
-    
-    // 标签类型加分
-    if (element.tagName === 'DIV' || element.tagName === 'P') {
-      score += 0.3;
-    }
-    
-    return score;
-  }
-  
-  // 执行分析
-  const results = analyzePureTextStructure();
-  
-  console.log(`\n📊 找到 ${results.length} 个纯文本候选:`);
-  
-  results.slice(0, 8).forEach((result, index) => {
-    console.log(`\n${index + 1}. ${result.tagName} - ${result.selector}`);
-    console.log(`   得分: ${result.score.toFixed(2)}`);
-    console.log(`   类名: ${result.className}`);
-    console.log(`   文本长度: ${result.textLength}`);
-    console.log(`   有按钮: ${result.hasButtons}`);
-    console.log(`   有用户问题: ${result.hasUserQuestions}`);
-    console.log(`   有AI内容: ${result.hasAIContent}`);
-    console.log(`   结构复杂: ${result.hasComplexStructure}`);
-    console.log(`   文本预览: ${result.text}...`);
-    
-    // 高亮显示
-    let color;
-    if (result.score >= 5.0) {
-      color = '#10B981'; // 绿色 - 完美
-    } else if (result.score >= 4.0) {
-      color = '#F59E0B'; // 黄色 - 良好
-    } else if (result.score >= 3.0) {
-      color = '#EF4444'; // 红色 - 一般
-    } else {
-      color = '#6B7280'; // 灰色 - 较差
-    }
-    
-    result.element.style.outline = `3px solid ${color}`;
-    result.element.style.outlineOffset = '2px';
-    
-    // 添加序号标签
-    const label = document.createElement('div');
-    label.textContent = `${index + 1}`;
-    label.style.cssText = `
-      position: absolute;
-      top: -15px;
-      left: -15px;
-      background: ${color};
-      color: white;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: bold;
-      z-index: 10000;
-    `;
-    
-    result.element.style.position = 'relative';
-    result.element.appendChild(label);
-  });
-  
-  // 推荐最佳选择器
-  if (results.length > 0) {
-    const best = results[0];
-    console.log(`\n🏆 推荐选择器: ${best.selector}`);
-    console.log(`   理由: 得分最高 (${best.score.toFixed(2)})，纯AI内容，无多余文字`);
-    
-    // 测试选择器
-    console.log('\n🧪 测试选择器:');
-    try {
-      const testElements = document.querySelectorAll(best.selector);
-      console.log(`选择器匹配了 ${testElements.length} 个元素`);
-      
-      testElements.forEach((el, i) => {
-        const text = el.textContent?.trim();
-        const hasExtraContent = /(?:复制|重试|分享|本回答由 AI 生成)/.test(text);
-        console.log(`  元素 ${i + 1}: ${text?.length || 0} 字符, 有多余内容: ${hasExtraContent}`);
-        if (text && text.length > 50) {
-          console.log(`    预览: ${text.substring(0, 100)}...`);
-        }
-      });
-    } catch (error) {
-      console.error('选择器测试失败:', error);
-    }
-    
-    // 生成备选选择器
-    const alternatives = generateAlternatives(results.slice(0, 3));
-    console.log('\n🔄 备选选择器:');
-    alternatives.forEach((alt, i) => {
-      console.log(`  ${i + 1}. ${alt}`);
-    });
-    
-    // 保存结果
-    window.kimiPureTextResult = {
-      bestSelector: best.selector,
-      alternatives: alternatives,
-      allResults: results
-    };
-  }
-  
-  function generateAlternatives(topResults) {
-    const alternatives = [];
-    
-    topResults.forEach(result => {
-      if (result.className) {
-        const classes = result.className.split(' ').filter(c => c.trim());
-        classes.forEach(cls => {
-          if (cls.length > 3 && !cls.match(/^(css-|_|\d)/)) {
-            alternatives.push(`.${cls}`);
-          }
-        });
-      }
-    });
-    
-    return [...new Set(alternatives)];
-  }
-  
-  // 清除高亮函数
-  window.clearKimiHighlights = function() {
-    document.querySelectorAll('*').forEach(el => {
-      el.style.outline = '';
-      el.style.outlineOffset = '';
-      // 移除标签
-      const labels = el.querySelectorAll('div[style*="position: absolute"][style*="top: -15px"]');
-      labels.forEach(label => label.remove());
-    });
-    console.log('✅ 已清除所有高亮');
-  };
-  
-  console.log('\n💡 使用说明:');
-  console.log('- 绿色边框: 完美候选 (得分 ≥ 5.0) - 纯AI内容，无多余文字');
-  console.log('- 黄色边框: 良好候选 (得分 ≥ 4.0)');
-  console.log('- 红色边框: 一般候选 (得分 ≥ 3.0)');
-  console.log('- 数字标签: 候选排名');
-  console.log('- 运行 clearKimiHighlights() 清除高亮');
-  console.log('- 结果保存在 window.kimiPureTextResult');
-  
 })();

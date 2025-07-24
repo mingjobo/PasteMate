@@ -45,6 +45,12 @@ const SUPPORTED_SITES = {
   "www.kimi.com": {
     name: "Kimi",
     selectors: [
+      // 优先使用更精确的AI回复选择器
+      "[data-role='assistant'] .segment-content-box",
+      "[data-author='assistant'] .segment-content-box",
+      ".ai-response .segment-content-box",
+      ".assistant-message .segment-content-box",
+      // 备用选择器（会通过isAIResponse函数进一步过滤）
       ".segment-content-box",
       ".markdown-container",
       ".markdown",
@@ -59,7 +65,7 @@ const SUPPORTED_SITES = {
       ".assistant-bubble"
     ],
     features: {
-      textIndicators: ["我是", "我可以", "根据", "建议", "Kimi", "收到", "请问", "强平", "期货", "交易所"],
+      textIndicators: ["我是", "我可以", "根据", "建议", "Kimi", "收到", "您可以", "建议您", "以下是", "具体来说", "需要注意"],
       roleAttributes: ["data-role=assistant", "data-author=assistant"],
       containerClasses: ["segment-content-box", "markdown-container", "markdown", "assistant", "ai"]
     }
