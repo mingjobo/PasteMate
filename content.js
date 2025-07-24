@@ -1,24 +1,42 @@
 // 一键纯文扩展 - 内容脚本
+// 注意：SUPPORTED_SITES 配置在 sites.js 中定义
 
-// 内置站点配置
-const SUPPORTED_SITES = {
-  "chat.openai.com": {
-    selector: "[data-message-author-role='assistant'] .markdown",
-    name: "ChatGPT"
-  },
-  "chat.deepseek.com": {
-    selector: ".message-content[data-role='assistant']",
-    name: "DeepSeek"
-  },
-  "www.doubao.com": {
-    selector: ".dialogue-text.assistant",
-    name: "豆包"
-  },
-  "www.kimi.com": {
-    selector: ".response-bubble",
-    name: "Kimi"
-  }
+// 调试日志级别
+const DEBUG_LEVEL = {
+  ERROR: 0,
+  WARN: 1,
+  INFO: 2,
+  DEBUG: 3
 };
+
+// 当前调试级别（可以通过控制台修改：window.PURETEXT_DEBUG_LEVEL = 3）
+window.PURETEXT_DEBUG_LEVEL = window.PURETEXT_DEBUG_LEVEL || DEBUG_LEVEL.INFO;
+
+// 调试日志函数
+function debugLog(level, message, ...args) {
+  if (level <= window.PURETEXT_DEBUG_LEVEL) {
+    const timestamp = new Date().toLocaleTimeString();
+    const levelNames = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
+    const prefix = `[${timestamp}] PureText-${levelNames[level]}:`;
+    
+    switch (level) {
+      case DEBUG_LEVEL.ERROR:
+        console.error(prefix, message, ...args);
+        break;
+      case DEBUG_LEVEL.WARN:
+        console.warn(prefix, message, ...args);
+        break;
+      case DEBUG_LEVEL.INFO:
+        console.info(prefix, message, ...args);
+        break;
+      case DEBUG_LEVEL.DEBUG:
+        console.log(prefix, message, ...args);
+        break;
+    }
+  }
+}
+
+debugLog(DEBUG_LEVEL.INFO, '🚀 Content script loaded');
 
 /**
  * 站点管理器类
@@ -35,26 +53,41 @@ class SiteManager {
    * 首先尝试从存储加载用户配置，如果失败则使用内置配置
    */
   async loadSiteConfig() {
+    debugLog(DEBUG_LEVEL.DEBUG, '📋 Loading site configuration...');
+    
     try {
+      // 检查 SUPPORTED_SITES 是否可用
+      debugLog(DEBUG_LEVEL.DEBUG, '🔍 Checking SUPPORTED_SITES availability:', typeof SUPPORTED_SITES);
+      
+      if (typeof SUPPORTED_SITES === 'undefined') {
+        debugLog(DEBUG_LEVEL.ERROR, '❌ SUPPORTED_SITES is undefined! sites.js may not be loaded.');
+        this.siteConfig = {};
+        return;
+      }
+      
+      debugLog(DEBUG_LEVEL.DEBUG, '📊 Available sites:', Object.keys(SUPPORTED_SITES));
+      
       // 使用全局的SUPPORTED_SITES配置（从sites.js加载）
-      const baseSites = typeof SUPPORTED_SITES !== 'undefined' ? SUPPORTED_SITES : {};
+      const baseSites = { ...SUPPORTED_SITES };
       
       // 尝试从存储加载用户配置（为未来的配置功能预留）
       if (typeof chrome !== 'undefined' && chrome.storage) {
         const result = await chrome.storage.sync.get(['customSites', 'disabledSites']);
         if (result.customSites || result.disabledSites) {
           this.siteConfig = this.mergeConfigs(baseSites, result);
-          console.debug('PureText: Loaded user configuration');
+          debugLog(DEBUG_LEVEL.INFO, '✅ Loaded user configuration');
           return;
         }
       }
+      
+      // 使用内置配置作为默认
+      this.siteConfig = baseSites;
+      debugLog(DEBUG_LEVEL.INFO, '✅ Using built-in site configuration');
+      
     } catch (error) {
-      console.warn('PureText: Failed to load user config, using built-in config:', error);
+      debugLog(DEBUG_LEVEL.WARN, '⚠️ Failed to load user config, using built-in config:', error);
+      this.siteConfig = typeof SUPPORTED_SITES !== 'undefined' ? { ...SUPPORTED_SITES } : {};
     }
-
-    // 使用内置配置作为默认
-    this.siteConfig = typeof SUPPORTED_SITES !== 'undefined' ? { ...SUPPORTED_SITES } : {};
-    console.debug('PureText: Using built-in site configuration');
   }
 
   /**
@@ -87,15 +120,23 @@ class SiteManager {
    */
   getCurrentSite() {
     if (!this.siteConfig) {
+      debugLog(DEBUG_LEVEL.WARN, '⚠️ Site config not loaded');
       return null;
     }
 
     const hostname = window.location.hostname;
+    debugLog(DEBUG_LEVEL.DEBUG, '🌐 Checking current hostname:', hostname);
+    
     this.currentSite = this.siteConfig[hostname] || null;
     
     if (this.currentSite) {
       // 添加hostname信息到配置中
       this.currentSite.hostname = hostname;
+      debugLog(DEBUG_LEVEL.INFO, '✅ Current site supported:', this.currentSite.name);
+      debugLog(DEBUG_LEVEL.DEBUG, '🎯 Site selector:', this.currentSite.selector);
+    } else {
+      debugLog(DEBUG_LEVEL.WARN, '❌ Current site not supported:', hostname);
+      debugLog(DEBUG_LEVEL.DEBUG, '📋 Available sites:', Object.keys(this.siteConfig));
     }
     
     return this.currentSite;
@@ -214,8 +255,15 @@ class ClipboardManager {
       return '';
     }
 
+    // 创建元素的副本，以避免修改原始DOM
+    const clonedElement = element.cloneNode(true);
+    
+    // 移除所有复制按钮，避免按钮文字被包含在复制内容中
+    const copyButtons = clonedElement.querySelectorAll('.puretext-copy-btn');
+    copyButtons.forEach(button => button.remove());
+    
     // 获取元素的文本内容（自动去除HTML标签）
-    let text = element.innerText || element.textContent || '';
+    let text = clonedElement.innerText || clonedElement.textContent || '';
     
     // 去除常见的Markdown格式标记
     text = this.removeMarkdownFormatting(text);
@@ -495,17 +543,32 @@ class ButtonInjector {
   scanAndInjectButtons() {
     const selector = this.siteManager.getSelector();
     if (!selector) {
+      debugLog(DEBUG_LEVEL.WARN, '⚠️ No selector available, skipping button injection');
       return;
     }
 
+    debugLog(DEBUG_LEVEL.DEBUG, '🔍 Scanning for elements with selector:', selector);
+
     try {
       const bubbles = document.querySelectorAll(selector);
+      debugLog(DEBUG_LEVEL.INFO, `📊 Found ${bubbles.length} target elements`);
       
-      for (const bubble of bubbles) {
-        this.injectButton(bubble);
+      if (bubbles.length === 0) {
+        debugLog(DEBUG_LEVEL.WARN, '⚠️ No target elements found. Possible reasons:');
+        debugLog(DEBUG_LEVEL.WARN, '   - Page content not fully loaded');
+        debugLog(DEBUG_LEVEL.WARN, '   - Selector may be incorrect for current page structure');
+        debugLog(DEBUG_LEVEL.WARN, '   - Elements may be dynamically generated');
       }
+      
+      let injectedCount = 0;
+      for (const bubble of bubbles) {
+        const injected = this.injectButton(bubble);
+        if (injected) injectedCount++;
+      }
+      
+      debugLog(DEBUG_LEVEL.INFO, `✅ Successfully injected ${injectedCount} buttons`);
     } catch (error) {
-      console.error('PureText: Error scanning for bubbles:', error);
+      debugLog(DEBUG_LEVEL.ERROR, '❌ Error scanning for bubbles:', error);
     }
   }
 

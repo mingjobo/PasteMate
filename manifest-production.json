@@ -13,8 +13,7 @@
         "https://chat.openai.com/*",
         "https://chat.deepseek.com/*",
         "https://www.doubao.com/*",
-        "https://www.kimi.com/*",
-        "file://*/*"
+        "https://www.kimi.com/*"
       ],
       "js": ["sites.js", "content.js"],
       "run_at": "document_idle"

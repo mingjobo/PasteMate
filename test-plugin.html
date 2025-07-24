@@ -61,6 +61,13 @@
             background: white;
             border-left: 4px solid #4CAF50;
         }
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -72,11 +79,21 @@
             <strong>步骤1：</strong> 确保你已经在Chrome中加载了这个插件
         </div>
         <div class="step">
-            <strong>步骤2：</strong> 在下面的模拟聊天内容右下角应该会出现"Copy Plain Text"按钮
+            <strong>步骤2：</strong> 按F12打开开发者工具，查看Console标签中的日志
         </div>
         <div class="step">
-            <strong>步骤3：</strong> 点击按钮测试复制功能，然后粘贴到记事本查看效果
+            <strong>步骤3：</strong> 在下面的模拟聊天内容右下角应该会出现按钮
         </div>
+    </div>
+
+    <div class="debug-info">
+        <h3>🔍 调试信息</h3>
+        <p><strong>预期效果：</strong></p>
+        <ul>
+            <li>如果插件正确加载：会看到半透明的"Copy Plain Text"按钮</li>
+            <li>如果页面结构正确：会看到红色的"Debug Test Button"</li>
+            <li>控制台会显示详细的调试日志</li>
+        </ul>
     </div>
 
     <div class="chat-container">
@@ -144,62 +161,77 @@ print(result)</code></pre>
                 <h3>主要类型</h3>
                 
                 <ul>
-                    <li><strong>监督学习</strong>：使用标记数据训练模型
-                        <ul>
-                            <li>分类：预测类别（如邮件是否为垃圾邮件）</li>
-                            <li>回归：预测数值（如房价预测）</li>
-                        </ul>
-                    </li>
-                    <li><strong>无监督学习</strong>：从无标记数据中发现模式
-                        <ul>
-                            <li>聚类：将相似数据分组</li>
-                            <li>降维：简化数据复杂度</li>
-                        </ul>
-                    </li>
+                    <li><strong>监督学习</strong>：使用标记数据训练模型</li>
+                    <li><strong>无监督学习</strong>：从无标记数据中发现模式</li>
                     <li><strong>强化学习</strong>：通过试错学习最优策略</li>
                 </ul>
-                
-                <h3>常用算法</h3>
-                
-                <pre><code># 简单的线性回归示例
-from sklearn.linear_model import LinearRegression
-import numpy as np
-
-# 创建数据
-X = np.array([[1], [2], [3], [4], [5]])
-y = np.array([2, 4, 6, 8, 10])
-
-# 训练模型
-model = LinearRegression()
-model.fit(X, y)
-
-# 预测
-prediction = model.predict([[6]])
-print(f"预测结果: {prediction[0]}")</code></pre>
-                
-                <p>机器学习的核心是找到数据中的**模式**和**规律**，然后用这些规律对新数据进行预测。</p>
             </div>
         </div>
     </div>
 
+    <script src="debug_test.js"></script>
     <script>
-        // 模拟插件加载提示
+        // 页面加载完成后的检查
         window.addEventListener('load', function() {
+            console.log('🚀 Test page loaded');
+            
             setTimeout(function() {
-                const messages = document.querySelectorAll('[data-message-author-role="assistant"], [data-role="assistant"]');
-                if (messages.length > 0) {
-                    let hasButtons = false;
-                    messages.forEach(msg => {
-                        if (msg.querySelector('.puretext-copy-btn')) {
-                            hasButtons = true;
-                        }
-                    });
-                    
-                    if (!hasButtons) {
-                        alert('⚠️ 提示：如果你没有看到"Copy Plain Text"按钮，说明插件可能没有正确加载。\n\n请确保：\n1. 已在Chrome扩展管理页面加载插件\n2. 插件已启用\n3. 刷新此页面');
-                    }
+                // 检查插件按钮
+                const pluginButtons = document.querySelectorAll('.puretext-copy-btn');
+                const debugButtons = document.querySelectorAll('.debug-test-btn');
+                
+                console.log(`📊 Final check - Plugin buttons: ${pluginButtons.length}, Debug buttons: ${debugButtons.length}`);
+                
+                // 显示状态提示
+                const statusDiv = document.createElement('div');
+                statusDiv.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: ${pluginButtons.length > 0 ? '#d4edda' : '#f8d7da'};
+                    border: 1px solid ${pluginButtons.length > 0 ? '#c3e6cb' : '#f5c6cb'};
+                    border-radius: 8px;
+                    padding: 15px;
+                    max-width: 300px;
+                    z-index: 10000;
+                    font-size: 14px;
+                `;
+                
+                if (pluginButtons.length > 0) {
+                    statusDiv.innerHTML = `
+                        <h4 style="margin: 0 0 10px 0; color: #155724;">✅ 插件工作正常</h4>
+                        <p style="margin: 0;">找到 ${pluginButtons.length} 个复制按钮</p>
+                    `;
+                } else if (debugButtons.length > 0) {
+                    statusDiv.innerHTML = `
+                        <h4 style="margin: 0 0 10px 0; color: #721c24;">⚠️ 插件未加载</h4>
+                        <p style="margin: 0 0 10px 0;">页面结构正确，但插件未工作</p>
+                        <p style="margin: 0; font-size: 12px;">请检查Chrome扩展管理页面</p>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <h4 style="margin: 0 0 10px 0; color: #721c24;">❌ 页面结构问题</h4>
+                        <p style="margin: 0;">未找到任何按钮，请检查控制台日志</p>
+                    `;
                 }
-            }, 2000);
+                
+                // 添加关闭按钮
+                const closeBtn = document.createElement('button');
+                closeBtn.textContent = '关闭';
+                closeBtn.style.cssText = 'margin-top: 10px; padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;';
+                closeBtn.onclick = () => statusDiv.remove();
+                statusDiv.appendChild(closeBtn);
+                
+                document.body.appendChild(statusDiv);
+                
+                // 5秒后自动关闭
+                setTimeout(() => {
+                    if (statusDiv.parentNode) {
+                        statusDiv.remove();
+                    }
+                }, 10000);
+                
+            }, 3000);
         });
     </script>
 </body>

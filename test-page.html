@@ -197,11 +197,22 @@
 
     <div class="instructions">
         <h3>📋 测试说明</h3>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin: 10px 0;">
+            <h4 style="margin-top: 0; color: #856404;">⚠️ 重要：本地测试配置</h4>
+            <p>如果你在本地文件上测试扩展，需要先配置测试环境：</p>
+            <ol>
+                <li><strong>切换到测试模式</strong>：运行 <code>node switch-manifest.js test</code></li>
+                <li><strong>重新加载扩展</strong>：在 <code>chrome://extensions/</code> 中重新加载扩展</li>
+                <li><strong>刷新此页面</strong>：然后再进行测试</li>
+            </ol>
+            <p>或者直接在支持的网站上测试：ChatGPT、DeepSeek、豆包、Kimi</p>
+        </div>
         <ol>
             <li>确保已在当前浏览器中加载了 PureText 扩展</li>
             <li>点击下方的"运行兼容性测试"按钮</li>
             <li>查看测试结果和控制台输出</li>
             <li>在模拟聊天区域测试按钮注入功能</li>
+            <li>使用浏览器控制台运行高级测试</li>
         </ol>
     </div>
 
@@ -245,6 +256,9 @@
             </button>
             <button class="test-button" onclick="testButtonInjection()">
                 🔘 测试按钮注入
+            </button>
+            <button class="test-button" onclick="loadAdvancedTest()">
+                🔬 高级测试工具
             </button>
             <button class="test-button" onclick="clearResults()">
                 🗑️ 清除结果
@@ -557,12 +571,67 @@
                 });
             } else {
                 console.warn('⚠️ 未发现复制按钮，可能扩展未加载或不支持当前页面');
+                console.log('💡 解决方案:');
+                console.log('1. 使用 manifest-test.json 替换 manifest.json');
+                console.log('2. 或者在浏览器中访问支持的网站进行测试');
+                console.log('3. 或者临时修改当前页面的 hostname');
             }
             
             // 手动触发按钮注入（如果扩展已加载）
             if (typeof window.buttonInjector !== 'undefined') {
                 window.buttonInjector.scanAndInjectButtons();
                 console.log('🔄 手动触发按钮扫描');
+            }
+            
+            // 检查扩展环境
+            checkExtensionEnvironment();
+        }
+        
+        // 检查扩展环境
+        function checkExtensionEnvironment() {
+            console.log('🔍 检查扩展环境...');
+            
+            // 检查 Chrome 扩展 API
+            if (typeof chrome === 'undefined') {
+                console.error('❌ Chrome 扩展 API 不可用');
+                console.log('💡 这通常意味着:');
+                console.log('   - 扩展未安装或未启用');
+                console.log('   - 当前页面不在扩展的匹配规则中');
+                console.log('   - 需要使用 manifest-test.json 进行本地测试');
+                return;
+            }
+            
+            console.log('✅ Chrome 扩展 API 可用');
+            
+            // 检查内容脚本是否加载
+            if (typeof SUPPORTED_SITES === 'undefined') {
+                console.error('❌ 扩展内容脚本未加载');
+                console.log('💡 请检查:');
+                console.log('   - manifest.json 中的 matches 配置');
+                console.log('   - 扩展是否正确安装');
+                return;
+            }
+            
+            console.log('✅ 扩展内容脚本已加载');
+            console.log('📋 支持的网站:', Object.keys(SUPPORTED_SITES));
+            
+            // 检查当前页面是否匹配
+            const currentHostname = window.location.hostname;
+            console.log(`🌐 当前页面: ${currentHostname}`);
+            
+            if (SUPPORTED_SITES[currentHostname]) {
+                console.log('✅ 当前页面受支持');
+                console.log(`📍 选择器: ${SUPPORTED_SITES[currentHostname].selector}`);
+                
+                // 测试选择器
+                const elements = document.querySelectorAll(SUPPORTED_SITES[currentHostname].selector);
+                console.log(`🎯 找到 ${elements.length} 个匹配元素`);
+            } else {
+                console.warn('⚠️ 当前页面不在支持列表中');
+                console.log('💡 要在本地测试，请:');
+                console.log('   1. 将 manifest-test.json 重命名为 manifest.json');
+                console.log('   2. 重新加载扩展');
+                console.log('   3. 刷新此页面');
             }
         }
 
@@ -661,6 +730,40 @@
             });
             
             document.body.removeChild(testElement);
+        }
+
+        // 加载高级测试工具
+        function loadAdvancedTest() {
+            console.log('🔬 加载高级测试工具...');
+            
+            // 检查是否已经加载
+            if (typeof window.pureTextTest !== 'undefined') {
+                console.log('✅ 高级测试工具已加载');
+                console.log('💡 在控制台中运行: pureTextTest.runFullTest()');
+                return;
+            }
+            
+            // 动态加载测试脚本
+            const script = document.createElement('script');
+            script.src = 'manual-browser-test.js';
+            script.onload = function() {
+                console.log('✅ 高级测试工具加载成功');
+                console.log('🚀 自动运行完整测试...');
+                
+                // 延迟执行，确保脚本完全加载
+                setTimeout(() => {
+                    if (typeof window.pureTextTest !== 'undefined') {
+                        window.pureTextTest.runFullTest();
+                    }
+                }, 500);
+            };
+            script.onerror = function() {
+                console.error('❌ 高级测试工具加载失败');
+                console.log('💡 请确保 manual-browser-test.js 文件存在');
+                console.log('💡 或者直接在控制台中粘贴测试代码');
+            };
+            
+            document.head.appendChild(script);
         }
 
         // 清除结果

@@ -5,7 +5,7 @@ const SUPPORTED_SITES = {
     name: "ChatGPT"
   },
   "chat.deepseek.com": {
-    selector: ".message-content[data-role='assistant']",
+    selector: ".ds-markdown.ds-markdown--block",
     name: "DeepSeek"
   },
   "www.doubao.com": {

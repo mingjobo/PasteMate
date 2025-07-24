@@ -37,7 +37,7 @@ const MOCK_WEBSITE_DOM = {
     expectedButtons: 2,
     expectedText: "这是一个ChatGPT的回复消息。\n\n包含Markdown格式的内容。\n\n• 列表项1\n• 列表项2\n\nconsole.log('代码块');"
   },
-  
+
   "chat.deepseek.com": {
     name: "DeepSeek",
     html: `
@@ -57,7 +57,7 @@ const MOCK_WEBSITE_DOM = {
     expectedButtons: 2,
     expectedText: "这是DeepSeek的回复。\n\n支持Markdown格式。\n\n引用内容"
   },
-  
+
   "www.doubao.com": {
     name: "豆包",
     html: `
@@ -80,7 +80,7 @@ const MOCK_WEBSITE_DOM = {
     expectedButtons: 2,
     expectedText: "这是豆包的中文回复。\n\n测试中文界面支持。\n\n1. 有序列表1\n2. 有序列表2"
   },
-  
+
   "www.kimi.com": {
     name: "Kimi",
     html: `
@@ -114,7 +114,7 @@ class WebsiteFunctionalityTester {
       },
       details: []
     };
-    
+
     // 加载扩展代码
     this.loadExtensionCode();
   }
@@ -141,12 +141,12 @@ class WebsiteFunctionalityTester {
 
     for (const [hostname, mockData] of Object.entries(MOCK_WEBSITE_DOM)) {
       this.results.summary.total++;
-      
+
       console.log(`\n🌐 测试网站: ${mockData.name} (${hostname})`);
-      
+
       try {
         const result = await this.testWebsiteFunctionality(hostname, mockData);
-        
+
         if (result.success) {
           this.results.summary.passed++;
           console.log(`   ✅ 功能测试通过`);
@@ -154,9 +154,9 @@ class WebsiteFunctionalityTester {
           this.results.summary.failed++;
           console.log(`   ❌ 功能测试失败: ${result.error}`);
         }
-        
+
         this.results.details.push(result);
-        
+
       } catch (error) {
         this.results.summary.failed++;
         const errorResult = {
@@ -213,7 +213,7 @@ class WebsiteFunctionalityTester {
       console.log(`   🎯 测试选择器匹配...`);
       const elements = document.querySelectorAll(mockData.selector);
       result.metrics.elementsFound = elements.length;
-      
+
       if (elements.length === mockData.expectedButtons) {
         result.details.selectorMatching = true;
         console.log(`   ✅ 选择器匹配成功 (找到 ${elements.length} 个元素)`);
@@ -225,13 +225,13 @@ class WebsiteFunctionalityTester {
       // 3. 模拟扩展初始化
       console.log(`   🚀 模拟扩展初始化...`);
       const extensionContext = await this.initializeExtension(window, document, hostname);
-      
+
       // 4. 测试按钮注入
       console.log(`   💉 测试按钮注入...`);
       const injectionResult = await this.testButtonInjection(extensionContext, elements);
       result.details.buttonInjection = injectionResult.success;
       result.metrics.buttonsInjected = injectionResult.count;
-      
+
       if (injectionResult.success) {
         console.log(`   ✅ 按钮注入成功 (${injectionResult.count} 个)`);
       } else {
@@ -243,7 +243,7 @@ class WebsiteFunctionalityTester {
       const textResult = await this.testTextExtraction(extensionContext, elements[0]);
       result.details.textExtraction = textResult.success;
       result.metrics.textLength = textResult.length;
-      
+
       if (textResult.success) {
         console.log(`   ✅ 文本提取成功 (${textResult.length} 字符)`);
         console.log(`   📄 提取内容预览: "${textResult.text.substring(0, 50)}..."`);
@@ -255,7 +255,7 @@ class WebsiteFunctionalityTester {
       console.log(`   🌍 测试国际化支持...`);
       const i18nResult = await this.testI18nSupport(extensionContext, hostname);
       result.details.i18nSupport = i18nResult.success;
-      
+
       if (i18nResult.success) {
         console.log(`   ✅ 国际化支持正常 (${i18nResult.language}: "${i18nResult.buttonText}")`);
       } else {
@@ -266,7 +266,7 @@ class WebsiteFunctionalityTester {
       console.log(`   📋 测试复制功能逻辑...`);
       const copyResult = await this.testCopyFunctionality(extensionContext, elements[0]);
       result.details.copyFunctionality = copyResult.success;
-      
+
       if (copyResult.success) {
         console.log(`   ✅ 复制功能逻辑正常`);
       } else {
@@ -277,10 +277,10 @@ class WebsiteFunctionalityTester {
       result.metrics.processingTime = Date.now() - startTime;
 
       // 判断整体成功
-      result.success = result.details.domSetup && 
-                      result.details.selectorMatching && 
-                      result.details.buttonInjection && 
-                      result.details.textExtraction;
+      result.success = result.details.domSetup &&
+        result.details.selectorMatching &&
+        result.details.buttonInjection &&
+        result.details.textExtraction;
 
     } catch (error) {
       result.error = error.message;
@@ -496,20 +496,20 @@ class WebsiteFunctionalityTester {
   async testButtonInjection(context, elements) {
     try {
       let injectedCount = 0;
-      
+
       for (const element of elements) {
         // 确保元素有相对定位
         element.style.position = 'relative';
-        
+
         const injected = context.buttonInjector.injectButton(element);
         if (injected) {
           injectedCount++;
         }
       }
-      
+
       // 验证按钮是否真的被添加
       const buttons = context.document.querySelectorAll('.puretext-copy-btn');
-      
+
       return {
         success: buttons.length === injectedCount && injectedCount > 0,
         count: buttons.length,
@@ -539,7 +539,7 @@ class WebsiteFunctionalityTester {
       }
 
       const extractedText = context.clipboardManager.extractPlainText(element);
-      
+
       return {
         success: extractedText.length > 0,
         text: extractedText,
@@ -566,10 +566,10 @@ class WebsiteFunctionalityTester {
         'www.doubao.com': '复制纯文本',
         'default': 'Copy Plain Text'
       };
-      
+
       const expected = expectedTexts[hostname] || expectedTexts.default;
       const isCorrect = buttonText === expected;
-      
+
       return {
         success: isCorrect,
         buttonText: buttonText,
@@ -599,7 +599,7 @@ class WebsiteFunctionalityTester {
       }
 
       const success = await context.clipboardManager.copyPlainText(element);
-      
+
       return {
         success: success,
         error: success ? null : 'Copy operation failed'
@@ -640,7 +640,7 @@ class WebsiteFunctionalityTester {
     console.log(`   通过: ${this.results.summary.passed}`);
     console.log(`   失败: ${this.results.summary.failed}`);
     console.log(`   警告: ${this.results.summary.warnings}`);
-    
+
     const successRate = ((this.results.summary.passed / this.results.summary.total) * 100).toFixed(1);
     console.log(`   成功率: ${successRate}%`);
 
@@ -654,10 +654,10 @@ class WebsiteFunctionalityTester {
    */
   generateMarkdownTestReport(reportData) {
     const { summary, details, timestamp } = reportData;
-    
+
     let markdown = `# 网站功能测试报告\n\n`;
     markdown += `**生成时间**: ${new Date(timestamp).toLocaleString()}\n\n`;
-    
+
     // 摘要
     markdown += `## 测试摘要\n\n`;
     markdown += `| 指标 | 数量 |\n`;
@@ -667,19 +667,19 @@ class WebsiteFunctionalityTester {
     markdown += `| 失败 | ${summary.failed} |\n`;
     markdown += `| 警告 | ${summary.warnings} |\n`;
     markdown += `| 成功率 | ${((summary.passed / summary.total) * 100).toFixed(1)}% |\n\n`;
-    
+
     // 详细结果
     markdown += `## 详细测试结果\n\n`;
-    
+
     details.forEach((result, index) => {
       const status = result.success ? '✅ 通过' : '❌ 失败';
       markdown += `### ${index + 1}. ${result.siteName} (${result.hostname})\n\n`;
       markdown += `**状态**: ${status}\n\n`;
-      
+
       if (result.error) {
         markdown += `**错误**: ${result.error}\n\n`;
       }
-      
+
       // 功能检查项
       markdown += `**功能检查**:\n\n`;
       markdown += `| 功能 | 状态 |\n`;
@@ -690,7 +690,7 @@ class WebsiteFunctionalityTester {
       markdown += `| 文本提取 | ${result.details.textExtraction ? '✅' : '❌'} |\n`;
       markdown += `| 国际化支持 | ${result.details.i18nSupport ? '✅' : '❌'} |\n`;
       markdown += `| 复制功能 | ${result.details.copyFunctionality ? '✅' : '❌'} |\n\n`;
-      
+
       // 性能指标
       markdown += `**性能指标**:\n\n`;
       markdown += `| 指标 | 数值 |\n`;
@@ -700,13 +700,13 @@ class WebsiteFunctionalityTester {
       markdown += `| 提取文本长度 | ${result.metrics.textLength} 字符 |\n`;
       markdown += `| 处理时间 | ${result.metrics.processingTime} ms |\n\n`;
     });
-    
+
     // 结论和建议
     markdown += `## 结论和建议\n\n`;
-    
+
     const passedTests = details.filter(r => r.success);
     const failedTests = details.filter(r => !r.success);
-    
+
     if (passedTests.length === details.length) {
       markdown += `🎉 **所有网站功能测试都通过了！**\n\n`;
       markdown += `扩展在所有目标网站上的核心功能都能正常工作：\n`;
@@ -722,14 +722,14 @@ class WebsiteFunctionalityTester {
       });
       markdown += `\n`;
     }
-    
+
     markdown += `### 下一步建议\n\n`;
     markdown += `1. 在实际浏览器环境中进行端到端测试\n`;
     markdown += `2. 验证扩展在真实网站上的表现\n`;
     markdown += `3. 测试不同浏览器的兼容性\n`;
     markdown += `4. 进行用户体验测试\n`;
     markdown += `5. 监控扩展在生产环境中的性能\n\n`;
-    
+
     return markdown;
   }
 }
