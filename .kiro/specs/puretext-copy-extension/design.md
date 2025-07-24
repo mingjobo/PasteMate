@@ -61,9 +61,9 @@
   "content_scripts": [{
     "matches": [
       "https://chat.openai.com/*",
-      "https://*.deepseek.com/*", 
-      "https://*.doubao.com/*",
-      "https://*.kimi.moonshot.ai/*"
+      "https://chat.deepseek.com/*", 
+      "https://www.doubao.com/*",
+      "https://www.kimi.com/*"
     ],
     "js": ["content.js"],
     "run_at": "document_idle"
@@ -87,15 +87,15 @@ const SUPPORTED_SITES = {
     selector: "[data-message-author-role='assistant'] .markdown",
     name: "ChatGPT"
   },
-  "deepseek.com": {
+  "chat.deepseek.com": {
     selector: ".message-content[data-role='assistant']",
     name: "DeepSeek"
   },
-  "doubao.com": {
+  "www.doubao.com": {
     selector: ".dialogue-text.assistant",
     name: "豆包"
   },
-  "kimi.moonshot.ai": {
+  "www.kimi.com": {
     selector: ".response-bubble",
     name: "Kimi"
   }

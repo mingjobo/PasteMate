@@ -45,9 +45,9 @@
 #### Acceptance Criteria
 
 1. WHEN 用户访问 chat.openai.com THEN 系统 SHALL 正确识别并在 ChatGPT 回复气泡中插入复制按钮
-2. WHEN 用户访问 deepseek.com THEN 系统 SHALL 正确识别并在 DeepSeek 回复气泡中插入复制按钮
-3. WHEN 用户访问 doubao.com THEN 系统 SHALL 正确识别并在豆包回复气泡中插入复制按钮
-4. WHEN 用户访问 kimi.moonshot.ai THEN 系统 SHALL 正确识别并在 Kimi 回复气泡中插入复制按钮
+2. WHEN 用户访问 chat.deepseek.com THEN 系统 SHALL 正确识别并在 DeepSeek 回复气泡中插入复制按钮
+3. WHEN 用户访问 www.doubao.com THEN 系统 SHALL 正确识别并在豆包回复气泡中插入复制按钮
+4. WHEN 用户访问 www.kimi.com THEN 系统 SHALL 正确识别并在 Kimi 回复气泡中插入复制按钮
 5. WHEN 用户访问不支持的网站 THEN 系统 SHALL 不显示复制按钮，不影响页面正常使用
 
 ### Requirement 5
