@@ -188,3 +188,12 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 ---
 
 **Made with ❤️ for the AI community**
+
+## 站点配置架构（2024重构）
+
+- 每个目标网站的配置已独立为单独文件，位于 `src/sites/` 目录：
+  - `chatgpt.js`、`deepseek.js`、`doubao.js`、`kimi.js` 等
+- `src/sites/index.js` 汇总所有站点配置，导出 `SUPPORTED_SITES`
+- `content.js` 只需从 `src/sites/index.js` 导入，无需关心具体站点细节
+
+这样便于维护、扩展和管理各站点的支持。

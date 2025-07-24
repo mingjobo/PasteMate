@@ -16,7 +16,7 @@
         "https://www.kimi.com/*",
         "file://*/*"
       ],
-      "js": ["sites.js", "content.js"],
+      "js": ["sites.js", "src/CopyButton.js", "content.js"],
       "run_at": "document_idle"
     }
   ],

@@ -1,24 +1,67 @@
-// 内置站点配置
+// 内置站点配置 - 支持多层级选择器和智能匹配
 const SUPPORTED_SITES = {
   "chat.openai.com": {
-    selector: "[data-message-author-role='assistant'] .markdown",
-    name: "ChatGPT"
+    name: "ChatGPT",
+    selectors: [
+      "[data-message-author-role='assistant'] .markdown",
+      "[data-message-author-role='assistant']",
+      ".group.w-full.text-token-text-primary",
+      ".markdown.prose"
+    ],
+    features: {
+      textIndicators: ["I'm", "I can", "Here's", "Based on"],
+      roleAttributes: ["data-message-author-role=assistant"],
+      containerClasses: ["markdown", "prose"]
+    }
   },
   "chat.deepseek.com": {
-    selector: ".ds-markdown.ds-markdown--block",
-    name: "DeepSeek"
+    name: "DeepSeek",
+    selectors: [
+      ".ds-markdown.ds-markdown--block",
+      ".message-content[data-role='assistant']",
+      "[data-role='assistant'] .markdown",
+      ".assistant-message .content"
+    ],
+    features: {
+      textIndicators: ["我是", "我可以", "根据", "基于"],
+      roleAttributes: ["data-role=assistant"],
+      containerClasses: ["ds-markdown", "message-content"]
+    }
   },
   "www.doubao.com": {
-    selector: ".dialogue-text.assistant",
-    name: "豆包"
+    name: "豆包",
+    selectors: [
+      ".dialogue-text.assistant",
+      ".message.assistant .content",
+      "[data-role='assistant']",
+      ".ai-response"
+    ],
+    features: {
+      textIndicators: ["我是", "我可以", "根据", "建议"],
+      roleAttributes: ["data-role=assistant"],
+      containerClasses: ["dialogue-text", "assistant"]
+    }
   },
   "www.kimi.com": {
-    selector: ".response-bubble",
-    name: "Kimi"
+    name: "Kimi",
+    selectors: [
+      ".segment-content-box",
+      ".markdown-container",
+      ".markdown",
+      "div[class*=\"assistant\"]",
+      "div[class*=\"ai\"]",
+      ".response-bubble",
+      "[data-role='assistant']",
+      ".ai-message .content",
+      ".message-content.assistant",
+      ".chat-message.assistant",
+      ".kimi-response",
+      ".assistant-bubble"
+    ],
+    features: {
+      textIndicators: ["我是", "我可以", "根据", "建议", "Kimi", "收到", "请问", "强平", "期货", "交易所"],
+      roleAttributes: ["data-role=assistant", "data-author=assistant"],
+      containerClasses: ["segment-content-box", "markdown-container", "markdown", "assistant", "ai"]
+    }
   }
-};
-
-// 导出配置供其他模块使用
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { SUPPORTED_SITES };
-}
+}; 
