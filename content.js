@@ -708,47 +708,38 @@ class ClipboardManager {
      */
     static removeKimiSuggestedQuestions(clonedElement) {
         try {
+            debugLog(DEBUG_LEVEL.DEBUG, '[Kimi] removeKimiSuggestedQuestions: start', clonedElement.outerHTML);
             // 查找并移除推荐问题相关的元素
             const questionSelectors = [
-                // 推荐问题容器的常见选择器
-                '[class*="question"]',
-                '[class*="suggest"]',
-                '[class*="recommend"]',
-                '[class*="related"]',
-                // 包含问号的按钮或链接
-                'button:contains("?")',
-                'a:contains("?")',
-                // 特定的Kimi推荐问题区域
+                '[class*="question"]', '[class*="suggest"]', '[class*="recommend"]', '[class*="related"]',
+                'button:contains("?")', 'a:contains("?")',
                 '.segment-content-box .segment-content:last-child',
-                // 其他可能的推荐问题容器
-                '[data-testid*="question"]',
-                '[data-testid*="suggest"]'
+                '[data-testid*="question"]', '[data-testid*="suggest"]'
             ];
-
             questionSelectors.forEach(selector => {
                 try {
                     const elements = clonedElement.querySelectorAll(selector);
                     elements.forEach(element => {
                         const text = element.textContent?.trim();
-                        // 如果元素包含问号且文本较短，可能是推荐问题
                         if (text && text.includes('？') && text.length < 100) {
+                            debugLog(DEBUG_LEVEL.DEBUG, `[Kimi] removeKimiSuggestedQuestions: removing by selector ${selector}`, text);
                             element.remove();
                         }
                     });
                 } catch (error) {
-                    // 忽略选择器错误
+                    debugLog(DEBUG_LEVEL.DEBUG, `[Kimi] removeKimiSuggestedQuestions: selector error ${selector}`, error);
                 }
             });
-
             // 移除包含特定文本模式的元素
             const allElements = clonedElement.querySelectorAll('*');
             allElements.forEach(element => {
                 const text = element.textContent?.trim();
                 if (text && this.isKimiSuggestedQuestion(text)) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '[Kimi] removeKimiSuggestedQuestions: removing by pattern', text);
                     element.remove();
                 }
             });
-
+            debugLog(DEBUG_LEVEL.DEBUG, '[Kimi] removeKimiSuggestedQuestions: end', clonedElement.outerHTML);
         } catch (error) {
             debugLog(DEBUG_LEVEL.DEBUG, '⚠️ Error removing Kimi suggested questions:', error);
         }
@@ -932,61 +923,84 @@ class ClipboardManager {
     }
 
     /**
-     * 复制元素的 HTML 内容到剪贴板（Word 可识别格式）
-     * @param {HTMLElement} element - 要复制内容的DOM元素
-     * @returns {Promise<boolean>} 复制是否成功
+     * 清理克隆的DOM元素，移除按钮、AI声明、推荐问题等，仅保留AI主体内容
+     * @param {HTMLElement} clonedElement - 克隆的DOM元素
      */
+    static cleanClonedElement(clonedElement) {
+        // 移除所有复制按钮和按钮容器
+        clonedElement.querySelectorAll('.puretext-copy-btn, .puretext-button-container').forEach(btn => btn.remove());
+        // 移除常见的按钮和操作元素（精准匹配）
+        const buttonSelectors = [
+            'button', '[role="button"]', '.btn', '.button', '[onclick]', 'a[href="#"]', '.action', '.menu'
+        ];
+        buttonSelectors.forEach(selector => {
+            clonedElement.querySelectorAll(selector).forEach(button => {
+                const buttonText = button.textContent?.trim();
+                if (buttonText && /^(复制|重试|分享|编辑|搜索|搜索一下|点赞|踩|收藏|删除|举报)$/.test(buttonText)) {
+                    button.remove();
+                }
+            });
+        });
+        // 移除AI声明、免责声明、查看更多等界面元素（精准匹配）
+        const extraTextSelectors = [
+            '[class*="ai"]', '[class*="statement"]', '[class*="disclaimer"]', '[class*="more"]', '[class*="expand"]', '[class*="related"]'
+        ];
+        extraTextSelectors.forEach(selector => {
+            clonedElement.querySelectorAll(selector).forEach(node => {
+                const text = node.textContent?.trim();
+                if (text && (/AI\s*生成/.test(text) || /内容仅供参考/.test(text) || /查看更多|展开全部|收起|相关推荐/.test(text))) {
+                    node.remove();
+                }
+            });
+        });
+        // 不再全局移除短句问号结尾的节点，避免误删主体内容
+    }
+
     static async copyHtmlToClipboard(element) {
         try {
             if (!element) {
                 this.showErrorMessage('未找到可复制内容');
                 return false;
             }
-            // deepseek专用：复制前预处理列表结构和样式
-            let cloned = element.cloneNode(true);
-            if (window.location.hostname.includes('deepseek')) {
-                function preprocessListForWord(root) {
-                    // 1. 处理伪列表（div以•、-开头）
-                    root.querySelectorAll('div').forEach(div => {
-                        const text = div.textContent?.trim() || '';
-                        if (/^[•\-]\s+/.test(text)) {
-                            const ul = document.createElement('ul');
-                            const li = document.createElement('li');
-                            li.textContent = text.replace(/^[•\-]\s+/, '');
-                            ul.appendChild(li);
-                            div.replaceWith(ul);
-                        }
+            let cloned;
+            let html = '';
+            let text = '';
+            // Kimi专用：只复制.markdown内容
+            if (window.location.hostname === 'www.kimi.com') {
+                // 支持多段markdown
+                const markdowns = element.querySelectorAll('.markdown, .markdown-container');
+                if (markdowns.length > 0) {
+                    let htmlParts = [];
+                    let textParts = [];
+                    markdowns.forEach(md => {
+                        let mdClone = md.cloneNode(true);
+                        ClipboardManager.cleanClonedElement(mdClone);
+                        ClipboardManager.removeKimiSuggestedQuestions(mdClone);
+                        htmlParts.push(mdClone.outerHTML);
+                        textParts.push(mdClone.innerText || mdClone.textContent || '');
                     });
-                    // 2. 内联样式<ul>/<ol>/<li>
-                    root.querySelectorAll('ul, ol').forEach(list => {
-                        list.style.margin = '0 0 0 24px';
-                        list.style.padding = '0';
-                        list.style.listStyleType = list.tagName === 'UL' ? 'disc' : 'decimal';
-                        list.style.fontSize = '15px';
-                        list.style.lineHeight = '1.7';
-                        list.style.color = '#333';
-                    });
-                    root.querySelectorAll('li').forEach(li => {
-                        li.style.marginBottom = '4px';
-                        li.style.fontSize = '15px';
-                        li.style.lineHeight = '1.7';
-                        li.style.color = '#333';
-                    });
-                    // 3. 递归处理嵌套列表（已被querySelectorAll覆盖）
-                    // 4. 移除所有class和data-属性
-                    root.querySelectorAll('*').forEach(node => {
-                        node.removeAttribute('class');
-                        Array.from(node.attributes)
-                            .filter(attr => attr.name.startsWith('data-'))
-                            .forEach(attr => node.removeAttribute(attr.name));
-                    });
+                    html = `<html><body>${htmlParts.join('<hr>')}</body></html>`;
+                    text = textParts.join('\n\n');
+                } else {
+                    // fallback: 复制整个element
+                    cloned = element.cloneNode(true);
+                    ClipboardManager.cleanClonedElement(cloned);
+                    ClipboardManager.removeKimiSuggestedQuestions(cloned);
+                    html = `<html><body>${cloned.outerHTML}</body></html>`;
+                    text = cloned.innerText || cloned.textContent || '';
                 }
-                preprocessListForWord(cloned);
+            } else {
+                // 其他站点：原逻辑
+                cloned = element.cloneNode(true);
+                ClipboardManager.cleanClonedElement(cloned);
+                html = `<html><body>${cloned.outerHTML}</body></html>`;
+                text = cloned.innerText || cloned.textContent || '';
             }
-            // 复制整个 AI 回复主容器的 outerHTML，并包裹完整 HTML 结构
-            const outer = cloned.outerHTML;
-            const html = `<html><body>${outer}</body></html>`;
-            const text = cloned.innerText || cloned.textContent || '';
+            if (!text || !text.trim()) {
+                debugLog(DEBUG_LEVEL.ERROR, '[PureText] No content after cleaning, abort copy.', html);
+                this.showErrorMessage('未检测到可复制内容');
+                return false;
+            }
             const blobHtml = new Blob([html], { type: 'text/html' });
             const blobText = new Blob([text], { type: 'text/plain' });
             const clipboardItem = new window.ClipboardItem({
@@ -1000,7 +1014,10 @@ class ClipboardManager {
             return true;
         } catch (error) {
             this.showErrorMessage('复制失败，请重试');
-            console.error('[PureText] copyHtmlToClipboard error:', error);
+            debugLog(DEBUG_LEVEL.ERROR, '[PureText] copyHtmlToClipboard error', error);
+            if (typeof cloned !== 'undefined') {
+                debugLog(DEBUG_LEVEL.ERROR, '[PureText] cloned.outerHTML on error', cloned?.outerHTML);
+            }
             return false;
         }
     }
