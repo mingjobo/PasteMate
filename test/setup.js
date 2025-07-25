@@ -6,7 +6,7 @@ global.chrome = {
   i18n: {
     getMessage: vi.fn((key) => {
       const messages = {
-        'copyPlainText': 'Copy Plain Text',
+        'copyToWord': 'Copy Plain Text',
         'copySuccess': 'Copied successfully',
         'copyFailed': 'Copy failed',
         'extensionName': 'PureText One-Click',

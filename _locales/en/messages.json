@@ -7,9 +7,8 @@
     "message": "One-click copy plain text content from AI chat websites, removing Markdown formatting",
     "description": "Extension description"
   },
-  "copyPlainText": {
-    "message": "Copy Plain Text",
-    "description": "Copy button text"
+  "copyToWord": {
+    "message": "Copy to Word"
   },
   "copySuccess": {
     "message": "Copied successfully",

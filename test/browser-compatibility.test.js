@@ -31,7 +31,7 @@ global.chrome = {
     getMessage: vi.fn((key) => {
       const messages = {
         'extensionName': 'PureText One-Click',
-        'copyPlainText': 'Copy Plain Text',
+        'copyToWord': 'Copy Plain Text',
         'copySuccess': 'Copied successfully',
         'copyFailed': 'Copy failed'
       };
@@ -100,7 +100,7 @@ describe('浏览器兼容性测试', () => {
       expect(chrome.i18n.getMessage).toBeDefined();
       expect(chrome.i18n.getUILanguage).toBeDefined();
       
-      const message = chrome.i18n.getMessage('copyPlainText');
+      const message = chrome.i18n.getMessage('copyToWord');
       expect(message).toBe('Copy Plain Text');
     });
 

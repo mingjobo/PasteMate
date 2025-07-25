@@ -164,19 +164,19 @@ describe('ClipboardManager', () => {
     });
   });
 
-  describe('copyPlainText', () => {
+  describe('copyHtmlToClipboard', () => {
     it('should successfully copy text using clipboard API', async () => {
       const element = env.document.createElement('div');
       element.textContent = 'Test content';
       
-      const result = await ClipboardManager.copyPlainText(element);
+      const result = await ClipboardManager.copyHtmlToClipboard(element);
       
       expect(result).toBe(true);
       expect(env.window.navigator.clipboard.writeText).toHaveBeenCalledWith('Test content');
     });
 
     it('should return false for null element', async () => {
-      const result = await ClipboardManager.copyPlainText(null);
+      const result = await ClipboardManager.copyHtmlToClipboard(null);
       expect(result).toBe(false);
     });
 
@@ -184,7 +184,7 @@ describe('ClipboardManager', () => {
       const element = env.document.createElement('div');
       element.textContent = '   ';
       
-      const result = await ClipboardManager.copyPlainText(element);
+      const result = await ClipboardManager.copyHtmlToClipboard(element);
       expect(result).toBe(false);
     });
 
@@ -195,7 +195,7 @@ describe('ClipboardManager', () => {
       // Mock clipboard API to fail
       env.window.navigator.clipboard.writeText.mockRejectedValue(new Error('Clipboard API failed'));
       
-      const result = await ClipboardManager.copyPlainText(element);
+      const result = await ClipboardManager.copyHtmlToClipboard(element);
       
       expect(result).toBe(true);
       expect(env.document.execCommand).toHaveBeenCalledWith('copy');
@@ -205,7 +205,7 @@ describe('ClipboardManager', () => {
       const element = env.document.createElement('div');
       element.innerHTML = '<strong>Bold</strong> and <em>italic</em> text';
       
-      const result = await ClipboardManager.copyPlainText(element);
+      const result = await ClipboardManager.copyHtmlToClipboard(element);
       
       expect(result).toBe(true);
       expect(env.window.navigator.clipboard.writeText).toHaveBeenCalledWith('Bold and italic text');

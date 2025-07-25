@@ -402,7 +402,7 @@ class WebsiteFunctionalityTester {
           return text;
         }
         
-        static async copyPlainText(element) {
+        static async copyHtmlToClipboard(element) {
           try {
             const text = this.extractPlainText(element);
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -461,7 +461,7 @@ class WebsiteFunctionalityTester {
           button.addEventListener('click', async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            await MockClipboardManager.copyPlainText(targetBubble);
+            await MockClipboardManager.copyHtmlToClipboard(targetBubble);
           });
           
           return button;
@@ -598,7 +598,7 @@ class WebsiteFunctionalityTester {
         };
       }
 
-      const success = await context.clipboardManager.copyPlainText(element);
+      const success = await context.clipboardManager.copyHtmlToClipboard(element);
 
       return {
         success: success,

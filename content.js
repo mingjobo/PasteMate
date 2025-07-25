@@ -930,6 +930,80 @@ class ClipboardManager {
             }, 300);
         }, 2000);
     }
+
+    /**
+     * 复制元素的 HTML 内容到剪贴板（Word 可识别格式）
+     * @param {HTMLElement} element - 要复制内容的DOM元素
+     * @returns {Promise<boolean>} 复制是否成功
+     */
+    static async copyHtmlToClipboard(element) {
+        try {
+            if (!element) {
+                this.showErrorMessage('未找到可复制内容');
+                return false;
+            }
+            // deepseek专用：复制前预处理列表结构和样式
+            let cloned = element.cloneNode(true);
+            if (window.location.hostname.includes('deepseek')) {
+                function preprocessListForWord(root) {
+                    // 1. 处理伪列表（div以•、-开头）
+                    root.querySelectorAll('div').forEach(div => {
+                        const text = div.textContent?.trim() || '';
+                        if (/^[•\-]\s+/.test(text)) {
+                            const ul = document.createElement('ul');
+                            const li = document.createElement('li');
+                            li.textContent = text.replace(/^[•\-]\s+/, '');
+                            ul.appendChild(li);
+                            div.replaceWith(ul);
+                        }
+                    });
+                    // 2. 内联样式<ul>/<ol>/<li>
+                    root.querySelectorAll('ul, ol').forEach(list => {
+                        list.style.margin = '0 0 0 24px';
+                        list.style.padding = '0';
+                        list.style.listStyleType = list.tagName === 'UL' ? 'disc' : 'decimal';
+                        list.style.fontSize = '15px';
+                        list.style.lineHeight = '1.7';
+                        list.style.color = '#333';
+                    });
+                    root.querySelectorAll('li').forEach(li => {
+                        li.style.marginBottom = '4px';
+                        li.style.fontSize = '15px';
+                        li.style.lineHeight = '1.7';
+                        li.style.color = '#333';
+                    });
+                    // 3. 递归处理嵌套列表（已被querySelectorAll覆盖）
+                    // 4. 移除所有class和data-属性
+                    root.querySelectorAll('*').forEach(node => {
+                        node.removeAttribute('class');
+                        Array.from(node.attributes)
+                            .filter(attr => attr.name.startsWith('data-'))
+                            .forEach(attr => node.removeAttribute(attr.name));
+                    });
+                }
+                preprocessListForWord(cloned);
+            }
+            // 复制整个 AI 回复主容器的 outerHTML，并包裹完整 HTML 结构
+            const outer = cloned.outerHTML;
+            const html = `<html><body>${outer}</body></html>`;
+            const text = cloned.innerText || cloned.textContent || '';
+            const blobHtml = new Blob([html], { type: 'text/html' });
+            const blobText = new Blob([text], { type: 'text/plain' });
+            const clipboardItem = new window.ClipboardItem({
+                'text/html': blobHtml,
+                'text/plain': blobText
+            });
+            await navigator.clipboard.write([
+                clipboardItem
+            ]);
+            this.showSuccessMessage('已复制为 Word 格式，可直接粘贴到 Word');
+            return true;
+        } catch (error) {
+            this.showErrorMessage('复制失败，请重试');
+            console.error('[PureText] copyHtmlToClipboard error:', error);
+            return false;
+        }
+    }
 }
 
 /**
@@ -1142,7 +1216,7 @@ class ButtonInjector {
 
             // 创建统一的按钮组件
             const buttonContainer = CopyButton.create(targetContainer, async (element) => {
-                return await ClipboardManager.copyPlainText(element);
+                return await ClipboardManager.copyHtmlToClipboard(element);
             });
 
             // 智能定位按钮
@@ -1612,7 +1686,7 @@ class ButtonInjector {
             }
 
             // 执行复制操作
-            const success = await ClipboardManager.copyPlainText(targetBubble);
+            const success = await ClipboardManager.copyHtmlToClipboard(targetBubble);
 
             if (success) {
                 console.debug('PureText: Copy operation successful');
@@ -2095,3 +2169,6 @@ window.addEventListener('beforeunload', handlePageUnload);
 // 启动扩展
 console.log('PureText One-Click extension loaded');
 initializeWhenReady();
+
+// 挂载 ClipboardManager 到全局，确保按钮事件能访问
+window.ClipboardManager = ClipboardManager;

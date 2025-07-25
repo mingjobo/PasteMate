@@ -312,7 +312,7 @@ describe('ButtonInjector', () => {
       const button = buttonInjector.createButton(bubble);
       
       // Mock ClipboardManager.copyPlainText
-      const copyPlainTextSpy = vi.spyOn(env.ClipboardManager, 'copyPlainText')
+      const copyPlainTextSpy = vi.spyOn(env.ClipboardManager, 'copyHtmlToClipboard')
         .mockResolvedValue(true);
       
       await buttonInjector.handleButtonClick(bubble, button);
@@ -337,7 +337,7 @@ describe('ButtonInjector', () => {
       const button = buttonInjector.createButton(bubble);
       
       // Mock ClipboardManager.copyPlainText to throw error
-      vi.spyOn(env.ClipboardManager, 'copyPlainText')
+      vi.spyOn(env.ClipboardManager, 'copyHtmlToClipboard')
         .mockRejectedValue(new Error('Copy failed'));
       
       await expect(buttonInjector.handleButtonClick(bubble, button)).resolves.not.toThrow();

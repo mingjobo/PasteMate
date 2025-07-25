@@ -4,44 +4,42 @@
  */
 export class ClipboardManager {
   /**
-   * 复制元素的纯文本内容到剪贴板
+   * 复制元素的 HTML 内容到剪贴板（Word 可识别格式）
    * @param {HTMLElement} element - 要复制内容的DOM元素
    * @returns {Promise<boolean>} 复制是否成功
    */
-  static async copyPlainText(element) {
+  static async copyHtmlToClipboard(element) {
     try {
       if (!element) {
-        console.warn('PureText: No element provided for copying');
+        this.showErrorMessage('未找到可复制内容');
         return false;
       }
+      // 调试：输出 element
+      console.debug('[PureText] copyHtmlToClipboard: element', element);
+      // 复制整个 AI 回复主容器的 outerHTML，并包裹完整 HTML 结构
+      const outer = element.outerHTML;
+      console.debug('[PureText] copyHtmlToClipboard: outerHTML', outer);
+      const html = `<html><body>${outer}</body></html>`;
+      console.debug('[PureText] copyHtmlToClipboard: final html', html);
+      const text = element.innerText || element.textContent || '';
+      console.debug('[PureText] copyHtmlToClipboard: text', text);
 
-      const plainText = this.extractPlainText(element);
-      
-      if (!plainText.trim()) {
-        console.warn('PureText: No text content found to copy');
-        return false;
-      }
-
-      // 尝试使用现代 Clipboard API
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(plainText);
-        this.showSuccessMessage();
-        return true;
-      } else {
-        // 降级到传统方法
-        return this.fallbackCopyMethod(plainText);
-      }
+      const blobHtml = new Blob([html], { type: 'text/html' });
+      const blobText = new Blob([text], { type: 'text/plain' });
+      const clipboardItem = new window.ClipboardItem({
+        'text/html': blobHtml,
+        'text/plain': blobText
+      });
+      console.debug('[PureText] copyHtmlToClipboard: ClipboardItem', clipboardItem);
+      await navigator.clipboard.write([
+        clipboardItem
+      ]);
+      this.showSuccessMessage('已复制为 Word 格式，可直接粘贴到 Word');
+      return true;
     } catch (error) {
-      console.error('PureText: Clipboard write failed:', error);
-      // 尝试降级方法
-      try {
-        const plainText = this.extractPlainText(element);
-        return this.fallbackCopyMethod(plainText);
-      } catch (fallbackError) {
-        console.error('PureText: Fallback copy method also failed:', fallbackError);
-        this.showErrorMessage();
-        return false;
-      }
+      this.showErrorMessage('复制失败，请重试');
+      console.error('[PureText] copyHtmlToClipboard error:', error);
+      return false;
     }
   }
 

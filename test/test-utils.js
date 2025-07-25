@@ -233,7 +233,7 @@ class ButtonInjector {
   createButton(targetBubble) {
     const button = document.createElement('button');
     
-    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyPlainText') : 'Copy Plain Text';
+    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : 'Copy Plain Text';
     button.textContent = buttonText;
     
     button.className = this.buttonClass;
@@ -323,7 +323,7 @@ class ButtonInjector {
         return;
       }
       
-      const success = await ClipboardManager.copyPlainText(targetBubble);
+      const success = await ClipboardManager.copyHtmlToClipboard(targetBubble);
       return success;
     } catch (error) {
       return false;
@@ -353,7 +353,7 @@ export function createTestEnvironment(hostname = 'chat.openai.com') {
     i18n: {
       getMessage: vi.fn((key) => {
         const messages = {
-          'copyPlainText': 'Copy Plain Text',
+          'copyToWord': 'Copy Plain Text',
           'copySuccess': 'Copied successfully',
           'copyFailed': 'Copy failed'
         };

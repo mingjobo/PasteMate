@@ -22,7 +22,7 @@ class CopyButton {
     button.className = this.BUTTON_CLASS;
     
     // 设置按钮文本（支持国际化）
-    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyPlainText') : '复制纯文本';
+    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制到 Word';
     button.textContent = buttonText;
     
     // 设置按钮属性
