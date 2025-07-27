@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word兼容性测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .original {
+            background-color: #f9f9f9;
+        }
+        .formatted {
+            background-color: #e8f5e8;
+        }
+        h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .copy-btn {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .copy-btn:hover {
+            background: #005a87;
+        }
+        .word-preview {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            font-family: 'Times New Roman', serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>Word兼容性测试</h1>
+    
+    <div class="test-section original">
+        <h3>原始Kimi DOM结构</h3>
+        <div data-v-3a4aba44="" class="markdown">
+            <div class="paragraph">强平<strong>不是"那手资金全部没有了"</strong>，而是<strong>把你的持仓合约强制平仓掉</strong>，但<strong>账户里剩余的保证金（扣除亏损后）还是会退给你</strong>的。</div>
+            <hr>
+            <h3>✅ 举个例子你就明白了：</h3>
+            <div class="paragraph">假设你开了一手螺纹钢期货：</div>
+            <ul start="1">
+                <li><div class="paragraph"><strong>合约价值</strong>：10吨 × 4000元/吨 = <strong>4万元</strong></div></li>
+                <li><div class="paragraph"><strong>保证金比例</strong>：10%，所以你只交了 <strong>4000元保证金</strong></div></li>
+                <li><div class="paragraph"><strong>你账户里总共</strong>：5000元（4000保证金 + 1000可用资金）</div></li>
+            </ul>
+            <div class="paragraph">后来行情大跌，亏损了<strong>2000元</strong>，账户权益变成：</div>
+            <blockquote><div class="paragraph">5000 - 2000 = <strong>3000元</strong><br>低于维持保证金（比如3500元），触发强平。</div></blockquote>
+            <hr>
+            <h3>🔧 强平后会发生什么？</h3>
+            <ul start="1">
+                <li><div class="paragraph">期货公司会<strong>强制把这1手螺纹钢卖掉</strong>（平仓）</div></li>
+                <li><div class="paragraph">平仓后，你账户里<strong>剩下的钱（3000元）还在你账户里</strong></div></li>
+                <li><div class="paragraph">只是这1手合约没了，仓位清掉了</div></li>
+            </ul>
+        </div>
+        <button class="copy-btn" onclick="copyOriginal()">复制原始内容</button>
+    </div>
+    
+    <div class="test-section formatted">
+        <h3>格式化后的HTML（Word兼容版本）</h3>
+        <div id="formatted-content">
+            <p>强平<strong>不是"那手资金全部没有了"</strong>，而是<strong>把你的持仓合约强制平仓掉</strong>，但<strong>账户里剩余的保证金（扣除亏损后）还是会退给你</strong>的。</p>
+            <hr>
+            <h3>✅ 举个例子你就明白了：</h3>
+            <p>假设你开了一手螺纹钢期货：</p>
+            <ul style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;">
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;"><strong>合约价值</strong>：10吨 × 4000元/吨 = <strong>4万元</strong></li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;"><strong>保证金比例</strong>：10%，所以你只交了 <strong>4000元保证金</strong></li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;"><strong>你账户里总共</strong>：5000元（4000保证金 + 1000可用资金）</li>
+            </ul>
+            <p>后来行情大跌，亏损了<strong>2000元</strong>，账户权益变成：</p>
+            <blockquote style="margin: 16px 0; padding: 8px 16px; border-left: 4px solid #ccc; background: #f9f9f9; font-style: italic;">5000 - 2000 = <strong>3000元</strong><br>低于维持保证金（比如3500元），触发强平。</blockquote>
+            <hr>
+            <h3>🔧 强平后会发生什么？</h3>
+            <ul style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;">
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">期货公司会<strong>强制把这1手螺纹钢卖掉</strong>（平仓）</li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">平仓后，你账户里<strong>剩下的钱（3000元）还在你账户里</strong></li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">只是这1手合约没了，仓位清掉了</li>
+            </ul>
+        </div>
+        <button class="copy-btn" onclick="copyFormatted()">复制格式化内容</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Word预览效果</h3>
+        <div class="word-preview">
+            <p>强平<strong>不是"那手资金全部没有了"</strong>，而是<strong>把你的持仓合约强制平仓掉</strong>，但<strong>账户里剩余的保证金（扣除亏损后）还是会退给你</strong>的。</p>
+            <hr>
+            <h3>✅ 举个例子你就明白了：</h3>
+            <p>假设你开了一手螺纹钢期货：</p>
+            <ul style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;">
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;"><strong>合约价值</strong>：10吨 × 4000元/吨 = <strong>4万元</strong></li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;"><strong>保证金比例</strong>：10%，所以你只交了 <strong>4000元保证金</strong></li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;"><strong>你账户里总共</strong>：5000元（4000保证金 + 1000可用资金）</li>
+            </ul>
+            <p>后来行情大跌，亏损了<strong>2000元</strong>，账户权益变成：</p>
+            <blockquote style="margin: 16px 0; padding: 8px 16px; border-left: 4px solid #ccc; background: #f9f9f9; font-style: italic;">5000 - 2000 = <strong>3000元</strong><br>低于维持保证金（比如3500元），触发强平。</blockquote>
+            <hr>
+            <h3>🔧 强平后会发生什么？</h3>
+            <ul style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;">
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">期货公司会<strong>强制把这1手螺纹钢卖掉</strong>（平仓）</li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">平仓后，你账户里<strong>剩下的钱（3000元）还在你账户里</strong></li>
+                <li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">只是这1手合约没了，仓位清掉了</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>关键改进说明</h3>
+        <p><strong>Word兼容性优化：</strong></p>
+        <ul>
+            <li><strong>移除段落包装</strong>：不再将列表项内容包装在 &lt;div class="paragraph"&gt; 中</li>
+            <li><strong>增强缩进</strong>：使用更大的 padding-left (24px) 确保列表有足够缩进</li>
+            <li><strong>文本缩进</strong>：使用 text-indent: -12px 确保列表符号正确对齐</li>
+            <li><strong>列表项间距</strong>：增加 margin 确保列表项之间有足够间距</li>
+            <li><strong>Word特定样式</strong>：添加 mso-list 属性确保Word正确识别列表</li>
+        </ul>
+        
+        <p><strong>预期效果：</strong></p>
+        <ol>
+            <li>列表符号（•）正确显示在内容左侧</li>
+            <li>列表项有适当的缩进和间距</li>
+            <li>文本内容与列表符号对齐</li>
+            <li>在Word中保持美观的格式</li>
+        </ol>
+    </div>
+
+    <script>
+        function copyOriginal() {
+            const originalDiv = document.querySelector('.original .markdown');
+            const text = originalDiv.outerHTML;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('原始DOM结构已复制到剪贴板！');
+            });
+        }
+        
+        function copyFormatted() {
+            const formattedDiv = document.getElementById('formatted-content');
+            const text = formattedDiv.innerHTML;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Word兼容的HTML已复制到剪贴板！');
+            });
+        }
+    </script>
+</body>
+</html> 

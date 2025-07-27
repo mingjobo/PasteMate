@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi列表格式化测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .original {
+            background-color: #f9f9f9;
+        }
+        .formatted {
+            background-color: #e8f5e8;
+        }
+        h3 {
+            color: #333;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kimi列表格式化测试</h1>
+    
+    <div class="test-section original">
+        <h3>原始Kimi DOM结构</h3>
+        <div data-v-dc94c17e="" class="segment-content-box">
+            <div data-v-3a4aba44="" data-v-e8248998="" class="markdown-container">
+                <div data-v-3a4aba44="" class="markdown">
+                    <div class="paragraph">如果您是通过线上方式完成失业登记的，可以通过以下方式获取《深圳市失业人员登记证明》：</div>
+                    <h3>线上获取方式</h3>
+                    <ol start="1">
+                        <li>
+                            <div class="paragraph"><strong>登录深圳市公共就业服务平台</strong>：</div>
+                            <ul start="1">
+                                <li><div class="paragraph">登录深圳市公共就业服务平台（网址：<a data-v-3a4aba44="" target="_blank" href="https://hrsspub.sz.gov.cn/ggjyfw/" rel="noreferrer nofollow noopener">https://hrsspub.sz.gov.cn/ggjyfw/</a>）</div></li>
+                                <li><div class="paragraph">在平台上查看失业登记审核结果，通常审核通过后会有提示信息。</div></li>
+                                <li><div class="paragraph">如果平台支持打印功能，可以直接在平台上打印《深圳市失业人员登记证明》</div></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div class="paragraph"><strong>通过"深圳人社"微信公众号</strong>：</div>
+                            <ul start="1">
+                                <li><div class="paragraph">关注"深圳人社"微信公众号</div></li>
+                                <li><div class="paragraph">在公众号内查找失业登记相关功能，查看审核结果并获取证明</div></li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <h3>线下获取方式</h3>
+                    <div class="paragraph">如果您需要纸质证明，也可以选择线下打印：</div>
+                    <ul start="1">
+                        <li>
+                            <div class="paragraph"><strong>前往街道公共就业服务机构</strong>：</div>
+                            <ul start="1">
+                                <li><div class="paragraph">携带本人身份证，前往深圳市任一街道公共就业服务机构</div></li>
+                                <li><div class="paragraph">向工作人员说明需要打印《深圳市失业人员登记证明》，工作人员会协助您完成打印</div></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>注意事项</h3>
+                    <ul start="1">
+                        <li><div class="paragraph"><strong>审核时间</strong>：线上失业登记通常在1个工作日内完成审核</div></li>
+                        <li><div class="paragraph"><strong>证明有效期</strong>：《深圳市失业人员登记证明》自打印之日起60天内有效</div></li>
+                    </ul>
+                    <div class="paragraph">如果您在获取证明过程中遇到问题，可以联系深圳市人力资源和社会保障局或街道公共就业服务机构咨询。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section formatted">
+        <h3>格式化后的HTML（预期结果）</h3>
+        <div>
+            <p>如果您是通过线上方式完成失业登记的，可以通过以下方式获取《深圳市失业人员登记证明》：</p>
+            <h3>线上获取方式</h3>
+            <ol start="1" style="margin: 8px 0; padding-left: 20px; list-style-type: decimal; list-style-position: outside;">
+                <li style="margin: 4px 0; line-height: 1.5; display: list-item;">
+                    <strong>登录深圳市公共就业服务平台</strong>：
+                    <ul style="margin: 4px 0; padding-left: 20px; list-style-type: circle; list-style-position: outside;">
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">登录深圳市公共就业服务平台（网址：<a href="https://hrsspub.sz.gov.cn/ggjyfw/">https://hrsspub.sz.gov.cn/ggjyfw/</a>）</li>
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">在平台上查看失业登记审核结果，通常审核通过后会有提示信息。</li>
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">如果平台支持打印功能，可以直接在平台上打印《深圳市失业人员登记证明》</li>
+                    </ul>
+                </li>
+                <li style="margin: 4px 0; line-height: 1.5; display: list-item;">
+                    <strong>通过"深圳人社"微信公众号</strong>：
+                    <ul style="margin: 4px 0; padding-left: 20px; list-style-type: circle; list-style-position: outside;">
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">关注"深圳人社"微信公众号</li>
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">在公众号内查找失业登记相关功能，查看审核结果并获取证明</li>
+                    </ul>
+                </li>
+            </ol>
+            <h3>线下获取方式</h3>
+            <p>如果您需要纸质证明，也可以选择线下打印：</p>
+            <ul style="margin: 8px 0; padding-left: 20px; list-style-type: disc; list-style-position: outside;">
+                <li style="margin: 4px 0; line-height: 1.5; display: list-item;">
+                    <strong>前往街道公共就业服务机构</strong>：
+                    <ul style="margin: 4px 0; padding-left: 20px; list-style-type: circle; list-style-position: outside;">
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">携带本人身份证，前往深圳市任一街道公共就业服务机构</li>
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">向工作人员说明需要打印《深圳市失业人员登记证明》，工作人员会协助您完成打印</li>
+                    </ul>
+                </li>
+            </ul>
+            <h3>注意事项</h3>
+            <ul style="margin: 8px 0; padding-left: 20px; list-style-type: disc; list-style-position: outside;">
+                <li style="margin: 4px 0; line-height: 1.5; display: list-item;"><strong>审核时间</strong>：线上失业登记通常在1个工作日内完成审核</li>
+                <li style="margin: 4px 0; line-height: 1.5; display: list-item;"><strong>证明有效期</strong>：《深圳市失业人员登记证明》自打印之日起60天内有效</li>
+            </ul>
+            <p>如果您在获取证明过程中遇到问题，可以联系深圳市人力资源和社会保障局或街道公共就业服务机构咨询。</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试说明</h3>
+        <p>这个测试页面展示了：</p>
+        <ul>
+            <li>原始的Kimi DOM结构（包含复杂的嵌套列表）</li>
+            <li>格式化后的HTML（应该保持正确的列表格式）</li>
+            <li>在Word中应该显示为美观的列表格式</li>
+        </ul>
+        <p><strong>关键改进：</strong></p>
+        <ol>
+            <li>正确处理嵌套的 &lt;ol&gt; 和 &lt;ul&gt; 标签</li>
+            <li>保持列表项的层级关系</li>
+            <li>添加Word兼容的CSS样式</li>
+            <li>确保列表符号和编号正确显示</li>
+        </ol>
+    </div>
+</body>
+</html> 

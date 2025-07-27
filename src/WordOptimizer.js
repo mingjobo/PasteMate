@@ -25,7 +25,10 @@ class WordOptimizer {
     // 3. 处理特殊字符
     optimized = this.handleSpecialCharacters(optimized);
     
-    // 4. 优化表格结构
+    // 4. 优化列表结构
+    optimized = this.optimizeLists(optimized);
+    
+    // 5. 优化表格结构
     optimized = this.optimizeTables(optimized);
     
     // 5. 包装完整HTML文档
@@ -73,10 +76,18 @@ class WordOptimizer {
       .replace(/<h5([^>]*)>/g, '<h5$1 style="font-weight: bold; font-size: 12px; margin: 12px 0 4px 0; color: #333;">')
       .replace(/<h6([^>]*)>/g, '<h6$1 style="font-weight: bold; font-size: 11px; margin: 10px 0 4px 0; color: #333;">')
       
-      // 为列表添加样式
-      .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 8px 0; padding-left: 20px; list-style-type: disc;">')
-      .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 8px 0; padding-left: 20px; list-style-type: decimal;">')
-      .replace(/<li([^>]*)>/g, '<li$1 style="margin: 4px 0; line-height: 1.5;">')
+      // 为列表添加样式，确保Word兼容性
+      .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
+      .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
+      .replace(/<li([^>]*)>/g, '<li$1 style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">')
+      
+      // 处理嵌套列表样式
+      .replace(/<ul([^>]*)><ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ul$2 style="margin: 8px 0; padding-left: 24px; list-style-type: circle; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
+      .replace(/<ol([^>]*)><ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ol$2 style="margin: 8px 0; padding-left: 24px; list-style-type: lower-alpha; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
+      
+      // 处理更深层嵌套
+      .replace(/<ul([^>]*)><ul([^>]*)><ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ul$2 style="margin: 8px 0; padding-left: 24px; list-style-type: circle; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ul$3 style="margin: 8px 0; padding-left: 24px; list-style-type: square; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
+      .replace(/<ol([^>]*)><ol([^>]*)><ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ol$2 style="margin: 8px 0; padding-left: 24px; list-style-type: lower-alpha; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ol$3 style="margin: 8px 0; padding-left: 24px; list-style-type: lower-roman; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
       
       // 为引用块添加样式
       .replace(/<blockquote([^>]*)>/g, '<blockquote$1 style="margin: 16px 0; padding: 8px 16px; border-left: 4px solid #ccc; background: #f9f9f9; font-style: italic;">')
@@ -149,6 +160,27 @@ class WordOptimizer {
       const processedText = processSpecialChars(textContent);
       return `>${processedText}<`;
     });
+  }
+  
+  /**
+   * 优化列表结构，确保Word兼容性
+   * @param {string} html - HTML字符串
+   * @returns {string} 优化后的HTML
+   */
+  optimizeLists(html) {
+    return html
+      // 确保列表项内容不被额外包装
+      .replace(/<li[^>]*>\s*<div[^>]*class="paragraph"[^>]*>/g, '<li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">')
+      .replace(/<\/div>\s*<\/li>/g, '</li>')
+      
+      // 确保列表有足够的缩进
+      .replace(/<ul([^>]*style="[^"]*margin:[^"]*")/g, '<ul$1; padding-left: 24px;')
+      .replace(/<ol([^>]*style="[^"]*margin:[^"]*")/g, '<ol$1; padding-left: 24px;')
+      
+      // 添加Word特定的列表样式
+      .replace(/<ul([^>]*style="[^"]*")/g, '<ul$1; mso-list: l0 level1 lfo1;')
+      .replace(/<ol([^>]*style="[^"]*")/g, '<ol$1; mso-list: l1 level1 lfo2;')
+      .replace(/<li([^>]*style="[^"]*")/g, '<li$1; mso-list: l0 level1 lfo1;');
   }
   
   /**

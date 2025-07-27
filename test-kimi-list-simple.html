@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi列表格式化简单测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .original {
+            background-color: #f9f9f9;
+        }
+        .formatted {
+            background-color: #e8f5e8;
+        }
+        h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .copy-btn {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .copy-btn:hover {
+            background: #005a87;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kimi列表格式化测试</h1>
+    
+    <div class="test-section original">
+        <h3>原始Kimi DOM结构</h3>
+        <div data-v-dc94c17e="" class="segment-content-box">
+            <div data-v-3a4aba44="" data-v-e8248998="" class="markdown-container">
+                <div data-v-3a4aba44="" class="markdown">
+                    <h3>线上获取方式</h3>
+                    <ol start="1">
+                        <li>
+                            <div class="paragraph"><strong>登录深圳市公共就业服务平台</strong>：</div>
+                            <ul start="1">
+                                <li><div class="paragraph">登录深圳市公共就业服务平台（网址：<a href="https://hrsspub.sz.gov.cn/ggjyfw/">https://hrsspub.sz.gov.cn/ggjyfw/</a>）</div></li>
+                                <li><div class="paragraph">在平台上查看失业登记审核结果，通常审核通过后会有提示信息。</div></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div class="paragraph"><strong>通过"深圳人社"微信公众号</strong>：</div>
+                            <ul start="1">
+                                <li><div class="paragraph">关注"深圳人社"微信公众号</div></li>
+                                <li><div class="paragraph">在公众号内查找失业登记相关功能，查看审核结果并获取证明</div></li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <button class="copy-btn" onclick="copyOriginal()">复制原始内容</button>
+    </div>
+    
+    <div class="test-section formatted">
+        <h3>格式化后的HTML（预期结果）</h3>
+        <div id="formatted-content">
+            <h3>线上获取方式</h3>
+            <ol start="1" style="margin: 8px 0; padding-left: 20px; list-style-type: decimal; list-style-position: outside;">
+                <li style="margin: 4px 0; line-height: 1.5; display: list-item;">
+                    <strong>登录深圳市公共就业服务平台</strong>：
+                    <ul style="margin: 4px 0; padding-left: 20px; list-style-type: circle; list-style-position: outside;">
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">登录深圳市公共就业服务平台（网址：<a href="https://hrsspub.sz.gov.cn/ggjyfw/">https://hrsspub.sz.gov.cn/ggjyfw/</a>）</li>
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">在平台上查看失业登记审核结果，通常审核通过后会有提示信息。</li>
+                    </ul>
+                </li>
+                <li style="margin: 4px 0; line-height: 1.5; display: list-item;">
+                    <strong>通过"深圳人社"微信公众号</strong>：
+                    <ul style="margin: 4px 0; padding-left: 20px; list-style-type: circle; list-style-position: outside;">
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">关注"深圳人社"微信公众号</li>
+                        <li style="margin: 4px 0; line-height: 1.5; display: list-item;">在公众号内查找失业登记相关功能，查看审核结果并获取证明</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        <button class="copy-btn" onclick="copyFormatted()">复制格式化内容</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试说明</h3>
+        <p><strong>修改内容：</strong></p>
+        <ol>
+            <li><strong>KimiHtmlFormatter.js</strong> - 添加了对列表元素的专门处理</li>
+            <li><strong>WordOptimizer.js</strong> - 增强了列表样式以确保Word兼容性</li>
+            <li><strong>StructureConverter.js</strong> - 添加了Kimi特有列表结构的检测</li>
+        </ol>
+        
+        <p><strong>关键改进：</strong></p>
+        <ul>
+            <li>正确处理嵌套的 &lt;ol&gt; 和 &lt;ul&gt; 标签</li>
+            <li>保持列表项的层级关系</li>
+            <li>添加Word兼容的CSS样式（list-style-position: outside）</li>
+            <li>确保列表符号和编号正确显示</li>
+            <li>处理嵌套列表的不同样式（disc → circle → square）</li>
+        </ul>
+        
+        <p><strong>预期效果：</strong></p>
+        <p>复制到Word后，列表应该保持正确的格式：</p>
+        <ul>
+            <li>有序列表显示为 1. 2. 3.</li>
+            <li>无序列表显示为 • ○ ■</li>
+            <li>适当的缩进和间距</li>
+            <li>嵌套列表的正确层级显示</li>
+        </ul>
+    </div>
+
+    <script>
+        function copyOriginal() {
+            const originalDiv = document.querySelector('.original .markdown');
+            const text = originalDiv.outerHTML;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('原始DOM结构已复制到剪贴板！');
+            });
+        }
+        
+        function copyFormatted() {
+            const formattedDiv = document.getElementById('formatted-content');
+            const text = formattedDiv.innerHTML;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('格式化后的HTML已复制到剪贴板！');
+            });
+        }
+    </script>
+</body>
+</html> 
