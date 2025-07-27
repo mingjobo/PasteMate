@@ -378,47 +378,36 @@ class KimiMessageDetector {
 class ClipboardManager {
     static async copyHtmlToClipboard(element) {
         const startTime = performance.now();
-        
         try {
-            console.log('[ClipboardManager] ========== 开始统一文本复制操作 ==========');
+            console.log('[ClipboardManager] ========== 开始智能格式复制操作 ==========');
             console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
-            console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
-            console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
-            
             if (!element) {
                 console.error('[ClipboardManager] ❌ 元素为空，无法复制');
                 this.showErrorMessage('未找到可复制内容');
                 return false;
             }
-            
-            // 检测当前网站
-            const hostname = window.location.hostname;
-            console.log('[ClipboardManager] 检测到网站:', hostname);
-            
-            // 使用统一文本格式化
-            console.log('[ClipboardManager] 🔥 开始统一文本格式化...');
-            const unifiedText = this.convertElementToUnifiedText(element);
-            console.log('[ClipboardManager] ✅ 统一文本格式化完成');
-            console.log('[ClipboardManager] 格式化结果长度:', unifiedText.length);
-            console.log('[ClipboardManager] 格式化结果预览:', unifiedText.substring(0, 500) + '...');
-
-            console.log('[ClipboardManager] 创建剪贴板数据...');
-            const blobText = new Blob([unifiedText], { type: 'text/plain' });
+            // 1. 生成优化的HTML（Word专用）
+            console.log('[ClipboardManager] 🔥 生成Word优化HTML...');
+            const optimizedHtml = this.generateWordOptimizedHtml(element);
+            console.log('[ClipboardManager] ✅ Word HTML生成完成，长度:', optimizedHtml.length);
+            // 2. 生成增强文本格式（WPS专用）
+            console.log('[ClipboardManager] 🔥 生成WPS增强文本...');
+            const enhancedText = this.generateEnhancedText(element);
+            console.log('[ClipboardManager] ✅ WPS文本生成完成，长度:', enhancedText.length);
+            // 3. 创建剪贴板数据 - 同时写入两种格式
+            console.log('[ClipboardManager] 创建智能剪贴板数据...');
             const clipboardItem = new window.ClipboardItem({
-                'text/plain': blobText
+                'text/html': new Blob([optimizedHtml], { type: 'text/html' }),
+                'text/plain': new Blob([enhancedText], { type: 'text/plain' })
             });
-            
             console.log('[ClipboardManager] 写入剪贴板...');
             await navigator.clipboard.write([clipboardItem]);
-            console.log('[ClipboardManager] ✅ 剪贴板写入成功');
-            
+            console.log('[ClipboardManager] ✅ 智能剪贴板写入成功');
             const duration = performance.now() - startTime;
             console.log(`[ClipboardManager] 复制操作耗时: ${duration.toFixed(2)}ms`);
-            
-            console.log('[ClipboardManager] ========== 统一文本复制操作完成 ==========');
-            this.showSuccessMessage('已复制为统一格式，Word和WPS都能正常显示');
+            console.log('[ClipboardManager] ========== 智能格式复制操作完成 ==========');
+            this.showSuccessMessage('已复制，Word和WPS都能保持完整格式');
             return true;
-            
         } catch (error) {
             const duration = performance.now() - startTime;
             console.error(`[ClipboardManager] ❌ Copy operation failed after ${duration.toFixed(2)}ms:`, error);
@@ -428,27 +417,23 @@ class ClipboardManager {
         }
     }
 
-    static convertElementToUnifiedText(element) {
-        // 创建元素副本避免修改原DOM
+    static generateWordOptimizedHtml(element) {
         const cloned = element.cloneNode(true);
-        
-        // 移除不需要的元素
         this.removeUnwantedElements(cloned);
-        
-        // 转换为统一文本格式
-        return this.convertHtmlToUnifiedText(cloned.outerHTML);
+        let html = cloned.outerHTML;
+        html = this.standardizeHtml(html);
+        html = this.inlineStyles(html);
+        html = this.optimizeLists(html);
+        html = this.wrapCompleteDocument(html);
+        return html;
     }
 
-    static convertHtmlToUnifiedText(html) {
-        console.log('[ClipboardManager] 开始HTML到统一文本转换...');
-        
-        // 创建临时DOM元素来解析HTML
+    static generateEnhancedText(element) {
+        const cloned = element.cloneNode(true);
+        this.removeUnwantedElements(cloned);
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        
+        tempDiv.innerHTML = cloned.outerHTML;
         let result = '';
-        
-        // 递归处理DOM节点
         const processNode = (node) => {
             if (node.nodeType === Node.TEXT_NODE) {
                 const text = node.textContent.trim();
@@ -457,16 +442,12 @@ class ClipboardManager {
                 }
                 return;
             }
-            
             if (node.nodeType !== Node.ELEMENT_NODE) {
                 return;
             }
-            
             const tagName = node.tagName.toLowerCase();
             const text = node.textContent.trim();
-            
             if (!text) return;
-            
             switch (tagName) {
                 case 'h1':
                 case 'h2':
@@ -474,85 +455,122 @@ class ClipboardManager {
                 case 'h4':
                 case 'h5':
                 case 'h6':
-                    result += '\n' + text + '\n\n';
+                    result += '\n' + '█'.repeat(20) + '\n';
+                    result += text + '\n';
+                    result += '█'.repeat(20) + '\n\n';
                     break;
-                    
                 case 'p':
                     result += text + '\n\n';
                     break;
-                    
                 case 'ul':
                     result += '\n';
                     Array.from(node.children).forEach((li, index) => {
                         if (li.tagName.toLowerCase() === 'li') {
-                            result += '• ' + li.textContent.trim() + '\n';
+                            result += '  ● ' + li.textContent.trim() + '\n';
                         }
                     });
                     result += '\n';
                     break;
-                    
                 case 'ol':
                     result += '\n';
                     Array.from(node.children).forEach((li, index) => {
                         if (li.tagName.toLowerCase() === 'li') {
-                            result += (index + 1) + '. ' + li.textContent.trim() + '\n';
+                            result += '  ' + (index + 1) + '. ' + li.textContent.trim() + '\n';
                         }
                     });
                     result += '\n';
                     break;
-                    
-                case 'li':
-                    // 列表项在ul/ol中处理，这里跳过
-                    break;
-                    
-                case 'blockquote':
-                    result += '\n引用：\n' + text + '\n\n';
-                    break;
-                    
-                case 'code':
-                    result += '【代码】' + text + '\n';
-                    break;
-                    
                 case 'strong':
                 case 'b':
-                    result += '【粗体】' + text + '【/粗体】';
+                    result += this.convertToBoldUnicode(text);
                     break;
-                    
                 case 'em':
                 case 'i':
-                    result += '【斜体】' + text + '【/斜体】';
+                    result += this.convertToItalicUnicode(text);
                     break;
-                    
-                case 'hr':
-                    result += '\n' + '─'.repeat(50) + '\n\n';
+                case 'blockquote':
+                    result += '\n┌─ 引用 ──────────────────────────────┐\n';
+                    result += '│ ' + text.replace(/\n/g, '\n│ ') + '\n';
+                    result += '└─────────────────────────────────────┘\n\n';
                     break;
-                    
-                case 'br':
-                    result += '\n';
+                case 'code':
+                    result += '「' + text + '」';
                     break;
-                    
                 default:
-                    // 处理其他标签，递归处理子节点
                     Array.from(node.childNodes).forEach(child => {
                         processNode(child);
                     });
                     break;
             }
         };
-        
-        // 处理所有子节点
         Array.from(tempDiv.childNodes).forEach(child => {
             processNode(child);
         });
-        
-        // 清理多余的换行符
-        result = result
-            .replace(/\n\s*\n\s*\n/g, '\n\n')  // 最多保留两个连续换行
-            .replace(/\n+$/, '\n')              // 去除末尾多余换行
+        return result
+            .replace(/\n\s*\n\s*\n/g, '\n\n')
+            .replace(/\n+$/, '\n')
             .trim();
-        
-        console.log('[ClipboardManager] HTML到统一文本转换完成');
-        return result;
+    }
+
+    static convertToBoldUnicode(text) {
+        const boldMap = {
+            'a': '𝗮', 'b': '𝗯', 'c': '𝗰', 'd': '𝗱', 'e': '𝗲', 'f': '𝗳', 'g': '𝗴', 'h': '𝗵', 'i': '𝗶',
+            'j': '𝗷', 'k': '𝗸', 'l': '𝗹', 'm': '𝗺', 'n': '𝗻', 'o': '𝗼', 'p': '𝗽', 'q': '𝗾', 'r': '𝗿',
+            's': '𝘀', 't': '𝘁', 'u': '𝘂', 'v': '𝘃', 'w': '𝘄', 'x': '𝘅', 'y': '𝘆', 'z': '𝘇',
+            'A': '𝗔', 'B': '𝗕', 'C': '𝗖', 'D': '𝗗', 'E': '𝗘', 'F': '𝗙', 'G': '𝗚', 'H': '𝗛', 'I': '𝗜',
+            'J': '𝗝', 'K': '𝗞', 'L': '𝗟', 'M': '𝗠', 'N': '𝗡', 'O': '𝗢', 'P': '𝗣', 'Q': '𝗤', 'R': '𝗥',
+            'S': '𝗦', 'T': '𝗧', 'U': '𝗨', 'V': '𝗩', 'W': '𝗪', 'X': '𝗫', 'Y': '𝗬', 'Z': '𝗭',
+            '0': '𝟬', '1': '𝟭', '2': '𝟮', '3': '𝟯', '4': '𝟰', '5': '𝟱', '6': '𝟲', '7': '𝟳', '8': '𝟴', '9': '𝟵'
+        };
+        return text.split('').map(char => boldMap[char] || char).join('');
+    }
+
+    static convertToItalicUnicode(text) {
+        const italicMap = {
+            'a': '𝘢', 'b': '𝘣', 'c': '𝘤', 'd': '𝘥', 'e': '𝘦', 'f': '𝘧', 'g': '𝘨', 'h': '𝘩', 'i': '𝘪',
+            'j': '𝘫', 'k': '𝘬', 'l': '𝘭', 'm': '𝘮', 'n': '𝘯', 'o': '𝘰', 'p': '𝘱', 'q': '𝘲', 'r': '𝘳',
+            's': '𝘴', 't': '𝘵', 'u': '𝘶', 'v': '𝘷', 'w': '𝘸', 'x': '𝘹', 'y': '𝘺', 'z': '𝘻',
+            'A': '𝘈', 'B': '𝘉', 'C': '𝘊', 'D': '𝘋', 'E': '𝘌', 'F': '𝘍', 'G': '𝘎', 'H': '𝘏', 'I': '𝘐',
+            'J': '𝘑', 'K': '𝘒', 'L': '𝘓', 'M': '𝘔', 'N': '𝘕', 'O': '𝘖', 'P': '𝘗', 'Q': '𝘘', 'R': '𝘙',
+            'S': '𝘚', 'T': '𝘛', 'U': '𝘜', 'V': '𝘝', 'W': '𝘞', 'X': '𝘟', 'Y': '𝘠', 'Z': '𝘡'
+        };
+        return text.split('').map(char => italicMap[char] || char).join('');
+    }
+
+    static standardizeHtml(html) {
+        return html
+            .replace(/<p([^>]*)>([^<]*?)(?=<[^/]|$)/g, '<p$1>$2</p>')
+            .replace(/<li([^>]*)>([^<]*?)(?=<li|<\/[ou]l|$)/g, '<li$1>$2</li>')
+            .replace(/<h([1-6])([^>]*)>([^<]*?)(?=<[^/]|$)/g, '<h$1$2>$3</h$1>')
+            .replace(/<strong([^>]*)>([^<]*?)(?=<[^/]|$)/g, '<strong$1>$2</strong>')
+            .replace(/<p[^>]*>\s*<\/p>/g, '')
+            .replace(/<li[^>]*>\s*<\/li>/g, '')
+            .replace(/<hr([^>]*)>/g, '<hr$1 />')
+            .replace(/<br([^>]*)>/g, '<br$1 />');
+    }
+
+    static inlineStyles(html) {
+        return html
+            .replace(/<h1([^>]*)>/g, '<h1$1 style="font-weight: bold; font-size: 24px; margin: 20px 0 12px 0; color: #333;">')
+            .replace(/<h2([^>]*)>/g, '<h2$1 style="font-weight: bold; font-size: 20px; margin: 18px 0 10px 0; color: #333;">')
+            .replace(/<h3([^>]*)>/g, '<h3$1 style="font-weight: bold; font-size: 16px; margin: 16px 0 8px 0; color: #333;">')
+            .replace(/<p([^>]*)>/g, '<p$1 style="margin: 8px 0; line-height: 1.6;">')
+            .replace(/<strong([^>]*)>/g, '<strong$1 style="font-weight: bold;">')
+            .replace(/<em([^>]*)>/g, '<em$1 style="font-style: italic;">')
+            .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc;">')
+            .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal;">')
+            .replace(/<li([^>]*)>/g, '<li$1 style="margin: 6px 0; line-height: 1.6;">');
+    }
+
+    static optimizeLists(html) {
+        return html
+            .replace(/<li[^>]*>\s*<div[^>]*class="paragraph"[^>]*>/g, '<li>')
+            .replace(/<\/div>\s*<\/li>/g, '</li>')
+            .replace(/<li[^>]*>\s*<\/li>/g, '');
+    }
+
+    static wrapCompleteDocument(html) {
+        return `<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>复制的内容</title>\n  <style>\n    body { \n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; \n      line-height: 1.6; \n      color: #333; \n      max-width: 800px; \n      margin: 0 auto; \n      padding: 20px;\n    }\n    ul { margin: 12px 0; padding-left: 30px; list-style: disc; }\n    ol { margin: 12px 0; padding-left: 30px; list-style: decimal; }\n    li { margin: 6px 0; line-height: 1.6; }\n    code { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: monospace; }\n    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; }\n  </style>\n</head>\n<body>\n${html}\n</body>\n</html>`;
     }
 
     static processElementForCopy(element) {
