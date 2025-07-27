@@ -6,6 +6,9 @@ class ContentCleaner {
     constructor() {
         // 清理规则映射，可以根据网站定制
         this.cleaningRules = new Map();
+        
+        // 清理场景标识
+        this.cleaningForCopy = false;
 
         // 初始化默认清理规则
         this.initializeDefaultRules();
@@ -15,11 +18,13 @@ class ContentCleaner {
      * 清理DOM元素中的不需要内容
      * @param {HTMLElement} element - 要清理的DOM元素
      * @param {string} hostname - 网站域名
+     * @param {boolean} isCopyScenario - 是否是复制场景
      * @returns {Promise<void>}
      */
-    async clean(element, hostname = window.location.hostname) {
+    async clean(element, hostname = window.location.hostname, isCopyScenario = false) {
         try {
-            console.debug(`[ContentCleaner] Starting cleanup for ${hostname}`);
+            this.cleaningForCopy = isCopyScenario;
+            console.debug(`[ContentCleaner] Starting cleanup for ${hostname}, copy scenario: ${isCopyScenario}`);
 
             // 1. 移除复制按钮
             this.removeButtons(element);
@@ -497,7 +502,15 @@ class ContentCleaner {
         // Kimi网站特定规则
         this.registerCleaningRule('www.kimi.com', (element) => {
             // 移除Kimi特有的界面元素
-            element.querySelectorAll('.segment-generate-tip, .segment-assistant-actions').forEach(el => el.remove());
+            element.querySelectorAll('.segment-generate-tip').forEach(el => el.remove());
+            
+            // 只在复制场景下移除按钮容器，不在注入场景下移除
+            if (this.cleaningForCopy) {
+                element.querySelectorAll('.segment-assistant-actions').forEach(el => el.remove());
+                console.debug('[ContentCleaner] Removed segment-assistant-actions in copy scenario');
+            } else {
+                console.debug('[ContentCleaner] Preserved segment-assistant-actions in injection scenario');
+            }
         });
 
         // DeepSeek网站特定规则

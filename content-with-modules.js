@@ -425,15 +425,32 @@ class ButtonInjector {
                 return;
             }
 
+            // 对于Kimi网站，检查是否已经有我们的按钮
+            if (siteConfig.hostname === 'www.kimi.com') {
+                if (targetContainer.querySelector('.puretext-copy-btn')) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in Kimi container');
+                    return;
+                }
+            }
+
             // 创建统一的按钮组件
             const buttonContainer = CopyButton.create(targetContainer, async (element) => {
                 return await ClipboardManager.copyHtmlToClipboard(element);
             });
 
             if (buttonContainer) {
+                // 对于Kimi网站，直接将按钮添加到容器中
+                if (siteConfig.hostname === 'www.kimi.com') {
+                    targetContainer.appendChild(buttonContainer);
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected into Kimi container');
+                } else {
+                    // 其他网站使用原有的逻辑
+                    targetContainer.appendChild(buttonContainer);
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected successfully');
+                }
+                
                 // 标记元素已注入按钮
                 this.injectedButtons.add(element);
-                debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected successfully');
             }
 
         } catch (error) {
@@ -494,6 +511,11 @@ class ButtonInjector {
      * @returns {Element|null} 按钮容器
      */
     findButtonContainer(element, siteConfig) {
+        // 对于Kimi网站，使用特殊的按钮容器查找逻辑
+        if (siteConfig.hostname === 'www.kimi.com') {
+            return this.findKimiButtonContainer(element, siteConfig);
+        }
+
         // 优先使用配置中指定的容器选择器
         if (siteConfig.buttonContainer) {
             const container = element.querySelector(siteConfig.buttonContainer) ||
@@ -519,6 +541,49 @@ class ButtonInjector {
         }
 
         // 如果找不到合适的容器，使用原始元素
+        return element;
+    }
+
+    findKimiButtonContainer(element, siteConfig) {
+        // 首先尝试找到segment-assistant-actions-content容器
+        let container = element.querySelector('.segment-assistant-actions-content');
+        if (container) {
+            debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container: .segment-assistant-actions-content');
+            return container;
+        }
+
+        // 如果没找到，向上查找父级元素
+        let current = element;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (current && attempts < maxAttempts) {
+            container = current.querySelector('.segment-assistant-actions-content');
+            if (container) {
+                debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container in parent element');
+                return container;
+            }
+
+            current = current.parentElement;
+            attempts++;
+        }
+
+        // 如果还是没找到，尝试查找segment-assistant-actions容器
+        current = element;
+        attempts = 0;
+
+        while (current && attempts < maxAttempts) {
+            container = current.querySelector('.segment-assistant-actions');
+            if (container) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⚠️ Found segment-assistant-actions, will create content container');
+                return container;
+            }
+
+            current = current.parentElement;
+            attempts++;
+        }
+
+        debugLog(DEBUG_LEVEL.WARN, '❌ No Kimi button container found');
         return element;
     }
 

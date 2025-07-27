@@ -30,9 +30,12 @@ class CopyButton {
     button.setAttribute('aria-label', buttonText);
     button.setAttribute('title', buttonText);
     
+    // 检查是否是Kimi网站，如果是则使用特殊的样式
+    const isKimi = window.location.hostname === 'www.kimi.com';
+    
     // 应用样式
-    this.applyContainerStyles(container);
-    this.applyButtonStyles(button);
+    this.applyContainerStyles(container, isKimi);
+    this.applyButtonStyles(button, isKimi);
     
     // 添加事件监听器
     this.addEventListeners(button, targetElement, onCopy);
@@ -46,89 +49,144 @@ class CopyButton {
   /**
    * 应用容器样式
    * @param {HTMLElement} container - 容器元素
+   * @param {boolean} isKimi - 是否是Kimi网站
    */
-  static applyContainerStyles(container) {
-    container.style.cssText = `
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      z-index: 10001;
-      pointer-events: none;
-    `;
+  static applyContainerStyles(container, isKimi = false) {
+    if (isKimi) {
+      // Kimi网站的容器样式 - 内联显示，不覆盖其他元素
+      container.style.cssText = `
+        display: inline-block;
+        margin-left: 8px;
+        vertical-align: middle;
+        pointer-events: auto;
+      `;
+    } else {
+      // 其他网站的容器样式 - 绝对定位
+      container.style.cssText = `
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        z-index: 10001;
+        pointer-events: none;
+      `;
+    }
   }
 
   /**
    * 应用按钮样式
    * @param {HTMLElement} button - 按钮元素
+   * @param {boolean} isKimi - 是否是Kimi网站
    */
-  static applyButtonStyles(button) {
-    // 统一的颜色方案 - 适配所有网站
-    const colorScheme = {
-      background: 'rgba(255, 255, 255, 0.95)',
-      text: '#374151',
-      border: 'rgba(0, 0, 0, 0.1)',
-      shadow: 'rgba(0, 0, 0, 0.1)',
-      hoverBackground: '#f3f4f6',
-      hoverShadow: 'rgba(0, 0, 0, 0.15)',
-      activeBackground: '#e5e7eb',
-      focus: '#3b82f6'
-    };
+  static applyButtonStyles(button, isKimi = false) {
+    if (isKimi) {
+      // Kimi网站的按钮样式 - 与现有按钮保持一致
+      const colorScheme = {
+        background: 'transparent',
+        text: 'var(--color-text-1, #374151)',
+        border: 'none',
+        shadow: 'none',
+        hoverBackground: 'var(--color-fill-2, rgba(0, 0, 0, 0.04))',
+        hoverShadow: 'none',
+        activeBackground: 'var(--color-fill-3, rgba(0, 0, 0, 0.08))',
+        focus: '#3b82f6'
+      };
 
-    button.style.cssText = `
-      /* 重置样式 */
-      all: initial;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      
-      /* 基础样式 */
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      
-      /* 尺寸和间距 */
-      padding: 6px 12px;
-      min-width: 80px;
-      height: 28px;
-      
-      /* 字体 */
-      font-size: 11px;
-      font-weight: 500;
-      line-height: 1.2;
-      letter-spacing: 0.01em;
-      text-align: center;
-      white-space: nowrap;
-      
-      /* 颜色 */
-      background: ${colorScheme.background};
-      color: ${colorScheme.text};
-      border: 1px solid ${colorScheme.border};
-      
-      /* 形状 */
-      border-radius: 6px;
-      
-      /* 阴影 */
-      box-shadow: 0 1px 3px ${colorScheme.shadow};
-      
-      /* 交互 */
-      cursor: pointer;
-      pointer-events: auto;
-      user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      
-      /* 动画 */
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      transform: translateZ(0);
-      will-change: transform, box-shadow, background-color;
-      
-      /* 确保在所有网站上都可见 */
-      opacity: 0.9;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    `;
+      button.style.cssText = `
+        all: initial;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 8px;
+        min-width: auto;
+        height: 24px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+        text-align: center;
+        white-space: nowrap;
+        background: ${colorScheme.background};
+        color: ${colorScheme.text};
+        border: ${colorScheme.border};
+        border-radius: 4px;
+        box-shadow: ${colorScheme.shadow};
+        cursor: pointer;
+        pointer-events: auto;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        transition: all 0.15s ease;
+        transform: translateZ(0);
+        will-change: background-color;
+        opacity: 1;
+      `;
 
-    // 添加交互效果
-    this.addButtonInteractions(button, colorScheme);
+      this.addButtonInteractions(button, colorScheme);
+    } else {
+      // 其他网站的按钮样式 - 保持原有样式
+      const colorScheme = {
+        background: 'rgba(255, 255, 255, 0.95)',
+        text: '#374151',
+        border: 'rgba(0, 0, 0, 0.1)',
+        shadow: 'rgba(0, 0, 0, 0.1)',
+        hoverBackground: '#f3f4f6',
+        hoverShadow: 'rgba(0, 0, 0, 0.15)',
+        activeBackground: '#e5e7eb',
+        focus: '#3b82f6'
+      };
+
+      button.style.cssText = `
+        /* 重置样式 */
+        all: initial;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        
+        /* 基础样式 */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        
+        /* 尺寸和间距 */
+        padding: 6px 12px;
+        min-width: 80px;
+        height: 28px;
+        
+        /* 字体 */
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: 0.01em;
+        text-align: center;
+        white-space: nowrap;
+        
+        /* 颜色 */
+        background: ${colorScheme.background};
+        color: ${colorScheme.text};
+        border: 1px solid ${colorScheme.border};
+        border-radius: 6px;
+        box-shadow: 0 1px 3px ${colorScheme.shadow};
+        
+        /* 交互 */
+        cursor: pointer;
+        pointer-events: auto;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        
+        /* 动画 */
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateZ(0);
+        will-change: transform, box-shadow, background-color;
+        
+        /* 视觉效果 */
+        opacity: 0.9;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+      `;
+
+      this.addButtonInteractions(button, colorScheme);
+    }
   }
 
   /**

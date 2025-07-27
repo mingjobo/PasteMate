@@ -78,6 +78,8 @@ export const SUPPORTED_SITES = {
       ".kimi-response", // Kimi回复
       ".assistant-bubble" // 助手气泡
     ],
+    // 指定按钮容器 - 按钮将注入到这个容器中
+    buttonContainer: ".segment-assistant-actions-content",
     features: {
       textIndicators: ["我是", "我可以", "根据", "建议", "Kimi", "收到", "您可以", "建议您", "以下是", "具体来说", "需要注意"], // Kimi特有的中文回复开头词
       roleAttributes: ["data-role=assistant", "data-author=assistant"], // Kimi使用的两种角色属性

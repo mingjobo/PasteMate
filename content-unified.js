@@ -505,8 +505,11 @@ class CopyButton {
         button.setAttribute('aria-label', buttonText);
         button.setAttribute('title', buttonText);
         
-        this.applyContainerStyles(container);
-        this.applyButtonStyles(button);
+        // 检查是否是Kimi网站，如果是则使用特殊的样式
+        const isKimi = window.location.hostname === 'www.kimi.com';
+        
+        this.applyContainerStyles(container, isKimi);
+        this.applyButtonStyles(button, isKimi);
         this.addEventListeners(button, targetElement, onCopy);
         
         container.appendChild(button);
@@ -514,63 +517,122 @@ class CopyButton {
         return container;
     }
 
-    static applyContainerStyles(container) {
-        container.style.cssText = `
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            z-index: 10001;
-            pointer-events: none;
-        `;
+    static applyContainerStyles(container, isKimi = false) {
+        if (isKimi) {
+            // Kimi网站的容器样式 - 内联显示，不覆盖其他元素
+            container.style.cssText = `
+                display: inline-block;
+                margin-left: 8px;
+                vertical-align: middle;
+                pointer-events: auto;
+            `;
+        } else {
+            // 其他网站的容器样式 - 绝对定位
+            container.style.cssText = `
+                position: absolute;
+                bottom: 8px;
+                right: 8px;
+                z-index: 10001;
+                pointer-events: none;
+            `;
+        }
     }
 
-    static applyButtonStyles(button) {
-        const colorScheme = {
-            background: 'rgba(255, 255, 255, 0.95)',
-            text: '#374151',
-            border: 'rgba(0, 0, 0, 0.1)',
-            shadow: 'rgba(0, 0, 0, 0.1)',
-            hoverBackground: '#f3f4f6',
-            hoverShadow: 'rgba(0, 0, 0, 0.15)',
-            activeBackground: '#e5e7eb',
-            focus: '#3b82f6'
-        };
+    static applyButtonStyles(button, isKimi = false) {
+        if (isKimi) {
+            // Kimi网站的按钮样式 - 与现有按钮保持一致
+            const colorScheme = {
+                background: 'transparent',
+                text: 'var(--color-text-1, #374151)',
+                border: 'none',
+                shadow: 'none',
+                hoverBackground: 'var(--color-fill-2, rgba(0, 0, 0, 0.04))',
+                hoverShadow: 'none',
+                activeBackground: 'var(--color-fill-3, rgba(0, 0, 0, 0.08))',
+                focus: '#3b82f6'
+            };
 
-        button.style.cssText = `
-            all: initial;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px 12px;
-            min-width: 80px;
-            height: 28px;
-            font-size: 11px;
-            font-weight: 500;
-            line-height: 1.2;
-            letter-spacing: 0.01em;
-            text-align: center;
-            white-space: nowrap;
-            background: ${colorScheme.background};
-            color: ${colorScheme.text};
-            border: 1px solid ${colorScheme.border};
-            border-radius: 6px;
-            box-shadow: 0 1px 3px ${colorScheme.shadow};
-            cursor: pointer;
-            pointer-events: auto;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateZ(0);
-            will-change: transform, box-shadow, background-color;
-            opacity: 0.9;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        `;
+            button.style.cssText = `
+                all: initial;
+                font-family: inherit;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 4px 8px;
+                min-width: auto;
+                height: 24px;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1.2;
+                text-align: center;
+                white-space: nowrap;
+                background: ${colorScheme.background};
+                color: ${colorScheme.text};
+                border: ${colorScheme.border};
+                border-radius: 4px;
+                box-shadow: ${colorScheme.shadow};
+                cursor: pointer;
+                pointer-events: auto;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition: all 0.15s ease;
+                transform: translateZ(0);
+                will-change: background-color;
+                opacity: 1;
+            `;
 
-        this.addButtonInteractions(button, colorScheme);
+            this.addButtonInteractions(button, colorScheme);
+        } else {
+            // 其他网站的按钮样式 - 保持原有样式
+            const colorScheme = {
+                background: 'rgba(255, 255, 255, 0.95)',
+                text: '#374151',
+                border: 'rgba(0, 0, 0, 0.1)',
+                shadow: 'rgba(0, 0, 0, 0.1)',
+                hoverBackground: '#f3f4f6',
+                hoverShadow: 'rgba(0, 0, 0, 0.15)',
+                activeBackground: '#e5e7eb',
+                focus: '#3b82f6'
+            };
+
+            button.style.cssText = `
+                all: initial;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 6px 12px;
+                min-width: 80px;
+                height: 28px;
+                font-size: 11px;
+                font-weight: 500;
+                line-height: 1.2;
+                letter-spacing: 0.01em;
+                text-align: center;
+                white-space: nowrap;
+                background: ${colorScheme.background};
+                color: ${colorScheme.text};
+                border: 1px solid ${colorScheme.border};
+                border-radius: 6px;
+                box-shadow: 0 1px 3px ${colorScheme.shadow};
+                cursor: pointer;
+                pointer-events: auto;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateZ(0);
+                will-change: transform, box-shadow, background-color;
+                opacity: 0.9;
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+            `;
+
+            this.addButtonInteractions(button, colorScheme);
+        }
     }
 
     static addButtonInteractions(button, colorScheme) {
@@ -1008,13 +1070,30 @@ class ButtonInjector {
                 return;
             }
 
+            // 对于Kimi网站，检查是否已经有我们的按钮
+            if (siteConfig.hostname === 'www.kimi.com') {
+                if (targetContainer.querySelector('.puretext-copy-btn')) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in Kimi container');
+                    return;
+                }
+            }
+
             const buttonContainer = CopyButton.create(targetContainer, async (element) => {
                 return await ClipboardManager.copyHtmlToClipboard(element);
             });
 
             if (buttonContainer) {
+                // 对于Kimi网站，直接将按钮添加到容器中
+                if (siteConfig.hostname === 'www.kimi.com') {
+                    targetContainer.appendChild(buttonContainer);
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected into Kimi container');
+                } else {
+                    // 其他网站使用原有的逻辑
+                    targetContainer.appendChild(buttonContainer);
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected successfully');
+                }
+                
                 this.injectedButtons.add(element);
-                debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected successfully');
             }
 
         } catch (error) {
@@ -1053,6 +1132,11 @@ class ButtonInjector {
     }
 
     findButtonContainer(element, siteConfig) {
+        // 对于Kimi网站，使用特殊的按钮容器查找逻辑
+        if (siteConfig.hostname === 'www.kimi.com') {
+            return this.findKimiButtonContainer(element, siteConfig);
+        }
+
         if (siteConfig.buttonContainer) {
             const container = element.querySelector(siteConfig.buttonContainer) ||
                 element.closest(siteConfig.buttonContainer);
@@ -1074,6 +1158,49 @@ class ButtonInjector {
             attempts++;
         }
 
+        return element;
+    }
+
+    findKimiButtonContainer(element, siteConfig) {
+        // 首先尝试找到segment-assistant-actions-content容器
+        let container = element.querySelector('.segment-assistant-actions-content');
+        if (container) {
+            debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container: .segment-assistant-actions-content');
+            return container;
+        }
+
+        // 如果没找到，向上查找父级元素
+        let current = element;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (current && attempts < maxAttempts) {
+            container = current.querySelector('.segment-assistant-actions-content');
+            if (container) {
+                debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container in parent element');
+                return container;
+            }
+
+            current = current.parentElement;
+            attempts++;
+        }
+
+        // 如果还是没找到，尝试查找segment-assistant-actions容器
+        current = element;
+        attempts = 0;
+
+        while (current && attempts < maxAttempts) {
+            container = current.querySelector('.segment-assistant-actions');
+            if (container) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⚠️ Found segment-assistant-actions, will create content container');
+                return container;
+            }
+
+            current = current.parentElement;
+            attempts++;
+        }
+
+        debugLog(DEBUG_LEVEL.WARN, '❌ No Kimi button container found');
         return element;
     }
 

@@ -185,15 +185,15 @@ class HtmlFormatterManager {
   }
   
   /**
-   * 执行完整的格式化流程
+   * 执行格式化处理
    * @param {HtmlFormatter} formatter - 格式化器
    * @param {HTMLElement} element - 克隆的DOM元素
    * @param {string} hostname - 网站域名
    * @returns {Promise<string>} 格式化结果
    */
   async doFormatting(formatter, element, hostname) {
-    // 1. 先进行内容清理
-    await this.contentCleaner.clean(element, hostname);
+    // 1. 先进行内容清理（复制场景）
+    await this.contentCleaner.clean(element, hostname, true);
     
     // 2. 然后执行格式化
     const result = await formatter.format(element);
