@@ -1,406 +1,1372 @@
-// 一键纯文扩展 - 内容脚本
-// 注意：SUPPORTED_SITES 配置在 sites.js 中定义
+// 一键纯文扩展 - 统一内容脚本
+// 将所有模块合并到一个文件中，避免ES模块导入问题
 
-console.log('🚀 PureText Content script loaded');
+// ==================== 站点配置 ====================
+const SUPPORTED_SITES = {
+  "chat.openai.com": {
+    name: "ChatGPT",
+    selectors: [
+      "[data-message-author-role='assistant'] .markdown",
+      "[data-message-author-role='assistant']",
+      ".group.w-full.text-token-text-primary",
+      ".markdown.prose"
+    ],
+    features: {
+      textIndicators: ["I'm", "I can", "Here's", "Based on"],
+      roleAttributes: ["data-message-author-role=assistant"],
+      containerClasses: ["markdown", "prose"]
+    }
+  },
+  "chat.deepseek.com": {
+    name: "DeepSeek",
+    selectors: [
+      ".ds-markdown.ds-markdown--block",
+      ".message-content[data-role='assistant']",
+      "[data-role='assistant'] .markdown",
+      ".assistant-message .content"
+    ],
+    features: {
+      textIndicators: ["我是", "我可以", "根据", "基于"],
+      roleAttributes: ["data-role=assistant"],
+      containerClasses: ["ds-markdown", "message-content"]
+    }
+  },
+  "www.doubao.com": {
+    name: "豆包",
+    selectors: [
+      ".dialogue-text.assistant",
+      ".message.assistant .content",
+      "[data-role='assistant']",
+      ".ai-response"
+    ],
+    features: {
+      textIndicators: ["我是", "我可以", "根据", "建议"],
+      roleAttributes: ["data-role=assistant"],
+      containerClasses: ["dialogue-text", "assistant"]
+    }
+  },
+  "www.kimi.com": {
+    name: "Kimi",
+    selectors: [
+      "[data-role='assistant'] .segment-content-box",
+      "[data-author='assistant'] .segment-content-box",
+      ".ai-response .segment-content-box",
+      ".assistant-message .segment-content-box",
+      ".segment-content-box",
+      ".markdown-container",
+      ".markdown",
+      "div[class*=\"assistant\"]",
+      "div[class*=\"ai\"]",
+      ".response-bubble",
+      "[data-role='assistant']",
+      ".ai-message .content",
+      ".message-content.assistant",
+      ".chat-message.assistant",
+      ".kimi-response",
+      ".assistant-bubble"
+    ],
+    features: {
+      textIndicators: ["我是", "我可以", "根据", "建议", "Kimi", "收到", "您可以", "建议您", "以下是", "具体来说", "需要注意"],
+      roleAttributes: ["data-role=assistant", "data-author=assistant"],
+      containerClasses: ["segment-content-box", "markdown-container", "markdown", "assistant", "ai"]
+    }
+  }
+};
 
-/**
- * 站点管理器类
- * 负责站点配置加载、当前站点识别和支持检查
- */
+// ==================== 消息类型枚举 ====================
+const MessageType = {
+    HUMAN: 'human',
+    AI: 'ai',
+    UNKNOWN: 'unknown'
+};
+
+// ==================== KimiMessageDetector ====================
+class KimiMessageDetector {
+    static isHumanMessage(element) {
+        const analysis = this.analyzeMessageType(element);
+        return analysis.type === MessageType.HUMAN;
+    }
+
+    static isAIResponse(element) {
+        const analysis = this.analyzeMessageType(element);
+        return analysis.type === MessageType.AI;
+    }
+
+    static analyzeMessageType(element) {
+        if (!element) {
+            return {
+                type: MessageType.UNKNOWN,
+                confidence: 0,
+                indicators: ['element-null'],
+                element: null
+            };
+        }
+
+        const indicators = [];
+        let humanScore = 0;
+        let aiScore = 0;
+
+        // 方法1: 检查元素及其父元素的类名和属性
+        const attributeAnalysis = this.analyzeAttributes(element);
+        humanScore += attributeAnalysis.humanScore;
+        aiScore += attributeAnalysis.aiScore;
+        indicators.push(...attributeAnalysis.indicators);
+
+        // 方法2: 通过文本内容特征判断
+        const contentAnalysis = this.analyzeTextContent(element);
+        humanScore += contentAnalysis.humanScore;
+        aiScore += contentAnalysis.aiScore;
+        indicators.push(...contentAnalysis.indicators);
+
+        // 方法3: 通过位置和结构判断（Kimi特定）
+        const structureAnalysis = this.analyzeStructure(element);
+        humanScore += structureAnalysis.humanScore;
+        aiScore += structureAnalysis.aiScore;
+        indicators.push(...structureAnalysis.indicators);
+
+        // 方法4: 通过内容复杂度判断
+        const complexityAnalysis = this.analyzeComplexity(element);
+        humanScore += complexityAnalysis.humanScore;
+        aiScore += complexityAnalysis.aiScore;
+        indicators.push(...complexityAnalysis.indicators);
+
+        // 确定最终类型和置信度
+        const totalScore = humanScore + aiScore;
+        let type, confidence;
+
+        if (totalScore === 0) {
+            type = MessageType.UNKNOWN;
+            confidence = 0;
+        } else if (aiScore > humanScore) {
+            type = MessageType.AI;
+            confidence = aiScore / totalScore;
+        } else if (humanScore > aiScore) {
+            type = MessageType.HUMAN;
+            confidence = humanScore / totalScore;
+        } else {
+            // 分数相等时，默认为AI（避免漏掉AI回复）
+            type = MessageType.AI;
+            confidence = 0.5;
+            indicators.push('tie-default-ai');
+        }
+
+        return {
+            type,
+            confidence,
+            indicators,
+            element,
+            scores: { humanScore, aiScore }
+        };
+    }
+
+    static analyzeAttributes(element) {
+        let humanScore = 0;
+        let aiScore = 0;
+        const indicators = [];
+
+        let current = element;
+        for (let i = 0; i < 5 && current; i++) {
+            const className = current.className?.toLowerCase() || '';
+            const dataRole = current.getAttribute('data-role')?.toLowerCase() || '';
+            const dataAuthor = current.getAttribute('data-author')?.toLowerCase() || '';
+
+            // 强烈的用户消息标识
+            if (className.includes('user') && !className.includes('user-agent')) {
+                humanScore += 3;
+                indicators.push('class-user');
+            }
+            if (className.includes('user-content') || className.includes('user-message')) {
+                humanScore += 4;
+                indicators.push('class-user-content');
+            }
+            if (dataRole === 'user' || dataAuthor === 'user') {
+                humanScore += 5;
+                indicators.push('attr-user');
+            }
+
+            // 强烈的AI回复标识
+            if (dataRole === 'assistant' || dataAuthor === 'assistant') {
+                aiScore += 5;
+                indicators.push('attr-assistant');
+            }
+            if (className.includes('assistant') || className.includes('ai-response')) {
+                aiScore += 4;
+                indicators.push('class-assistant');
+            }
+            if (className.includes('bot-message') || className.includes('kimi-response')) {
+                aiScore += 3;
+                indicators.push('class-bot');
+            }
+
+            current = current.parentElement;
+        }
+
+        return { humanScore, aiScore, indicators };
+    }
+
+    static analyzeTextContent(element) {
+        let humanScore = 0;
+        let aiScore = 0;
+        const indicators = [];
+
+        const text = element.textContent?.trim() || '';
+        if (text.length === 0) {
+            return { humanScore, aiScore, indicators };
+        }
+
+        // AI回复的特征词汇
+        const aiIndicators = [
+            '我是Kimi', '我可以帮助', '根据您的', '建议您', '您可以',
+            '以下是', '具体来说', '需要注意', '总结一下',
+            '首先', '其次', '最后', '另外', '此外',
+            '如果您', '您需要', '为您', 'Kimi助手',
+            '我理解', '我建议', '让我来', '我来帮您'
+        ];
+
+        // 用户消息的特征词汇
+        const userIndicators = [
+            '我想', '我需要', '请问', '能否', '可以吗', '怎么样',
+            '怎么办', '如何', '为什么', '什么是', '什么叫',
+            '帮我', '告诉我', '我该', '我应该', '我要',
+            '请帮助', '请解释', '请分析', '你觉得'
+        ];
+
+        // 检查AI指示词
+        const aiMatches = aiIndicators.filter(indicator => text.includes(indicator));
+        if (aiMatches.length > 0) {
+            aiScore += aiMatches.length * 2;
+            indicators.push(`ai-words-${aiMatches.length}`);
+        }
+
+        // 检查用户指示词
+        const userMatches = userIndicators.filter(indicator => text.includes(indicator));
+        if (userMatches.length > 0) {
+            humanScore += userMatches.length * 2;
+            indicators.push(`user-words-${userMatches.length}`);
+        }
+
+        // 特殊模式检查
+        if (text.match(/^(请|帮我|告诉我|我想|我需要)/)) {
+            humanScore += 2;
+            indicators.push('starts-with-request');
+        }
+
+        if (text.match(/[？?]$/)) {
+            humanScore += 1;
+            indicators.push('ends-with-question');
+        }
+
+        return { humanScore, aiScore, indicators };
+    }
+
+    static analyzeStructure(element) {
+        let humanScore = 0;
+        let aiScore = 0;
+        const indicators = [];
+
+        try {
+            // 检查元素在页面中的位置
+            const rect = element.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+
+            // Kimi中，用户消息通常在右侧，AI回复在左侧或占据更多宽度
+            const isOnRight = rect.left > viewportWidth * 0.6;
+            const isFullWidth = rect.width > viewportWidth * 0.7;
+
+            if (isOnRight && !isFullWidth) {
+                humanScore += 2;
+                indicators.push('position-right-narrow');
+            }
+
+            if (!isOnRight && isFullWidth) {
+                aiScore += 2;
+                indicators.push('position-left-wide');
+            }
+
+            // 检查是否包含Kimi特有的AI回复元素
+            const hasKimiFeatures = element.querySelector('.segment-content-box') ||
+                element.querySelector('.markdown-container') ||
+                element.closest('.segment-content-box');
+
+            if (hasKimiFeatures) {
+                aiScore += 3;
+                indicators.push('kimi-ai-features');
+            }
+
+            // 检查是否包含用户输入框附近的元素
+            const nearInputBox = element.closest('.input-container') ||
+                element.closest('.user-input') ||
+                element.querySelector('textarea');
+
+            if (nearInputBox) {
+                humanScore += 2;
+                indicators.push('near-input');
+            }
+
+        } catch (error) {
+            indicators.push('structure-analysis-error');
+        }
+
+        return { humanScore, aiScore, indicators };
+    }
+
+    static analyzeComplexity(element) {
+        let humanScore = 0;
+        let aiScore = 0;
+        const indicators = [];
+
+        const text = element.textContent?.trim() || '';
+        
+        // 文本长度分析
+        if (text.length > 200) {
+            aiScore += 1;
+            indicators.push('long-text');
+        } else if (text.length < 50) {
+            humanScore += 1;
+            indicators.push('short-text');
+        }
+
+        // 句子数量分析
+        const sentences = text.split(/[。！？.!?]/).filter(s => s.trim().length > 10);
+        if (sentences.length >= 3) {
+            aiScore += 1;
+            indicators.push('multi-sentence');
+        }
+
+        // 结构化内容检查
+        const hasStructuredContent = /[：:]\s*\n|^\s*[•\-\*]\s+|^\s*\d+[\.\)]\s+/m.test(text);
+        if (hasStructuredContent) {
+            aiScore += 2;
+            indicators.push('structured-content');
+        }
+
+        // 代码块检查
+        const hasCodeBlock = element.querySelector('code') || element.querySelector('pre') || 
+            text.includes('```') || text.includes('`');
+        if (hasCodeBlock) {
+            aiScore += 2;
+            indicators.push('code-content');
+        }
+
+        // 链接和引用检查
+        const hasLinks = element.querySelector('a') || text.match(/https?:\/\/\S+/);
+        if (hasLinks) {
+            aiScore += 1;
+            indicators.push('has-links');
+        }
+
+        return { humanScore, aiScore, indicators };
+    }
+
+    static getDebugInfo(element) {
+        const analysis = this.analyzeMessageType(element);
+        const text = element.textContent?.trim().substring(0, 100) || '';
+        
+        return `
+消息类型分析:
+- 类型: ${analysis.type}
+- 置信度: ${(analysis.confidence * 100).toFixed(1)}%
+- 人类得分: ${analysis.scores.humanScore}
+- AI得分: ${analysis.scores.aiScore}
+- 指标: ${analysis.indicators.join(', ')}
+- 文本预览: "${text}${text.length > 100 ? '...' : ''}"
+        `.trim();
+    }
+}
+
+// ==================== ClipboardManager ====================
+class ClipboardManager {
+    static async copyHtmlToClipboard(element) {
+        const startTime = performance.now();
+        
+        try {
+            console.log('[ClipboardManager] ========== 开始统一文本复制操作 ==========');
+            console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
+            console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
+            console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
+            
+            if (!element) {
+                console.error('[ClipboardManager] ❌ 元素为空，无法复制');
+                this.showErrorMessage('未找到可复制内容');
+                return false;
+            }
+            
+            // 检测当前网站
+            const hostname = window.location.hostname;
+            console.log('[ClipboardManager] 检测到网站:', hostname);
+            
+            // 使用统一文本格式化
+            console.log('[ClipboardManager] 🔥 开始统一文本格式化...');
+            const unifiedText = this.convertElementToUnifiedText(element);
+            console.log('[ClipboardManager] ✅ 统一文本格式化完成');
+            console.log('[ClipboardManager] 格式化结果长度:', unifiedText.length);
+            console.log('[ClipboardManager] 格式化结果预览:', unifiedText.substring(0, 500) + '...');
+
+            console.log('[ClipboardManager] 创建剪贴板数据...');
+            const blobText = new Blob([unifiedText], { type: 'text/plain' });
+            const clipboardItem = new window.ClipboardItem({
+                'text/plain': blobText
+            });
+            
+            console.log('[ClipboardManager] 写入剪贴板...');
+            await navigator.clipboard.write([clipboardItem]);
+            console.log('[ClipboardManager] ✅ 剪贴板写入成功');
+            
+            const duration = performance.now() - startTime;
+            console.log(`[ClipboardManager] 复制操作耗时: ${duration.toFixed(2)}ms`);
+            
+            console.log('[ClipboardManager] ========== 统一文本复制操作完成 ==========');
+            this.showSuccessMessage('已复制为统一格式，Word和WPS都能正常显示');
+            return true;
+            
+        } catch (error) {
+            const duration = performance.now() - startTime;
+            console.error(`[ClipboardManager] ❌ Copy operation failed after ${duration.toFixed(2)}ms:`, error);
+            console.error('[ClipboardManager] 错误详情:', error.stack);
+            this.showErrorMessage('复制失败，请重试');
+            return false;
+        }
+    }
+
+    static convertElementToUnifiedText(element) {
+        // 创建元素副本避免修改原DOM
+        const cloned = element.cloneNode(true);
+        
+        // 移除不需要的元素
+        this.removeUnwantedElements(cloned);
+        
+        // 转换为统一文本格式
+        return this.convertHtmlToUnifiedText(cloned.outerHTML);
+    }
+
+    static convertHtmlToUnifiedText(html) {
+        console.log('[ClipboardManager] 开始HTML到统一文本转换...');
+        
+        // 创建临时DOM元素来解析HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        let result = '';
+        
+        // 递归处理DOM节点
+        const processNode = (node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.textContent.trim();
+                if (text) {
+                    result += text + '\n';
+                }
+                return;
+            }
+            
+            if (node.nodeType !== Node.ELEMENT_NODE) {
+                return;
+            }
+            
+            const tagName = node.tagName.toLowerCase();
+            const text = node.textContent.trim();
+            
+            if (!text) return;
+            
+            switch (tagName) {
+                case 'h1':
+                case 'h2':
+                case 'h3':
+                case 'h4':
+                case 'h5':
+                case 'h6':
+                    result += '\n' + text + '\n\n';
+                    break;
+                    
+                case 'p':
+                    result += text + '\n\n';
+                    break;
+                    
+                case 'ul':
+                    result += '\n';
+                    Array.from(node.children).forEach((li, index) => {
+                        if (li.tagName.toLowerCase() === 'li') {
+                            result += '• ' + li.textContent.trim() + '\n';
+                        }
+                    });
+                    result += '\n';
+                    break;
+                    
+                case 'ol':
+                    result += '\n';
+                    Array.from(node.children).forEach((li, index) => {
+                        if (li.tagName.toLowerCase() === 'li') {
+                            result += (index + 1) + '. ' + li.textContent.trim() + '\n';
+                        }
+                    });
+                    result += '\n';
+                    break;
+                    
+                case 'li':
+                    // 列表项在ul/ol中处理，这里跳过
+                    break;
+                    
+                case 'blockquote':
+                    result += '\n引用：\n' + text + '\n\n';
+                    break;
+                    
+                case 'code':
+                    result += '【代码】' + text + '\n';
+                    break;
+                    
+                case 'strong':
+                case 'b':
+                    result += '【粗体】' + text + '【/粗体】';
+                    break;
+                    
+                case 'em':
+                case 'i':
+                    result += '【斜体】' + text + '【/斜体】';
+                    break;
+                    
+                case 'hr':
+                    result += '\n' + '─'.repeat(50) + '\n\n';
+                    break;
+                    
+                case 'br':
+                    result += '\n';
+                    break;
+                    
+                default:
+                    // 处理其他标签，递归处理子节点
+                    Array.from(node.childNodes).forEach(child => {
+                        processNode(child);
+                    });
+                    break;
+            }
+        };
+        
+        // 处理所有子节点
+        Array.from(tempDiv.childNodes).forEach(child => {
+            processNode(child);
+        });
+        
+        // 清理多余的换行符
+        result = result
+            .replace(/\n\s*\n\s*\n/g, '\n\n')  // 最多保留两个连续换行
+            .replace(/\n+$/, '\n')              // 去除末尾多余换行
+            .trim();
+        
+        console.log('[ClipboardManager] HTML到统一文本转换完成');
+        return result;
+    }
+
+    static processElementForCopy(element) {
+        // 创建元素副本避免修改原DOM
+        const cloned = element.cloneNode(true);
+        
+        // 移除不需要的元素
+        this.removeUnwantedElements(cloned);
+        
+        return cloned.outerHTML;
+    }
+
+    static removeUnwantedElements(cloned) {
+        // 移除复制按钮
+        cloned.querySelectorAll('.puretext-copy-btn, .puretext-button-container').forEach(el => el.remove());
+        
+        // 移除操作按钮
+        cloned.querySelectorAll('button, [role="button"]').forEach(button => {
+            const text = button.textContent?.trim();
+            if (text && /^(复制|重试|分享|编辑|搜索|点赞|踩|收藏)$/.test(text)) {
+                button.remove();
+            }
+        });
+        
+        // 移除AI声明
+        cloned.querySelectorAll('*').forEach(el => {
+            const text = el.textContent?.trim();
+            if (text && /本回答由\s*AI\s*生成.*内容仅供参考/.test(text)) {
+                el.remove();
+            }
+        });
+    }
+
+    static showSuccessMessage(customMessage) {
+        const message = customMessage || '复制成功';
+        this.showToast(message, 'success');
+    }
+
+    static showErrorMessage(customMessage) {
+        const message = customMessage || '复制失败';
+        this.showToast(message, 'error');
+    }
+
+    static showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+        });
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 2000);
+    }
+}
+
+// ==================== CopyButton ====================
+class CopyButton {
+    static BUTTON_CLASS = 'puretext-copy-btn';
+    static CONTAINER_CLASS = 'puretext-button-container';
+
+    static create(targetElement, onCopy) {
+        const container = document.createElement('div');
+        container.className = this.CONTAINER_CLASS;
+        
+        const button = document.createElement('button');
+        button.className = this.BUTTON_CLASS;
+        
+        const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制到 Word';
+        button.textContent = buttonText;
+        
+        button.type = 'button';
+        button.setAttribute('aria-label', buttonText);
+        button.setAttribute('title', buttonText);
+        
+        // 检查是否是Kimi网站，如果是则使用特殊的样式
+        const isKimi = window.location.hostname === 'www.kimi.com';
+        
+        this.applyContainerStyles(container, isKimi);
+        this.applyButtonStyles(button, isKimi);
+        this.addEventListeners(button, targetElement, onCopy);
+        
+        container.appendChild(button);
+        
+        return container;
+    }
+
+    static applyContainerStyles(container, isKimi = false) {
+        if (isKimi) {
+            // Kimi网站的容器样式 - 内联显示，不覆盖其他元素
+            container.style.cssText = `
+                display: inline-block;
+                margin-left: 8px;
+                vertical-align: middle;
+                pointer-events: auto;
+            `;
+        } else {
+            // 其他网站的容器样式 - 绝对定位
+            container.style.cssText = `
+                position: absolute;
+                bottom: 8px;
+                right: 8px;
+                z-index: 10001;
+                pointer-events: none;
+            `;
+        }
+    }
+
+    static applyButtonStyles(button, isKimi = false) {
+        if (isKimi) {
+            // Kimi网站的按钮样式 - 与现有按钮保持一致
+            const colorScheme = {
+                background: 'transparent',
+                text: 'var(--color-text-1, #374151)',
+                border: 'none',
+                shadow: 'none',
+                hoverBackground: 'var(--color-fill-2, rgba(0, 0, 0, 0.04))',
+                hoverShadow: 'none',
+                activeBackground: 'var(--color-fill-3, rgba(0, 0, 0, 0.08))',
+                focus: '#3b82f6'
+            };
+
+            button.style.cssText = `
+                all: initial;
+                font-family: inherit;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 4px 8px;
+                min-width: auto;
+                height: 24px;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1.2;
+                text-align: center;
+                white-space: nowrap;
+                background: ${colorScheme.background};
+                color: ${colorScheme.text};
+                border: ${colorScheme.border};
+                border-radius: 4px;
+                box-shadow: ${colorScheme.shadow};
+                cursor: pointer;
+                pointer-events: auto;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition: all 0.15s ease;
+                transform: translateZ(0);
+                will-change: background-color;
+                opacity: 1;
+            `;
+
+            this.addButtonInteractions(button, colorScheme);
+        } else {
+            // 其他网站的按钮样式 - 保持原有样式
+            const colorScheme = {
+                background: 'rgba(255, 255, 255, 0.95)',
+                text: '#374151',
+                border: 'rgba(0, 0, 0, 0.1)',
+                shadow: 'rgba(0, 0, 0, 0.1)',
+                hoverBackground: '#f3f4f6',
+                hoverShadow: 'rgba(0, 0, 0, 0.15)',
+                activeBackground: '#e5e7eb',
+                focus: '#3b82f6'
+            };
+
+            button.style.cssText = `
+                all: initial;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 6px 12px;
+                min-width: 80px;
+                height: 28px;
+                font-size: 11px;
+                font-weight: 500;
+                line-height: 1.2;
+                letter-spacing: 0.01em;
+                text-align: center;
+                white-space: nowrap;
+                background: ${colorScheme.background};
+                color: ${colorScheme.text};
+                border: 1px solid ${colorScheme.border};
+                border-radius: 6px;
+                box-shadow: 0 1px 3px ${colorScheme.shadow};
+                cursor: pointer;
+                pointer-events: auto;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateZ(0);
+                will-change: transform, box-shadow, background-color;
+                opacity: 0.9;
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+            `;
+
+            this.addButtonInteractions(button, colorScheme);
+        }
+    }
+
+    static addButtonInteractions(button, colorScheme) {
+        button.addEventListener('mouseenter', () => {
+            button.style.opacity = '1';
+            button.style.background = colorScheme.hoverBackground;
+            button.style.transform = 'translateY(-1px) translateZ(0)';
+            button.style.boxShadow = `0 2px 6px ${colorScheme.hoverShadow}`;
+        });
+
+        button.addEventListener('mouseleave', () => {
+            button.style.opacity = '0.9';
+            button.style.background = colorScheme.background;
+            button.style.transform = 'translateY(0) translateZ(0)';
+            button.style.boxShadow = `0 1px 3px ${colorScheme.shadow}`;
+        });
+
+        button.addEventListener('focus', () => {
+            button.style.outline = `2px solid ${colorScheme.focus}`;
+            button.style.outlineOffset = '2px';
+            button.style.opacity = '1';
+        });
+
+        button.addEventListener('blur', () => {
+            button.style.outline = 'none';
+            button.style.opacity = '0.9';
+        });
+
+        button.addEventListener('mousedown', () => {
+            button.style.transform = 'translateY(0) scale(0.98) translateZ(0)';
+            button.style.background = colorScheme.activeBackground;
+        });
+
+        button.addEventListener('mouseup', () => {
+            button.style.transform = 'translateY(-1px) translateZ(0)';
+            button.style.background = colorScheme.hoverBackground;
+        });
+    }
+
+    static addEventListeners(button, targetElement, onCopy) {
+        button.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            this.addClickFeedback(button);
+            
+            try {
+                if (onCopy) {
+                    await onCopy(targetElement);
+                }
+            } catch (error) {
+                console.error('PureText: Copy operation failed:', error);
+            }
+        });
+
+        button.addEventListener('keydown', async (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                this.addClickFeedback(button);
+                
+                try {
+                    if (onCopy) {
+                        await onCopy(targetElement);
+                    }
+                } catch (error) {
+                    console.error('PureText: Copy operation failed:', error);
+                }
+            }
+        });
+    }
+
+    static addClickFeedback(button) {
+        button.style.transform = 'scale(0.95) translateZ(0)';
+        
+        setTimeout(() => {
+            button.style.transform = 'translateZ(0)';
+        }, 150);
+
+        const originalText = button.textContent;
+        button.textContent = '复制中...';
+        
+        setTimeout(() => {
+            button.textContent = originalText;
+        }, 500);
+    }
+
+    static hasButton(element) {
+        return element.querySelector(`.${this.CONTAINER_CLASS}`) !== null;
+    }
+
+    static removeButton(element) {
+        const existingButton = element.querySelector(`.${this.CONTAINER_CLASS}`);
+        if (existingButton) {
+            existingButton.remove();
+        }
+    }
+
+    static positionButton(container, targetElement) {
+        const computedStyle = window.getComputedStyle(targetElement);
+        if (computedStyle.position === 'static') {
+            targetElement.style.position = 'relative';
+        }
+
+        const style = window.getComputedStyle(targetElement);
+        const paddingRight = parseInt(style.paddingRight) || 0;
+        const paddingBottom = parseInt(style.paddingBottom) || 0;
+
+        const rightOffset = Math.max(8, paddingRight + 4);
+        const bottomOffset = Math.max(8, paddingBottom + 4);
+
+        container.style.right = `${rightOffset}px`;
+        container.style.bottom = `${bottomOffset}px`;
+
+        this.ensureInViewport(container, targetElement);
+    }
+
+    static ensureInViewport(container, targetElement) {
+        setTimeout(() => {
+            try {
+                const containerRect = container.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                if (containerRect.right > viewportWidth) {
+                    container.style.right = 'auto';
+                    container.style.left = '8px';
+                }
+
+                if (containerRect.bottom > viewportHeight) {
+                    container.style.bottom = 'auto';
+                    container.style.top = '8px';
+                }
+
+                if (containerRect.left < 0) {
+                    container.style.left = '8px';
+                    container.style.right = 'auto';
+                }
+
+                if (containerRect.top < 0) {
+                    container.style.top = '8px';
+                    container.style.bottom = 'auto';
+                }
+            } catch (error) {
+                console.debug('PureText: Error ensuring button in viewport:', error);
+            }
+        }, 50);
+    }
+}
+
+// ==================== 调试日志系统 ====================
+const DEBUG_LEVEL = {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    DEBUG: 3
+};
+
+window.PURETEXT_DEBUG_LEVEL = window.PURETEXT_DEBUG_LEVEL || DEBUG_LEVEL.INFO;
+
+function debugLog(level, message, ...args) {
+    if (level <= window.PURETEXT_DEBUG_LEVEL) {
+        const timestamp = new Date().toLocaleTimeString();
+        const levelNames = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
+        const prefix = `[${timestamp}] PureText-${levelNames[level]}:`;
+
+        switch (level) {
+            case DEBUG_LEVEL.ERROR:
+                console.error(prefix, message, ...args);
+                break;
+            case DEBUG_LEVEL.WARN:
+                console.warn(prefix, message, ...args);
+                break;
+            case DEBUG_LEVEL.INFO:
+                console.info(prefix, message, ...args);
+                break;
+            case DEBUG_LEVEL.DEBUG:
+                console.log(prefix, message, ...args);
+                break;
+        }
+    }
+}
+
+debugLog(DEBUG_LEVEL.INFO, '🚀 Content script loaded');
+
+// ==================== 站点管理器 ====================
 class SiteManager {
     constructor() {
         this.siteConfig = null;
         this.currentSite = null;
     }
 
-    /**
-     * 加载站点配置
-     */
     async loadSiteConfig() {
+        debugLog(DEBUG_LEVEL.DEBUG, '📋 Loading site configuration...');
+
         try {
+            debugLog(DEBUG_LEVEL.DEBUG, '🔍 Checking SUPPORTED_SITES availability:', typeof SUPPORTED_SITES);
+
             if (typeof SUPPORTED_SITES === 'undefined') {
-                console.error('❌ SUPPORTED_SITES is undefined! sites.js may not be loaded.');
+                debugLog(DEBUG_LEVEL.ERROR, '❌ SUPPORTED_SITES is undefined!');
                 this.siteConfig = {};
                 return;
             }
 
-            // 使用全局的SUPPORTED_SITES配置（从sites.js加载）
-            this.siteConfig = { ...SUPPORTED_SITES };
-            console.log('✅ Site configuration loaded');
+            debugLog(DEBUG_LEVEL.DEBUG, '📊 Available sites:', Object.keys(SUPPORTED_SITES));
+
+            const baseSites = { ...SUPPORTED_SITES };
+
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                const result = await chrome.storage.sync.get(['customSites', 'disabledSites']);
+                if (result.customSites || result.disabledSites) {
+                    this.siteConfig = this.mergeConfigs(baseSites, result);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ Loaded user configuration');
+                    return;
+                }
+            }
+
+            this.siteConfig = baseSites;
+            debugLog(DEBUG_LEVEL.INFO, '✅ Using built-in site configuration');
 
         } catch (error) {
-            console.warn('⚠️ Failed to load config, using built-in config:', error);
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ Failed to load user config, using built-in config:', error);
             this.siteConfig = typeof SUPPORTED_SITES !== 'undefined' ? { ...SUPPORTED_SITES } : {};
         }
     }
 
-    /**
-     * 获取当前站点配置
-     */
-    getCurrentSite() {
+    mergeConfigs(builtInConfig, userConfig) {
+        const merged = { ...builtInConfig };
+
+        if (userConfig.customSites) {
+            Object.assign(merged, userConfig.customSites);
+        }
+
+        if (userConfig.disabledSites) {
+            userConfig.disabledSites.forEach(hostname => {
+                delete merged[hostname];
+            });
+        }
+
+        return merged;
+    }
+
+    identifyCurrentSite() {
         if (!this.siteConfig) {
-            console.warn('⚠️ Site config not loaded');
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ Site config not loaded');
             return null;
         }
 
         const hostname = window.location.hostname;
-        this.currentSite = this.siteConfig[hostname] || null;
+        debugLog(DEBUG_LEVEL.DEBUG, `🔍 Identifying site for hostname: ${hostname}`);
 
-        if (this.currentSite) {
-            this.currentSite.hostname = hostname;
-            console.log('✅ Current site supported:', this.currentSite.name);
-        } else {
-            console.warn('❌ Current site not supported:', hostname);
+        if (this.siteConfig[hostname]) {
+            this.currentSite = { hostname, ...this.siteConfig[hostname] };
+            debugLog(DEBUG_LEVEL.INFO, `✅ Direct match found for ${hostname}`);
+            return this.currentSite;
         }
 
-        return this.currentSite;
-    }
-
-    /**
-     * 检查当前站点是否支持
-     */
-    isSupported() {
-        return this.getCurrentSite() !== null;
-    }
-
-    /**
-     * 获取当前站点的有效选择器
-     */
-    getSelector() {
-        const site = this.getCurrentSite();
-        if (!site) return null;
-
-        // 如果是新格式（多选择器），尝试找到有效的选择器
-        if (site.selectors && Array.isArray(site.selectors)) {
-            return this.findValidSelector(site.selectors);
-        }
-
-        // 兼容旧格式（单选择器）
-        if (site.selector) {
-            return site.selector;
-        }
-
-        return null;
-    }
-
-    /**
-     * 从多个选择器中找到第一个有效的选择器
-     */
-    findValidSelector(selectors) {
-        for (const selector of selectors) {
-            try {
-                const elements = document.querySelectorAll(selector);
-                if (elements.length > 0) {
-                    // 验证元素是否有实际内容
-                    const hasContent = Array.from(elements).some(el => {
-                        const text = el.textContent?.trim();
-                        return text && text.length > 10;
-                    });
-
-                    if (hasContent) {
-                        console.log(`✅ 找到有效选择器: ${selector}`);
-                        return selector;
-                    }
-                }
-            } catch (error) {
-                continue;
+        for (const [configHostname, config] of Object.entries(this.siteConfig)) {
+            if (hostname.includes(configHostname) || configHostname.includes(hostname)) {
+                this.currentSite = { hostname: configHostname, ...config };
+                debugLog(DEBUG_LEVEL.INFO, `✅ Fuzzy match found: ${hostname} -> ${configHostname}`);
+                return this.currentSite;
             }
         }
 
-        console.warn('❌ 所有预设选择器都无效');
+        debugLog(DEBUG_LEVEL.INFO, `ℹ️ No configuration found for ${hostname}`);
         return null;
     }
 
-    /**
-     * 获取当前站点的显示名称
-     */
-    getSiteName() {
-        const site = this.getCurrentSite();
-        return site ? site.name : null;
+    isCurrentSiteSupported() {
+        return this.identifyCurrentSite() !== null;
+    }
+
+    getCurrentSiteConfig() {
+        return this.currentSite || this.identifyCurrentSite();
+    }
+
+    getSupportedSites() {
+        if (!this.siteConfig) {
+            return [];
+        }
+        return Object.keys(this.siteConfig);
     }
 }
 
-/**
- * 按钮注入器类
- * 负责监听DOM变化、创建和注入复制按钮
- */
+// ==================== 按钮注入器 ====================
 class ButtonInjector {
     constructor(siteManager) {
         this.siteManager = siteManager;
         this.observer = null;
         this.injectedButtons = new WeakSet();
         this.buttonClass = 'puretext-copy-btn';
-        this.debounceTimer = null;
-        this.debounceDelay = 100;
+        this.containerClass = 'puretext-button-container';
+        this.isObserving = false;
     }
 
-    /**
-     * 开始监听DOM变化
-     */
-    startObserving() {
-        if (this.observer) {
-            this.stopObserving();
-        }
-
-        // 首次扫描现有元素
-        this.scanAndInjectButtons();
-
-        // 创建MutationObserver监听DOM变化
-        this.observer = new MutationObserver((mutations) => {
-            this.handleMutations(mutations);
-        });
-
-        // 开始观察
-        this.observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: false
-        });
-
-        console.log('✅ Started observing DOM changes');
-    }
-
-    /**
-     * 停止监听DOM变化
-     */
-    stopObserving() {
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
-        }
-
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-            this.debounceTimer = null;
-        }
-    }
-
-    /**
-     * 处理DOM变化
-     */
-    handleMutations(mutations) {
-        let shouldScan = false;
-
-        for (const mutation of mutations) {
-            if (mutation.type === 'childList') {
-                for (const node of mutation.addedNodes) {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        shouldScan = true;
-                        break;
-                    }
-                }
-            }
-            if (shouldScan) break;
-        }
-
-        if (shouldScan) {
-            this.debouncedScan();
-        }
-    }
-
-    /**
-     * 防抖扫描函数
-     */
-    debouncedScan() {
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-        }
-
-        this.debounceTimer = setTimeout(() => {
-            this.scanAndInjectButtons();
-        }, this.debounceDelay);
-    }
-
-    /**
-     * 扫描页面并注入按钮
-     */
-    scanAndInjectButtons() {
-        const selector = this.siteManager.getSelector();
-        if (!selector) {
-            console.warn('⚠️ No selector available, skipping button injection');
+    start() {
+        if (this.isObserving) {
+            debugLog(DEBUG_LEVEL.DEBUG, '🔄 Button injector already running');
             return;
         }
 
-        try {
-            const bubbles = document.querySelectorAll(selector);
-            console.log(`📊 Found ${bubbles.length} target elements`);
+        const siteConfig = this.siteManager.getCurrentSiteConfig();
+        if (!siteConfig) {
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ No site configuration available, skipping button injection');
+            return;
+        }
 
-            if (bubbles.length === 0) {
-                console.warn('⚠️ No target elements found');
-                return;
+        debugLog(DEBUG_LEVEL.INFO, '🚀 Starting button injection for:', siteConfig.hostname);
+
+        this.injectButtonsForExistingElements(siteConfig);
+        this.startObserving(siteConfig);
+    }
+
+    injectButtonsForExistingElements(siteConfig) {
+        const selectors = siteConfig.selectors;
+        if (!selectors || selectors.length === 0) {
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ No selectors available, skipping button injection');
+            return;
+        }
+
+        debugLog(DEBUG_LEVEL.DEBUG, '🔍 Checking existing elements with selectors:', selectors);
+
+        selectors.forEach(selector => {
+            try {
+                const elements = document.querySelectorAll(selector);
+                debugLog(DEBUG_LEVEL.DEBUG, `📍 Found ${elements.length} elements for selector: ${selector}`);
+
+                elements.forEach(element => {
+                    this.injectButtonForElement(element, siteConfig);
+                });
+            } catch (error) {
+                debugLog(DEBUG_LEVEL.ERROR, `❌ Error querying selector "${selector}":`, error);
             }
+        });
+    }
 
-            let injectedCount = 0;
-            for (const bubble of bubbles) {
-                const injected = this.injectButton(bubble);
-                if (injected) injectedCount++;
+    startObserving(siteConfig) {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
+
+        this.observer = new MutationObserver((mutations) => {
+            this.handleMutations(mutations, siteConfig);
+        });
+
+        const observerConfig = {
+            childList: true,
+            subtree: true,
+            attributes: false
+        };
+
+        this.observer.observe(document.body, observerConfig);
+        this.isObserving = true;
+
+        debugLog(DEBUG_LEVEL.DEBUG, '👁️ Started observing DOM changes');
+    }
+
+    handleMutations(mutations, siteConfig) {
+        const selectors = siteConfig.selectors;
+        if (!selectors || selectors.length === 0) return;
+
+        let foundNewElements = false;
+
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        foundNewElements = this.checkNodeForTargets(node, selectors, siteConfig) || foundNewElements;
+                    }
+                });
             }
+        });
 
-            console.log(`✅ Successfully injected ${injectedCount} buttons`);
-        } catch (error) {
-            console.error('❌ Error scanning for bubbles:', error);
+        if (foundNewElements) {
+            debugLog(DEBUG_LEVEL.DEBUG, '✨ Injected buttons for new elements');
         }
     }
 
-    /**
-     * 向指定元素注入复制按钮
-     */
-    injectButton(bubble) {
+    checkNodeForTargets(node, selectors, siteConfig) {
+        let foundElements = false;
+
+        selectors.forEach(selector => {
+            try {
+                if (node.matches && node.matches(selector)) {
+                    this.injectButtonForElement(node, siteConfig);
+                    foundElements = true;
+                }
+
+                const childElements = node.querySelectorAll(selector);
+                childElements.forEach(element => {
+                    this.injectButtonForElement(element, siteConfig);
+                    foundElements = true;
+                });
+            } catch (error) {
+                debugLog(DEBUG_LEVEL.ERROR, `❌ Error checking selector "${selector}":`, error);
+            }
+        });
+
+        return foundElements;
+    }
+
+    injectButtonForElement(element, siteConfig) {
         try {
-            console.log('[ButtonInjector] ========== 开始按钮注入流程 ==========');
-            console.log('[ButtonInjector] 目标气泡元素:', bubble.tagName, bubble.className);
-            console.log('[ButtonInjector] 气泡元素内容预览:', (bubble.textContent || '').substring(0, 100) + '...');
+            debugLog(DEBUG_LEVEL.INFO, '========== 开始按钮注入流程 ==========');
+            debugLog(DEBUG_LEVEL.INFO, '目标元素:', element.tagName, element.className);
+            debugLog(DEBUG_LEVEL.INFO, '元素内容预览:', (element.textContent || '').substring(0, 100) + '...');
             
-            // 检查元素是否仍在DOM中
-            if (!document.contains(bubble)) {
-                console.warn('[ButtonInjector] 元素不在DOM中，跳过注入');
-                return false;
+            if (this.injectedButtons.has(element)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '元素已注入过按钮，跳过');
+                return;
             }
 
-            // 检查是否已经注入过按钮
-            if (this.injectedButtons.has(bubble)) {
-                console.log('[ButtonInjector] 元素已注入过按钮，跳过');
-                return false;
+            if (!this.validateModuleAvailability()) {
+                debugLog(DEBUG_LEVEL.ERROR, '❌ Required modules not available, skipping button injection');
+                return;
             }
 
-            // 检查是否已经存在按钮
-            if (CopyButton.hasButton(bubble)) {
-                console.log('[ButtonInjector] 元素已存在按钮，跳过');
-                this.injectedButtons.add(bubble);
-                return false;
+            const textContent = element.textContent || '';
+            debugLog(DEBUG_LEVEL.INFO, '元素文本长度:', textContent.trim().length);
+            if (textContent.trim().length < 10) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping element with insufficient text content');
+                return;
             }
 
-            // 验证元素是否有足够的文本内容
-            const text = bubble.textContent?.trim();
-            console.log('[ButtonInjector] 气泡元素文本长度:', text?.length || 0);
-            if (!text || text.length < 20) {
-                console.warn('[ButtonInjector] 文本内容不足，跳过注入');
-                return false;
+            if (!this.isElementVisible(element)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping invisible element');
+                return;
             }
 
-            // 检查是否是AI回复而不是用户消息
-            console.log('[ButtonInjector] 检查是否是AI回复...');
-            if (!this.isAIResponse(bubble)) {
-                console.log('[ButtonInjector] 不是AI回复，跳过注入');
-                return false;
+            // 🔥 关键修复：使用KimiMessageDetector验证是否应该注入按钮
+            if (!this.validateButtonInjection(element, siteConfig)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button injection validation failed');
+                return;
             }
-            console.log('[ButtonInjector] ✅ 确认是AI回复');
 
             // 🔥 关键修复：找到包含AI回复内容的主要元素
-            console.log('[ButtonInjector] 开始查找内容元素...');
-            const contentElement = this.findContentElement(bubble);
+            debugLog(DEBUG_LEVEL.INFO, '开始查找内容元素...');
+            const contentElement = this.findContentElement(element, siteConfig);
             if (!contentElement) {
-                console.error('[ButtonInjector] ❌ 无法找到内容元素，跳过按钮注入');
-                return false;
+                debugLog(DEBUG_LEVEL.ERROR, '❌ 无法找到内容元素，跳过按钮注入');
+                return;
             }
-            console.log('[ButtonInjector] ✅ 找到内容元素:', contentElement.tagName, contentElement.className);
-            console.log('[ButtonInjector] 内容元素文本长度:', (contentElement.textContent || '').length);
-            console.log('[ButtonInjector] 内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
+            debugLog(DEBUG_LEVEL.INFO, '✅ 找到内容元素:', contentElement.tagName, contentElement.className);
+            debugLog(DEBUG_LEVEL.INFO, '内容元素文本长度:', (contentElement.textContent || '').length);
+            debugLog(DEBUG_LEVEL.INFO, '内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
 
-            // 找到最合适的按钮容器元素
-            console.log('[ButtonInjector] 查找按钮容器...');
-            const targetContainer = this.findBestContainer(bubble);
-            console.log('[ButtonInjector] ✅ 找到按钮容器:', targetContainer.tagName, targetContainer.className);
+            const targetContainer = this.findButtonContainer(element, siteConfig);
+            if (!targetContainer) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ No suitable container found for button');
+                return;
+            }
+            debugLog(DEBUG_LEVEL.INFO, '✅ 找到按钮容器:', targetContainer.tagName, targetContainer.className);
 
-            // 创建按钮组件，传递内容元素而不是容器元素
-            console.log('[ButtonInjector] 创建复制按钮...');
+            // 对于Kimi网站，检查是否已经有我们的按钮
+            if (siteConfig.hostname === 'www.kimi.com') {
+                if (targetContainer.querySelector('.puretext-copy-btn')) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in Kimi container');
+                    return;
+                }
+            }
+
+            debugLog(DEBUG_LEVEL.INFO, '创建复制按钮...');
             const buttonContainer = CopyButton.create(targetContainer, async (element) => {
-                console.log('[ButtonInjector] 🔥 按钮点击事件触发');
-                console.log('[ButtonInjector] 传入的元素:', element.tagName, element.className);
-                console.log('[ButtonInjector] 实际复制的内容元素:', contentElement.tagName, contentElement.className);
+                debugLog(DEBUG_LEVEL.INFO, '🔥 按钮点击事件触发');
+                debugLog(DEBUG_LEVEL.INFO, '传入的元素:', element.tagName, element.className);
+                debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
                 
                 // 🔥 关键修复：使用找到的内容元素进行复制
                 const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
-                console.log('[ButtonInjector] 复制操作结果:', result);
+                debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
                 return result;
             });
 
-            // 定位按钮到右下角
-            buttonContainer.style.position = 'absolute';
-            buttonContainer.style.right = '8px';
-            buttonContainer.style.bottom = '8px';
-            buttonContainer.style.zIndex = '1000';
-
-            // 注入按钮
-            console.log('[ButtonInjector] 注入按钮到容器...');
-            targetContainer.appendChild(buttonContainer);
-            console.log('[ButtonInjector] ✅ 按钮注入成功');
-
-            // 标记为已注入
-            this.injectedButtons.add(bubble);
-            this.injectedButtons.add(targetContainer);
-
-            console.log('[ButtonInjector] ========== 按钮注入流程完成 ==========');
-            return true;
+            if (buttonContainer) {
+                // 对于Kimi网站，直接将按钮添加到容器中
+                if (siteConfig.hostname === 'www.kimi.com') {
+                    targetContainer.appendChild(buttonContainer);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into Kimi container');
+                } else {
+                    // 其他网站使用原有的逻辑
+                    targetContainer.appendChild(buttonContainer);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected successfully');
+                }
+                
+                this.injectedButtons.add(element);
+                debugLog(DEBUG_LEVEL.INFO, '========== 按钮注入流程完成 ==========');
+            }
 
         } catch (error) {
-            console.error('[ButtonInjector] ❌ 按钮注入失败:', error);
-            return false;
+            debugLog(DEBUG_LEVEL.ERROR, '❌ Error injecting button:', error);
+            this.attemptModuleRecovery();
         }
+    }
+
+    validateModuleAvailability() {
+        const requiredModules = [
+            { name: 'CopyButton', ref: CopyButton },
+            { name: 'ClipboardManager', ref: ClipboardManager }
+        ];
+
+        for (const module of requiredModules) {
+            if (typeof module.ref === 'undefined' || module.ref === null) {
+                debugLog(DEBUG_LEVEL.ERROR, `❌ Module ${module.name} is not available`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    attemptModuleRecovery() {
+        debugLog(DEBUG_LEVEL.WARN, '🔄 Attempting module recovery...');
+        
+        setTimeout(() => {
+            if (this.validateModuleAvailability()) {
+                debugLog(DEBUG_LEVEL.INFO, '✅ Module recovery successful');
+                this.start();
+            } else {
+                debugLog(DEBUG_LEVEL.ERROR, '❌ Module recovery failed');
+            }
+        }, 1000);
     }
 
     /**
      * 🔥 新增方法：找到包含AI回复内容的主要元素
-     * @param {HTMLElement} bubble - 初始气泡元素
+     * @param {HTMLElement} element - 初始元素
+     * @param {Object} siteConfig - 站点配置
      * @returns {HTMLElement|null} 内容元素
      */
-    findContentElement(bubble) {
+    findContentElement(element, siteConfig) {
         try {
-            console.log('[ButtonInjector] ========== 开始查找内容元素 ==========');
-            console.log('[ButtonInjector] 当前网站:', window.location.hostname);
+            debugLog(DEBUG_LEVEL.INFO, '========== 开始查找内容元素 ==========');
+            debugLog(DEBUG_LEVEL.INFO, '当前网站:', siteConfig.hostname);
             
             // 对于Kimi网站，内容通常在 markdown-container 中
-            if (window.location.hostname === 'www.kimi.com') {
-                console.log('[ButtonInjector] 检测到Kimi网站，查找markdown容器...');
+            if (siteConfig.hostname === 'www.kimi.com') {
+                debugLog(DEBUG_LEVEL.INFO, '检测到Kimi网站，查找markdown容器...');
                 
-                const markdownContainer = bubble.querySelector('.markdown-container');
+                const markdownContainer = element.querySelector('.markdown-container');
                 if (markdownContainer) {
-                    console.log('[ButtonInjector] ✅ 找到Kimi markdown容器:', markdownContainer.tagName, markdownContainer.className);
-                    console.log('[ButtonInjector] markdown容器文本长度:', (markdownContainer.textContent || '').length);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到Kimi markdown容器:', markdownContainer.tagName, markdownContainer.className);
+                    debugLog(DEBUG_LEVEL.INFO, 'markdown容器文本长度:', (markdownContainer.textContent || '').length);
                     return markdownContainer;
                 }
                 
                 // 备选：查找包含markdown类的元素
-                const markdownElement = bubble.querySelector('[class*="markdown"]');
+                const markdownElement = element.querySelector('[class*="markdown"]');
                 if (markdownElement) {
-                    console.log('[ButtonInjector] ✅ 找到Kimi markdown元素:', markdownElement.tagName, markdownElement.className);
-                    console.log('[ButtonInjector] markdown元素文本长度:', (markdownElement.textContent || '').length);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到Kimi markdown元素:', markdownElement.tagName, markdownElement.className);
+                    debugLog(DEBUG_LEVEL.INFO, 'markdown元素文本长度:', (markdownElement.textContent || '').length);
                     return markdownElement;
                 }
                 
-                console.warn('[ButtonInjector] ⚠️ Kimi网站未找到markdown容器');
+                debugLog(DEBUG_LEVEL.WARN, '⚠️ Kimi网站未找到markdown容器');
             }
             
             // 对于DeepSeek网站
-            if (window.location.hostname === 'chat.deepseek.com') {
-                console.log('[ButtonInjector] 检测到DeepSeek网站，查找消息内容...');
+            if (siteConfig.hostname === 'chat.deepseek.com') {
+                debugLog(DEBUG_LEVEL.INFO, '检测到DeepSeek网站，查找消息内容...');
                 
-                const messageContent = bubble.querySelector('[data-message-author="assistant"]');
+                const messageContent = element.querySelector('[data-message-author="assistant"]');
                 if (messageContent) {
-                    console.log('[ButtonInjector] ✅ 找到DeepSeek消息内容:', messageContent.tagName, messageContent.className);
-                    console.log('[ButtonInjector] 消息内容文本长度:', (messageContent.textContent || '').length);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到DeepSeek消息内容:', messageContent.tagName, messageContent.className);
+                    debugLog(DEBUG_LEVEL.INFO, '消息内容文本长度:', (messageContent.textContent || '').length);
                     return messageContent;
                 }
                 
-                console.warn('[ButtonInjector] ⚠️ DeepSeek网站未找到消息内容');
+                debugLog(DEBUG_LEVEL.WARN, '⚠️ DeepSeek网站未找到消息内容');
             }
             
             // 对于ChatGPT网站
-            if (window.location.hostname === 'chatgpt.com' || window.location.hostname === 'chat.openai.com') {
-                console.log('[ButtonInjector] 检测到ChatGPT网站，查找消息内容...');
+            if (siteConfig.hostname === 'chatgpt.com' || siteConfig.hostname === 'chat.openai.com') {
+                debugLog(DEBUG_LEVEL.INFO, '检测到ChatGPT网站，查找消息内容...');
                 
-                const messageContent = bubble.querySelector('[data-message-author-role="assistant"]');
+                const messageContent = element.querySelector('[data-message-author-role="assistant"]');
                 if (messageContent) {
-                    console.log('[ButtonInjector] ✅ 找到ChatGPT消息内容:', messageContent.tagName, messageContent.className);
-                    console.log('[ButtonInjector] 消息内容文本长度:', (messageContent.textContent || '').length);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到ChatGPT消息内容:', messageContent.tagName, messageContent.className);
+                    debugLog(DEBUG_LEVEL.INFO, '消息内容文本长度:', (messageContent.textContent || '').length);
                     return messageContent;
                 }
                 
-                console.warn('[ButtonInjector] ⚠️ ChatGPT网站未找到消息内容');
+                debugLog(DEBUG_LEVEL.WARN, '⚠️ ChatGPT网站未找到消息内容');
             }
             
             // 通用查找策略：寻找包含大量文本的元素
-            console.log('[ButtonInjector] 使用通用查找策略...');
+            debugLog(DEBUG_LEVEL.INFO, '使用通用查找策略...');
             const contentSelectors = [
                 '[class*="content"]',
                 '[class*="message"]',
@@ -411,403 +1377,377 @@ class ButtonInjector {
             ];
             
             for (const selector of contentSelectors) {
-                console.log(`[ButtonInjector] 尝试选择器: ${selector}`);
-                const elements = bubble.querySelectorAll(selector);
-                console.log(`[ButtonInjector] 找到 ${elements.length} 个元素`);
+                debugLog(DEBUG_LEVEL.INFO, `尝试选择器: ${selector}`);
+                const elements = element.querySelectorAll(selector);
+                debugLog(DEBUG_LEVEL.INFO, `找到 ${elements.length} 个元素`);
                 
-                for (const element of elements) {
-                    const text = element.textContent?.trim();
+                for (const el of elements) {
+                    const text = el.textContent?.trim();
                     if (text && text.length > 50) { // 内容长度阈值
-                        console.log(`[ButtonInjector] ✅ 找到通用内容元素: ${selector}`);
-                        console.log('[ButtonInjector] 元素信息:', element.tagName, element.className);
-                        console.log('[ButtonInjector] 文本长度:', text.length);
-                        console.log('[ButtonInjector] 文本预览:', text.substring(0, 100) + '...');
-                        return element;
+                        debugLog(DEBUG_LEVEL.INFO, `✅ 找到通用内容元素: ${selector}`);
+                        debugLog(DEBUG_LEVEL.INFO, '元素信息:', el.tagName, el.className);
+                        debugLog(DEBUG_LEVEL.INFO, '文本长度:', text.length);
+                        debugLog(DEBUG_LEVEL.INFO, '文本预览:', text.substring(0, 100) + '...');
+                        return el;
                     }
                 }
             }
             
             // 如果都找不到，返回原始元素
-            console.warn('[ButtonInjector] ⚠️ 未找到专门的内容元素，使用原始元素');
-            console.log('[ButtonInjector] 原始元素文本长度:', (bubble.textContent || '').length);
-            return bubble;
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ 未找到专门的内容元素，使用原始元素');
+            debugLog(DEBUG_LEVEL.INFO, '原始元素文本长度:', (element.textContent || '').length);
+            return element;
             
         } catch (error) {
-            console.error('[ButtonInjector] ❌ 查找内容元素失败:', error);
-            console.log('[ButtonInjector] 降级到原始元素');
-            return bubble; // 降级到原始元素
+            debugLog(DEBUG_LEVEL.ERROR, '❌ 查找内容元素失败:', error);
+            debugLog(DEBUG_LEVEL.INFO, '降级到原始元素');
+            return element; // 降级到原始元素
         }
     }
 
-    /**
-     * 找到最合适的按钮容器
-     */
-    findBestContainer(element) {
+    findButtonContainer(element, siteConfig) {
+        // 对于Kimi网站，使用特殊的按钮容器查找逻辑
+        if (siteConfig.hostname === 'www.kimi.com') {
+            return this.findKimiButtonContainer(element, siteConfig);
+        }
+
+        if (siteConfig.buttonContainer) {
+            const container = element.querySelector(siteConfig.buttonContainer) ||
+                element.closest(siteConfig.buttonContainer);
+            if (container) {
+                return container;
+            }
+        }
+
         let current = element;
-        let bestContainer = element;
+        let attempts = 0;
+        const maxAttempts = 5;
 
-        // 向上查找，寻找更合适的容器
-        for (let i = 0; i < 5 && current.parentElement; i++) {
+        while (current && attempts < maxAttempts) {
+            if (this.isGoodButtonContainer(current)) {
+                return current;
+            }
+
             current = current.parentElement;
-
-            // 检查是否是更好的容器
-            if (this.isBetterContainer(current, bestContainer)) {
-                bestContainer = current;
-            }
+            attempts++;
         }
 
-        return bestContainer;
+        return element;
     }
 
-    /**
-     * 判断是否是更好的容器
-     */
-    isBetterContainer(candidate, current) {
-        const candidateClasses = candidate.className.toLowerCase();
-        const candidateText = candidate.textContent?.trim() || '';
+    findKimiButtonContainer(element, siteConfig) {
+        // 首先尝试找到segment-assistant-actions-content容器
+        let container = element.querySelector('.segment-assistant-actions-content');
+        if (container) {
+            debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container: .segment-assistant-actions-content');
+            return container;
+        }
 
-        // 如果候选容器包含明显的消息容器特征
-        const messageKeywords = ['message', 'chat', 'conversation', 'response', 'reply'];
-        const hasMessageKeyword = messageKeywords.some(keyword =>
-            candidateClasses.includes(keyword)
-        );
+        // 如果没找到，向上查找父级元素
+        let current = element;
+        let attempts = 0;
+        const maxAttempts = 10;
 
-        // 如果候选容器的文本长度合理
-        const currentText = current.textContent?.trim() || '';
-        const textRatio = candidateText.length / Math.max(currentText.length, 1);
-        const reasonableSize = textRatio <= 2;
+        while (current && attempts < maxAttempts) {
+            container = current.querySelector('.segment-assistant-actions-content');
+            if (container) {
+                debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container in parent element');
+                return container;
+            }
 
-        // 如果候选容器有相对定位
-        const style = window.getComputedStyle(candidate);
-        const canPosition = style.position !== 'static' || candidate.tagName !== 'SPAN';
+            current = current.parentElement;
+            attempts++;
+        }
 
-        return hasMessageKeyword && reasonableSize && canPosition;
+        // 如果还是没找到，尝试查找segment-assistant-actions容器
+        current = element;
+        attempts = 0;
+
+        while (current && attempts < maxAttempts) {
+            container = current.querySelector('.segment-assistant-actions');
+            if (container) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⚠️ Found segment-assistant-actions, will create content container');
+                return container;
+            }
+
+            current = current.parentElement;
+            attempts++;
+        }
+
+        debugLog(DEBUG_LEVEL.WARN, '❌ No Kimi button container found');
+        return element;
     }
 
-    /**
-     * 判断元素是否是AI回复
-     */
-    isAIResponse(element) {
+    isGoodButtonContainer(element) {
+        if (!element) return false;
+
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+
+        const hasSpace = rect.width > 100 && rect.height > 30;
+        const isPositioned = ['relative', 'absolute', 'fixed'].includes(style.position) ||
+            ['block', 'flex', 'grid'].includes(style.display);
+        const notInline = style.display !== 'inline';
+
+        return hasSpace && isPositioned && notInline;
+    }
+
+    isElementVisible(element) {
+        if (!element) return false;
+
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+
+        return style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0' &&
+            rect.width > 0 &&
+            rect.height > 0;
+    }
+
+    validateButtonInjection(element, siteConfig) {
         try {
-            // 检查元素及其父元素的类名和属性
-            let current = element;
-            for (let i = 0; i < 5 && current; i++) {
-                const className = current.className?.toLowerCase() || '';
-                const dataRole = current.getAttribute('data-role')?.toLowerCase() || '';
-                const dataAuthor = current.getAttribute('data-author')?.toLowerCase() || '';
+            // 对于Kimi网站，使用专门的消息检测器
+            if (siteConfig.hostname === 'www.kimi.com') {
+                const analysis = KimiMessageDetector.analyzeMessageType(element);
+                
+                debugLog(DEBUG_LEVEL.DEBUG, `🔍 Kimi消息分析结果:`, {
+                    type: analysis.type,
+                    confidence: (analysis.confidence * 100).toFixed(1) + '%',
+                    indicators: analysis.indicators.join(', ')
+                });
 
-                // 如果包含user，判定为用户消息
-                if (className.includes('user')) {
+                // 如果是用户消息，不注入按钮
+                if (analysis.type === MessageType.HUMAN) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '❌ 检测到用户消息，跳过按钮注入');
                     return false;
                 }
 
-                // 明确的AI回复标识
-                if (dataRole === 'assistant' || dataAuthor === 'assistant' ||
-                    className.includes('assistant') || className.includes('ai-response') ||
-                    className.includes('bot-message') || className.includes('kimi-response')) {
+                // 如果是AI回复，注入按钮
+                if (analysis.type === MessageType.AI) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '✅ 检测到AI回复，允许按钮注入');
                     return true;
                 }
 
-                // 明确的用户消息标识
-                if (dataRole === 'user' || dataAuthor === 'user' ||
-                    className.includes('user-message') || className.includes('human-message')) {
-                    return false;
+                // 如果类型未知但置信度较低，使用备用检测方法
+                if (analysis.confidence < 0.6) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '⚠️ 置信度较低，使用备用检测方法');
+                    return this.fallbackMessageDetection(element);
                 }
 
-                current = current.parentElement;
+                return true;
             }
 
-            // 通过文本内容特征判断
-            const text = element.textContent?.trim() || '';
-            if (text.length > 0) {
-                // AI回复的特征词汇
-                const aiIndicators = [
-                    '我是', '我可以', '根据', '建议', '您可以', '建议您',
-                    '以下是', '具体来说', '需要注意', '总结一下',
-                    '首先', '其次', '最后', '另外', '此外',
-                    '如果您', '您需要', '您可以', '为您',
-                    'Kimi', '助手', '人工智能', 'AI'
-                ];
-
-                // 用户消息的特征词汇
-                const userIndicators = [
-                    '我想', '我需要', '请问', '能否', '可以吗',
-                    '怎么办', '如何', '为什么', '什么是',
-                    '帮我', '告诉我', '我该', '我应该'
-                ];
-
-                const hasAIIndicators = aiIndicators.some(indicator => text.includes(indicator));
-                const hasUserIndicators = userIndicators.some(indicator => text.includes(indicator));
-
-                if (hasAIIndicators && !hasUserIndicators) {
-                    return true;
-                }
-
-                if (hasUserIndicators && !hasAIIndicators) {
-                    return false;
-                }
-            }
-
-            // 默认情况：如果无法确定，倾向于认为是AI回复
-            return true;
+            // 对于其他网站，使用通用检测逻辑
+            return this.genericMessageValidation(element, siteConfig);
 
         } catch (error) {
+            debugLog(DEBUG_LEVEL.ERROR, '❌ 消息类型验证出错:', error);
             return true;
         }
     }
 
-    /**
-     * 清理所有注入的按钮
-     */
+    fallbackMessageDetection(element) {
+        const text = element.textContent?.trim() || '';
+        
+        const userPatterns = [
+            /^(请|帮我|告诉我|我想|我需要)/,
+            /[？?]$/,
+            /^.{1,50}[？?]$/
+        ];
+
+        const isLikelyUserMessage = userPatterns.some(pattern => pattern.test(text));
+        
+        if (isLikelyUserMessage) {
+            debugLog(DEBUG_LEVEL.DEBUG, '❌ 备用检测：识别为用户消息');
+            return false;
+        }
+
+        debugLog(DEBUG_LEVEL.DEBUG, '✅ 备用检测：允许按钮注入');
+        return true;
+    }
+
+    genericMessageValidation(element, siteConfig) {
+        let current = element;
+        for (let i = 0; i < 3 && current; i++) {
+            const dataRole = current.getAttribute('data-role')?.toLowerCase();
+            const dataAuthor = current.getAttribute('data-author')?.toLowerCase();
+            const className = current.className?.toLowerCase() || '';
+
+            if (dataRole === 'user' || dataAuthor === 'user' || className.includes('user-message')) {
+                debugLog(DEBUG_LEVEL.DEBUG, '❌ 通用检测：识别为用户消息');
+                return false;
+            }
+
+            if (dataRole === 'assistant' || dataAuthor === 'assistant' || className.includes('assistant')) {
+                debugLog(DEBUG_LEVEL.DEBUG, '✅ 通用检测：识别为AI回复');
+                return true;
+            }
+
+            current = current.parentElement;
+        }
+
+        debugLog(DEBUG_LEVEL.DEBUG, '✅ 通用检测：默认允许按钮注入');
+        return true;
+    }
+
+    cleanupIncorrectButtons() {
+        const allButtons = document.querySelectorAll(`.${this.containerClass}`);
+        let removedCount = 0;
+
+        allButtons.forEach(buttonContainer => {
+            const parentElement = buttonContainer.parentElement;
+            if (parentElement) {
+                const siteConfig = this.siteManager.getCurrentSiteConfig();
+                if (siteConfig && !this.validateButtonInjection(parentElement, siteConfig)) {
+                    buttonContainer.remove();
+                    removedCount++;
+                    debugLog(DEBUG_LEVEL.DEBUG, '🧹 移除了错误放置的按钮');
+                }
+            }
+        });
+
+        if (removedCount > 0) {
+            debugLog(DEBUG_LEVEL.INFO, `🧹 清理了 ${removedCount} 个错误放置的按钮`);
+        }
+    }
+
+    stop() {
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
+        this.isObserving = false;
+        debugLog(DEBUG_LEVEL.INFO, '🛑 Button injection stopped');
+    }
+
     cleanup() {
-        try {
-            const buttons = document.querySelectorAll(`.${this.buttonClass}`);
-            buttons.forEach(button => {
-                if (button.parentNode) {
-                    button.parentNode.removeChild(button);
-                }
-            });
+        const buttons = document.querySelectorAll(`.${this.containerClass}`);
+        buttons.forEach(button => {
+            button.remove();
+        });
 
-            this.injectedButtons = new WeakSet();
-            console.log('✅ Cleaned up all injected buttons');
-        } catch (error) {
-            console.error('❌ Error during cleanup:', error);
-        }
+        this.injectedButtons = new WeakSet();
+        debugLog(DEBUG_LEVEL.INFO, '🧹 Cleaned up all injected buttons');
     }
 }
 
-/**
- * 主扩展类
- * 负责协调所有组件并管理扩展生命周期
- */
+// ==================== 主扩展类 ====================
 class PureTextExtension {
     constructor() {
-        this.siteManager = null;
-        this.buttonInjector = null;
-        this.isInitialized = false;
+        this.siteManager = new SiteManager();
+        this.buttonInjector = new ButtonInjector(this.siteManager);
         this.isRunning = false;
     }
 
-    /**
-     * 初始化扩展
-     */
-    async init() {
+    async start() {
+        if (this.isRunning) {
+            debugLog(DEBUG_LEVEL.DEBUG, '🔄 Extension already running');
+            return;
+        }
+
         try {
-            console.log('🚀 Initializing extension...');
+            debugLog(DEBUG_LEVEL.INFO, '🚀 Starting PureText Extension...');
 
-            // 创建站点管理器
-            this.siteManager = new SiteManager();
-
-            // 加载站点配置
             await this.siteManager.loadSiteConfig();
 
-            // 检查当前站点是否支持
-            if (!this.siteManager.isSupported()) {
-                console.log('❌ Current site is not supported:', window.location.hostname);
+            if (!this.siteManager.isCurrentSiteSupported()) {
+                debugLog(DEBUG_LEVEL.INFO, `ℹ️ Current site (${window.location.hostname}) is not supported`);
                 return;
             }
 
-            console.log('✅ Site supported:', this.siteManager.getSiteName());
+            debugLog(DEBUG_LEVEL.INFO, `✅ Current site supported: ${window.location.hostname}`);
 
-            // 创建按钮注入器
-            this.buttonInjector = new ButtonInjector(this.siteManager);
-
-            this.isInitialized = true;
-            console.log('✅ Extension initialized successfully');
-
-        } catch (error) {
-            console.error('❌ Failed to initialize extension:', error);
-        }
-    }
-
-    /**
-     * 启动扩展功能
-     */
-    start() {
-        if (!this.isInitialized) {
-            console.warn('⚠️ Extension not initialized, cannot start');
-            return;
-        }
-
-        if (this.isRunning) {
-            console.log('✅ Extension already running');
-            return;
-        }
-
-        try {
-            // 开始监听DOM变化并注入按钮
-            this.buttonInjector.startObserving();
+            this.buttonInjector.start();
 
             this.isRunning = true;
-            console.log('✅ Extension started successfully');
+            debugLog(DEBUG_LEVEL.INFO, '✅ PureText Extension started successfully');
 
         } catch (error) {
-            console.error('❌ Failed to start extension:', error);
+            debugLog(DEBUG_LEVEL.ERROR, '❌ Failed to start extension:', error);
         }
     }
 
-    /**
-     * 停止扩展功能
-     */
     stop() {
         if (!this.isRunning) {
+            debugLog(DEBUG_LEVEL.DEBUG, '🔄 Extension not running');
             return;
         }
 
         try {
-            // 停止DOM监听
-            if (this.buttonInjector) {
-                this.buttonInjector.stopObserving();
-                this.buttonInjector.cleanup();
-            }
+            debugLog(DEBUG_LEVEL.INFO, '🛑 Stopping PureText Extension...');
+
+            this.buttonInjector.stop();
+            this.buttonInjector.cleanup();
 
             this.isRunning = false;
-            console.log('✅ Extension stopped');
+            debugLog(DEBUG_LEVEL.INFO, '✅ PureText Extension stopped successfully');
 
         } catch (error) {
-            console.error('❌ Error stopping extension:', error);
+            debugLog(DEBUG_LEVEL.ERROR, '❌ Failed to stop extension:', error);
         }
     }
 
-    /**
-     * 重启扩展
-     */
     async restart() {
-        console.log('🔄 Restarting extension...');
+        debugLog(DEBUG_LEVEL.INFO, '🔄 Restarting PureText Extension...');
         this.stop();
-        await this.init();
-        this.start();
+        await this.start();
     }
 
-    /**
-     * 获取扩展状态信息
-     */
     getStatus() {
         return {
-            isInitialized: this.isInitialized,
             isRunning: this.isRunning,
-            currentSite: this.siteManager ? this.siteManager.getSiteName() : null,
-            isSupported: this.siteManager ? this.siteManager.isSupported() : false,
-            hostname: window.location.hostname,
-            selector: this.siteManager ? this.siteManager.getSelector() : null
+            currentSite: this.siteManager.getCurrentSiteConfig(),
+            supportedSites: this.siteManager.getSupportedSites(),
+            injectedButtonsCount: document.querySelectorAll('.puretext-button-container').length
         };
     }
 }
 
-// 全局扩展实例
+// ==================== 初始化和启动 ====================
 let pureTextExtension = null;
 
-/**
- * 扩展启动函数
- */
 async function startExtension() {
     try {
-        // 避免重复初始化
-        if (pureTextExtension) {
-            console.log('✅ Extension already exists');
-            return;
+        if (!pureTextExtension) {
+            pureTextExtension = new PureTextExtension();
         }
-
-        // 创建扩展实例
-        pureTextExtension = new PureTextExtension();
-
-        // 初始化并启动
-        await pureTextExtension.init();
-        pureTextExtension.start();
-
-        // 验证启动状态
-        const status = pureTextExtension.getStatus();
-        console.log('✅ Extension startup completed', status);
-
+        await pureTextExtension.start();
     } catch (error) {
-        console.error('❌ Failed to start extension:', error);
+        console.error('PureText: Failed to start extension:', error);
     }
 }
 
-/**
- * 页面加载完成后启动扩展
- */
-function initializeWhenReady() {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startExtension);
-    } else {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
         startExtension();
-    }
+    });
+} else {
+    startExtension();
 }
 
-/**
- * 处理页面可见性变化
- */
-function handleVisibilityChange() {
-    if (document.hidden) {
-        console.log('📱 Page hidden');
-    } else {
-        console.log('📱 Page visible');
-        if (pureTextExtension && !pureTextExtension.isRunning) {
-            pureTextExtension.start();
-        }
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && pureTextExtension) {
+        setTimeout(() => {
+            if (pureTextExtension.isRunning) {
+                pureTextExtension.buttonInjector.start();
+            }
+        }, 1000);
     }
-}
+});
 
-/**
- * 处理页面卸载
- */
-function handlePageUnload() {
+// 暴露全局控制函数供调试使用
+window.pureTextExtension = pureTextExtension;
+window.stopPureText = function () {
     if (pureTextExtension) {
         pureTextExtension.stop();
     }
-}
+};
 
-// 监听页面可见性变化
-document.addEventListener('visibilitychange', handleVisibilityChange);
-
-// 监听页面卸载
-window.addEventListener('beforeunload', handlePageUnload);
-
-// 启动扩展
-console.log('🚀 PureText One-Click extension loaded');
-initializeWhenReady();
-
-// 挂载 ClipboardManager 到全局，确保按钮事件能访问
+// 暴露类供调试使用
+window.KimiMessageDetector = KimiMessageDetector;
+window.MessageType = MessageType;
 window.ClipboardManager = ClipboardManager;
+window.CopyButton = CopyButton;
 
-/**
- * 初始化HTML格式化管理器
- * 这个函数负责加载和初始化 @/formatters 文件夹中的所有格式化器
- * 
- * 格式化器包括：
- * - HtmlFormatter.js: 基础格式化器接口
- * - GenericHtmlFormatter.js: 通用格式化器（处理大多数网站）
- * - KimiHtmlFormatter.js: Kimi网站专用格式化器
- * - DeepSeekHtmlFormatter.js: DeepSeek网站专用格式化器
- * 
- * HtmlFormatterManager 会：
- * 1. 根据当前网站域名选择合适的格式化器
- * 2. 将AI回复的HTML内容转换为Word友好的格式
- * 3. 处理代码块、列表、表格等复杂结构
- * 4. 清理不必要的样式和脚本
- */
-async function initializeHtmlFormatterManager() {
-    try {
-        // 检查HtmlFormatterManager是否可用
-        if (typeof HtmlFormatterManager !== 'undefined') {
-            // 创建全局实例
-            // 🔥 这里会实例化 HtmlFormatterManager，它会：
-            // - 导入所有格式化器类
-            // - 注册网站特定的格式化器（如 KimiHtmlFormatter、DeepSeekHtmlFormatter）
-            // - 设置通用格式化器（GenericHtmlFormatter）作为降级方案
-            window.htmlFormatterManager = new HtmlFormatterManager();
-            console.log('✅ HTML formatter manager initialized');
-        } else {
-            console.warn('⚠️ HtmlFormatterManager not available');
-        }
-    } catch (error) {
-        console.error('❌ Failed to initialize HTML formatter manager:', error);
-        // 不阻塞扩展的其他功能
-    }
-}
-
-// 延迟初始化HTML格式化管理器，确保所有模块都已加载
-setTimeout(() => {
-    initializeHtmlFormatterManager();
-}, 100);
+debugLog(DEBUG_LEVEL.INFO, '✅ PureText extension unified script loaded successfully');
