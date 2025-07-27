@@ -371,10 +371,20 @@ export function createTestEnvironment(hostname = 'chat.openai.com') {
   // Mock clipboard API
   Object.defineProperty(window.navigator, 'clipboard', {
     value: {
-      writeText: vi.fn(() => Promise.resolve())
+      writeText: vi.fn(() => Promise.resolve()),
+      write: vi.fn(() => Promise.resolve())
     },
     writable: true
   });
+  
+  // Mock ClipboardItem
+  const ClipboardItemMock = vi.fn().mockImplementation((data) => ({
+    data,
+    types: Object.keys(data)
+  }));
+  
+  global.ClipboardItem = ClipboardItemMock;
+  window.ClipboardItem = ClipboardItemMock;
   
   // Mock document.execCommand
   document.execCommand = vi.fn(() => true);

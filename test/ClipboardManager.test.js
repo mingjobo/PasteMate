@@ -165,14 +165,18 @@ describe('ClipboardManager', () => {
   });
 
   describe('copyHtmlToClipboard', () => {
-    it('should successfully copy text using clipboard API', async () => {
+    it('should successfully copy HTML using clipboard API', async () => {
       const element = env.document.createElement('div');
       element.textContent = 'Test content';
       
       const result = await ClipboardManager.copyHtmlToClipboard(element);
       
       expect(result).toBe(true);
-      expect(env.window.navigator.clipboard.writeText).toHaveBeenCalledWith('Test content');
+      expect(env.window.navigator.clipboard.write).toHaveBeenCalled();
+      expect(env.window.ClipboardItem).toHaveBeenCalledWith({
+        'text/html': expect.any(Blob),
+        'text/plain': expect.any(Blob)
+      });
     });
 
     it('should return false for null element', async () => {
@@ -180,35 +184,40 @@ describe('ClipboardManager', () => {
       expect(result).toBe(false);
     });
 
-    it('should return false for element with no text content', async () => {
+    it('should still copy even for element with only whitespace', async () => {
       const element = env.document.createElement('div');
       element.textContent = '   ';
       
       const result = await ClipboardManager.copyHtmlToClipboard(element);
-      expect(result).toBe(false);
+      // The new implementation will still copy the HTML structure even if text is empty
+      expect(result).toBe(true);
     });
 
-    it('should fallback to execCommand when clipboard API fails', async () => {
+    it('should handle clipboard API failure gracefully', async () => {
       const element = env.document.createElement('div');
       element.textContent = 'Test content';
       
       // Mock clipboard API to fail
-      env.window.navigator.clipboard.writeText.mockRejectedValue(new Error('Clipboard API failed'));
+      env.window.navigator.clipboard.write.mockRejectedValue(new Error('Clipboard API failed'));
       
       const result = await ClipboardManager.copyHtmlToClipboard(element);
       
-      expect(result).toBe(true);
-      expect(env.document.execCommand).toHaveBeenCalledWith('copy');
+      // Should return false when clipboard API fails
+      expect(result).toBe(false);
     });
 
-    it('should extract plain text before copying', async () => {
+    it('should process HTML content and copy both HTML and plain text', async () => {
       const element = env.document.createElement('div');
       element.innerHTML = '<strong>Bold</strong> and <em>italic</em> text';
       
       const result = await ClipboardManager.copyHtmlToClipboard(element);
       
       expect(result).toBe(true);
-      expect(env.window.navigator.clipboard.writeText).toHaveBeenCalledWith('Bold and italic text');
+      expect(env.window.navigator.clipboard.write).toHaveBeenCalled();
+      expect(env.window.ClipboardItem).toHaveBeenCalledWith({
+        'text/html': expect.any(Blob),
+        'text/plain': expect.any(Blob)
+      });
     });
   });
 

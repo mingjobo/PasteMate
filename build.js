@@ -17,29 +17,32 @@ mkdirSync(distDir, { recursive: true });
 
 console.log('🚀 Building PureText One-Click Extension...');
 
-// Build configuration
+// Build configuration - 将所有模块打包到content.js中
 const buildConfig = {
-  entryPoints: ['content.js'],
+  entryPoints: ['content-with-modules.js'],
   bundle: true,
-  minify: true,
+  minify: false, // 暂时关闭压缩以便调试
   format: 'iife',
   target: 'es2020',
-  outdir: distDir,
+  outfile: join(distDir, 'content.js'),
   platform: 'browser',
   define: {
     'process.env.NODE_ENV': '"production"'
-  }
+  },
+  // 确保所有依赖都被打包
+  external: []
 };
 
 try {
-  // Build content script
+  // Build content script with all modules
   await build(buildConfig);
-  console.log('✅ Content script built successfully');
+  console.log('✅ Content script with modules built successfully');
 
   // Copy static files
   const filesToCopy = [
     'manifest.json',
     'sites.js',
+    'src',
     '_locales',
     'icons'
   ];
@@ -47,9 +50,9 @@ try {
   filesToCopy.forEach(file => {
     const srcPath = join(__dirname, file);
     const destPath = join(distDir, file);
-    
+
     if (existsSync(srcPath)) {
-      if (file === '_locales' || file === 'icons') {
+      if (file === '_locales' || file === 'icons' || file === 'src') {
         // Copy directories recursively
         copyDirectory(srcPath, destPath);
       } else {
@@ -83,13 +86,13 @@ function copyDirectory(src, dest) {
   if (!existsSync(dest)) {
     mkdirSync(dest, { recursive: true });
   }
-  
+
   const entries = readdirSync(src);
-  
+
   entries.forEach(entry => {
     const srcPath = join(src, entry);
     const destPath = join(dest, entry);
-    
+
     if (statSync(srcPath).isDirectory()) {
       copyDirectory(srcPath, destPath);
     } else {

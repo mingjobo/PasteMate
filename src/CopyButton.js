@@ -345,10 +345,5 @@ class CopyButton {
   }
 }
 
-// 导出供其他模块使用
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { CopyButton };
-}
-
-// 全局可用
-window.CopyButton = CopyButton;
+// 导出类
+export { CopyButton };

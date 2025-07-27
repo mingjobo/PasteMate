@@ -1,28 +1,56 @@
+import { HtmlFormatterManager } from './HtmlFormatterManager.js';
+
 /**
  * 剪贴板管理器类
  * 负责纯文本提取和剪贴板操作
  */
-export class ClipboardManager {
+class ClipboardManager {
+  // 静态实例，用于管理HTML格式化
+  static formatterManager = null;
+  
+  /**
+   * 初始化HTML格式化管理器
+   * @returns {Promise<void>}
+   */
+  static async initializeFormatterManager() {
+    if (!this.formatterManager) {
+      this.formatterManager = new HtmlFormatterManager();
+      console.debug('[ClipboardManager] HTML formatter manager initialized');
+    }
+  }
   /**
    * 复制元素的 HTML 内容到剪贴板（Word 可识别格式）
    * @param {HTMLElement} element - 要复制内容的DOM元素
    * @returns {Promise<boolean>} 复制是否成功
    */
   static async copyHtmlToClipboard(element) {
+    const startTime = performance.now();
+    
     try {
       if (!element) {
         this.showErrorMessage('未找到可复制内容');
         return false;
       }
-      // 调试：输出 element
-      console.debug('[PureText] copyHtmlToClipboard: element', element);
-      // 复制整个 AI 回复主容器的 outerHTML，并包裹完整 HTML 结构
-      const outer = element.outerHTML;
-      console.debug('[PureText] copyHtmlToClipboard: outerHTML', outer);
-      const html = `<html><body>${outer}</body></html>`;
-      console.debug('[PureText] copyHtmlToClipboard: final html', html);
+      
+      console.log('[ClipboardManager] ========== 开始HTML复制操作 ==========');
+      console.log('[ClipboardManager] 目标元素:', element.tagName, element.className);
+      console.log('[ClipboardManager] 元素内容预览:', (element.textContent || '').substring(0, 200) + '...');
+      
+      // 确保格式化管理器已初始化
+      await this.initializeFormatterManager();
+      console.log('[ClipboardManager] 格式化管理器已初始化');
+      
+      // 使用新的HTML格式化系统
+      console.log('[ClipboardManager] 开始HTML格式化...');
+      const processedHtml = await this.formatHtmlForWord(element);
+      console.log('[ClipboardManager] HTML格式化完成，结果长度:', processedHtml.length);
+      console.log('[ClipboardManager] 格式化结果预览:', processedHtml.substring(0, 500) + '...');
+      
+      const html = `<html><body>${processedHtml}</body></html>`;
+      console.log('[ClipboardManager] 最终HTML长度:', html.length);
+      
       const text = element.innerText || element.textContent || '';
-      console.debug('[PureText] copyHtmlToClipboard: text', text);
+      console.log('[ClipboardManager] 提取的纯文本长度:', text.length);
 
       const blobHtml = new Blob([html], { type: 'text/html' });
       const blobText = new Blob([text], { type: 'text/plain' });
@@ -30,17 +58,287 @@ export class ClipboardManager {
         'text/html': blobHtml,
         'text/plain': blobText
       });
-      console.debug('[PureText] copyHtmlToClipboard: ClipboardItem', clipboardItem);
-      await navigator.clipboard.write([
-        clipboardItem
-      ]);
+      
+      await navigator.clipboard.write([clipboardItem]);
+      
+      // 记录性能指标
+      const duration = performance.now() - startTime;
+      const hostname = this.detectWebsite();
+      this.logPerformanceMetrics('copyHtmlToClipboard', duration, true, hostname);
+      
       this.showSuccessMessage('已复制为 Word 格式，可直接粘贴到 Word');
       return true;
+      
     } catch (error) {
+      const duration = performance.now() - startTime;
+      const hostname = this.detectWebsite();
+      this.logPerformanceMetrics('copyHtmlToClipboard', duration, false, hostname);
+      
+      console.error(`[ClipboardManager] Copy operation failed after ${duration.toFixed(2)}ms:`, error);
       this.showErrorMessage('复制失败，请重试');
-      console.error('[PureText] copyHtmlToClipboard error:', error);
       return false;
     }
+  }
+
+  /**
+   * 使用HTML格式化系统格式化内容
+   * @param {HTMLElement} element - 要格式化的DOM元素
+   * @returns {Promise<string>} 格式化后的HTML字符串
+   */
+  static async formatHtmlForWord(element) {
+    const startTime = performance.now();
+    
+    try {
+      // 检测当前网站
+      const hostname = this.detectWebsite();
+      console.debug(`[ClipboardManager] Detected website: ${hostname}`);
+      
+      // 使用集成的格式化管理器
+      if (this.formatterManager) {
+        console.debug('[ClipboardManager] Using integrated HTML formatter manager');
+        const result = await this.formatterManager.formatForWord(element, hostname);
+        
+        const duration = performance.now() - startTime;
+        console.debug(`[ClipboardManager] HTML formatting completed in ${duration.toFixed(2)}ms`);
+        
+        return result;
+      } else {
+        console.warn('[ClipboardManager] Formatter manager not initialized, using legacy processing');
+        return this.legacyHtmlProcessing(element);
+      }
+      
+    } catch (error) {
+      const duration = performance.now() - startTime;
+      console.error(`[ClipboardManager] HTML formatting failed after ${duration.toFixed(2)}ms:`, error);
+      
+      // 降级到旧的处理方式
+      console.warn('[ClipboardManager] Falling back to legacy HTML processing');
+      return this.legacyHtmlProcessing(element);
+    }
+  }
+  
+  /**
+   * 检测当前网站
+   * @returns {string} 网站域名
+   */
+  static detectWebsite() {
+    const hostname = window.location.hostname;
+    
+    // 标准化域名处理
+    const normalizedHostname = hostname.toLowerCase();
+    
+    // 支持的网站映射
+    const siteMapping = {
+      'www.kimi.com': 'www.kimi.com',
+      'kimi.com': 'www.kimi.com',
+      'chat.deepseek.com': 'chat.deepseek.com',
+      'deepseek.com': 'chat.deepseek.com',
+      'chatgpt.com': 'chatgpt.com',
+      'chat.openai.com': 'chatgpt.com'
+    };
+    
+    const mappedHostname = siteMapping[normalizedHostname] || normalizedHostname;
+    
+    console.debug(`[ClipboardManager] Website detection: ${hostname} -> ${mappedHostname}`);
+    
+    return mappedHostname;
+  }
+
+  /**
+   * 旧版HTML处理逻辑（作为降级方案）
+   * @param {HTMLElement} element - DOM元素
+   * @returns {string} 处理后的HTML
+   */
+  static legacyHtmlProcessing(element) {
+    const hostname = window.location.hostname;
+    
+    if (hostname === 'www.kimi.com') {
+      return this.processKimiHtmlForWord(element);
+    } else {
+      // 其他网站使用原始HTML
+      return element.outerHTML;
+    }
+  }
+
+  /**
+   * 处理Kimi网站的HTML结构，转换为Word友好的格式
+   * @param {HTMLElement} element - 要处理的DOM元素
+   * @returns {string} 处理后的HTML字符串
+   */
+  static processKimiHtmlForWord(element) {
+    // 创建元素副本避免修改原DOM
+    const cloned = element.cloneNode(true);
+    
+    // 移除不需要的元素
+    this.removeUnwantedElements(cloned);
+    
+    // 转换Kimi的特殊结构为标准HTML
+    const processedHtml = this.convertKimiStructureToStandardHtml(cloned);
+    
+    return processedHtml;
+  }
+
+  /**
+   * 移除不需要的元素（按钮、推荐问题等）
+   * @param {HTMLElement} cloned - 克隆的DOM元素
+   */
+  static removeUnwantedElements(cloned) {
+    // 移除复制按钮
+    cloned.querySelectorAll('.puretext-copy-btn, .puretext-button-container').forEach(el => el.remove());
+    
+    // 移除操作按钮
+    cloned.querySelectorAll('button, [role="button"]').forEach(button => {
+      const text = button.textContent?.trim();
+      if (text && /^(复制|重试|分享|编辑|搜索|点赞|踩|收藏)$/.test(text)) {
+        button.remove();
+      }
+    });
+    
+    // 移除AI声明
+    cloned.querySelectorAll('*').forEach(el => {
+      const text = el.textContent?.trim();
+      if (text && /本回答由\s*AI\s*生成.*内容仅供参考/.test(text)) {
+        el.remove();
+      }
+    });
+    
+    // 移除推荐问题区域
+    cloned.querySelectorAll('[class*="recommend"], [class*="suggest"]').forEach(el => el.remove());
+  }
+
+  /**
+   * 将Kimi的DOM结构转换为Word友好的标准HTML
+   * @param {HTMLElement} cloned - 处理后的克隆元素
+   * @returns {string} 标准HTML字符串
+   */
+  static convertKimiStructureToStandardHtml(cloned) {
+    let html = '<div>';
+    
+    // 遍历所有子元素，重构为标准HTML格式
+    const walker = document.createTreeWalker(
+      cloned,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
+    
+    let currentNode;
+    let inList = false;
+    let listItems = [];
+    
+    while (currentNode = walker.nextNode()) {
+      if (currentNode.nodeType === Node.TEXT_NODE) {
+        const text = currentNode.textContent.trim();
+        if (text) {
+          // 检查是否是列表项的开始
+          if (this.isListItemStart(text)) {
+            if (!inList) {
+              inList = true;
+              listItems = [];
+            }
+            listItems.push(text);
+          } else if (inList && text.length > 0) {
+            // 如果在列表中，继续添加到当前列表项
+            if (listItems.length > 0) {
+              listItems[listItems.length - 1] += ' ' + text;
+            }
+          } else {
+            // 不在列表中的普通文本
+            if (inList) {
+              // 结束列表，输出列表HTML
+              html += this.generateListHtml(listItems);
+              inList = false;
+              listItems = [];
+            }
+            
+            // 根据文本特征决定HTML标签
+            if (this.isHeading(text)) {
+              html += `<h3><strong>${text}</strong></h3>`;
+            } else if (this.isBlockQuote(text)) {
+              html += `<blockquote><p>${text}</p></blockquote>`;
+            } else if (text.length > 0) {
+              html += `<p>${text}</p>`;
+            }
+          }
+        }
+      }
+    }
+    
+    // 如果最后还在列表中，输出列表
+    if (inList && listItems.length > 0) {
+      html += this.generateListHtml(listItems);
+    }
+    
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * 检查文本是否是列表项的开始
+   * @param {string} text - 要检查的文本
+   * @returns {boolean} 是否是列表项
+   */
+  static isListItemStart(text) {
+    // 检查是否以项目符号或数字开头
+    return /^[\s]*[•·▪▫◦‣⁃]\s+/.test(text) || 
+           /^[\s]*\d+[\.\)]\s+/.test(text) ||
+           /^[\s]*[a-zA-Z][\.\)]\s+/.test(text) ||
+           // Kimi特有的格式：合约价值、保证金比例等
+           /^[\s]*(合约价值|保证金比例|你账户里总共|期货公司会|平仓后|不会倒扣|只是亏的|剩余的钱)[:：]/.test(text);
+  }
+
+  /**
+   * 检查文本是否是标题
+   * @param {string} text - 要检查的文本
+   * @returns {boolean} 是否是标题
+   */
+  static isHeading(text) {
+    return /^[\s]*[✅❌🔧]\s+/.test(text) || 
+           /^[\s]*\d+\.\s*[^。]{5,30}[:：]$/.test(text) ||
+           /^[\s]*举个例子/.test(text) ||
+           /^[\s]*强平后会发生什么/.test(text) ||
+           /^[\s]*总结一句话/.test(text);
+  }
+
+  /**
+   * 检查文本是否是引用块
+   * @param {string} text - 要检查的文本
+   * @returns {boolean} 是否是引用块
+   */
+  static isBlockQuote(text) {
+    return /^[\s]*5000\s*-\s*2000\s*=/.test(text) ||
+           /^[\s]*强平只是强制/.test(text);
+  }
+
+  /**
+   * 生成列表的HTML
+   * @param {string[]} items - 列表项数组
+   * @returns {string} 列表HTML
+   */
+  static generateListHtml(items) {
+    if (items.length === 0) return '';
+    
+    // 判断是有序列表还是无序列表
+    const isOrderedList = items.some(item => /^\s*\d+[\.\)]/.test(item));
+    const listTag = isOrderedList ? 'ol' : 'ul';
+    
+    let html = `<${listTag}>`;
+    
+    items.forEach(item => {
+      // 清理列表项前缀
+      let cleanItem = item
+        .replace(/^[\s]*[•·▪▫◦‣⁃]\s+/, '')
+        .replace(/^[\s]*\d+[\.\)]\s+/, '')
+        .replace(/^[\s]*[a-zA-Z][\.\)]\s+/, '')
+        .trim();
+      
+      if (cleanItem) {
+        html += `<li>${cleanItem}</li>`;
+      }
+    });
+    
+    html += `</${listTag}>`;
+    return html;
   }
 
   /**
@@ -310,20 +608,75 @@ export class ClipboardManager {
 
   /**
    * 显示复制成功消息
+   * @param {string} customMessage - 自定义成功消息
    */
-  static showSuccessMessage() {
-    // 使用chrome.i18n API获取本地化消息
-    const message = chrome?.i18n ? chrome.i18n.getMessage('copySuccess') : 'Copied successfully';
+  static showSuccessMessage(customMessage) {
+    // 使用自定义消息或默认消息
+    const message = customMessage || 
+      (chrome?.i18n ? chrome.i18n.getMessage('copySuccess') : 'Copied successfully');
     this.showToast(message, 'success');
   }
 
   /**
    * 显示复制失败消息
+   * @param {string} customMessage - 自定义错误消息
    */
-  static showErrorMessage() {
-    // 使用chrome.i18n API获取本地化消息
-    const message = chrome?.i18n ? chrome.i18n.getMessage('copyFailed') : 'Copy failed';
+  static showErrorMessage(customMessage) {
+    // 使用自定义消息或默认消息
+    const message = customMessage || 
+      (chrome?.i18n ? chrome.i18n.getMessage('copyFailed') : 'Copy failed');
     this.showToast(message, 'error');
+  }
+
+  /**
+   * 记录性能指标
+   * @param {string} operation - 操作名称
+   * @param {number} duration - 持续时间（毫秒）
+   * @param {boolean} success - 操作是否成功
+   * @param {string} hostname - 网站域名
+   */
+  static logPerformanceMetrics(operation, duration, success, hostname) {
+    const metrics = {
+      operation,
+      duration: Math.round(duration),
+      success,
+      hostname,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.debug(`[ClipboardManager] Performance metrics:`, metrics);
+    
+    // 如果操作时间超过500ms，记录警告
+    if (duration > 500) {
+      console.warn(`[ClipboardManager] ${operation} took ${duration.toFixed(2)}ms, exceeding 500ms target`);
+    }
+    
+    // 可以在这里添加更多的性能监控逻辑，比如发送到分析服务
+    // this.sendMetricsToAnalytics(metrics);
+  }
+
+  /**
+   * 处理格式化超时
+   * @param {HTMLElement} element - DOM元素
+   * @param {number} timeout - 超时时间（毫秒）
+   * @returns {Promise<string>} 格式化结果
+   */
+  static async formatWithTimeout(element, timeout = 5000) {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Formatting operation timed out')), timeout);
+    });
+    
+    const formatPromise = this.formatHtmlForWord(element);
+    
+    try {
+      return await Promise.race([formatPromise, timeoutPromise]);
+    } catch (error) {
+      if (error.message === 'Formatting operation timed out') {
+        console.warn('[ClipboardManager] Formatting timed out, using fallback');
+        return this.legacyHtmlProcessing(element);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -369,3 +722,6 @@ export class ClipboardManager {
     }, 2000);
   }
 }
+
+// 导出类
+export { ClipboardManager };

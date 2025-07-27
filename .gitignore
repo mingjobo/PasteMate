@@ -32,6 +32,9 @@ website-functionality-test-report.json
 manual-validation-report.json
 coverage/
 
+# 明哥：开发目录（调试、测试、文档）
+dev/
+
 # 明哥：可选，忽略所有报告和指南（如不需上传）
 BROWSER_COMPATIBILITY_GUIDE.md
 BROWSER_COMPATIBILITY_TEST_REPORT.md
