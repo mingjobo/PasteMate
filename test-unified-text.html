@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一文本优化器测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .output-area {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+    </style>
+</head>
+<body>
+    <h1>统一文本优化器测试</h1>
+    
+    <div class="test-section">
+        <h2>测试内容</h2>
+        <div id="test-content">
+            <h1>测试标题</h1>
+            <p>这是一个测试段落，包含<strong>粗体文本</strong>和<em>斜体文本</em>。</p>
+            
+            <ul>
+                <li>列表项1</li>
+                <li>列表项2</li>
+                <li>列表项3</li>
+            </ul>
+            
+            <ol>
+                <li>有序列表项1</li>
+                <li>有序列表项2</li>
+            </ol>
+            
+            <blockquote>这是一个引用块，测试WPS兼容性。</blockquote>
+            
+            <code>console.log('Hello WPS');</code>
+            
+            <hr />
+            
+            <p>测试结束。</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>操作</h2>
+        <button onclick="testUnifiedText()">测试统一文本转换</button>
+        <button onclick="copyToClipboard()">复制到剪贴板</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>转换结果</h2>
+        <div id="output" class="output-area">点击"测试统一文本转换"按钮查看结果...</div>
+    </div>
+
+    <script>
+        // 模拟统一文本转换功能
+        function convertHtmlToUnifiedText(html) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            let result = '';
+            
+            const processNode = (node) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const text = node.textContent.trim();
+                    if (text) {
+                        result += text + '\n';
+                    }
+                    return;
+                }
+                
+                if (node.nodeType !== Node.ELEMENT_NODE) {
+                    return;
+                }
+                
+                const tagName = node.tagName.toLowerCase();
+                const text = node.textContent.trim();
+                
+                if (!text) return;
+                
+                switch (tagName) {
+                    case 'h1':
+                    case 'h2':
+                    case 'h3':
+                    case 'h4':
+                    case 'h5':
+                    case 'h6':
+                        result += '\n' + text + '\n\n';
+                        break;
+                        
+                    case 'p':
+                        result += text + '\n\n';
+                        break;
+                        
+                    case 'ul':
+                        result += '\n';
+                        Array.from(node.children).forEach((li, index) => {
+                            if (li.tagName.toLowerCase() === 'li') {
+                                result += '• ' + li.textContent.trim() + '\n';
+                            }
+                        });
+                        result += '\n';
+                        break;
+                        
+                    case 'ol':
+                        result += '\n';
+                        Array.from(node.children).forEach((li, index) => {
+                            if (li.tagName.toLowerCase() === 'li') {
+                                result += (index + 1) + '. ' + li.textContent.trim() + '\n';
+                            }
+                        });
+                        result += '\n';
+                        break;
+                        
+                    case 'li':
+                        // 列表项在ul/ol中处理，这里跳过
+                        break;
+                        
+                    case 'blockquote':
+                        result += '\n引用：\n' + text + '\n\n';
+                        break;
+                        
+                    case 'code':
+                        result += '【代码】' + text + '\n';
+                        break;
+                        
+                    case 'strong':
+                    case 'b':
+                        result += '【粗体】' + text + '【/粗体】';
+                        break;
+                        
+                    case 'em':
+                    case 'i':
+                        result += '【斜体】' + text + '【/斜体】';
+                        break;
+                        
+                    case 'hr':
+                        result += '\n' + '─'.repeat(50) + '\n\n';
+                        break;
+                        
+                    case 'br':
+                        result += '\n';
+                        break;
+                        
+                    default:
+                        // 处理其他标签，递归处理子节点
+                        Array.from(node.childNodes).forEach(child => {
+                            processNode(child);
+                        });
+                        break;
+                }
+            };
+            
+            // 处理所有子节点
+            Array.from(tempDiv.childNodes).forEach(child => {
+                processNode(child);
+            });
+            
+            // 清理多余的换行符
+            result = result
+                .replace(/\n\s*\n\s*\n/g, '\n\n')  // 最多保留两个连续换行
+                .replace(/\n+$/, '\n')              // 去除末尾多余换行
+                .trim();
+            
+            return result;
+        }
+        
+        function testUnifiedText() {
+            const testContent = document.getElementById('test-content');
+            const html = testContent.innerHTML;
+            const unifiedText = convertHtmlToUnifiedText(html);
+            
+            document.getElementById('output').textContent = unifiedText;
+        }
+        
+        async function copyToClipboard() {
+            const testContent = document.getElementById('test-content');
+            const html = testContent.innerHTML;
+            const unifiedText = convertHtmlToUnifiedText(html);
+            
+            try {
+                const blob = new Blob([unifiedText], { type: 'text/plain' });
+                const clipboardItem = new ClipboardItem({
+                    'text/plain': blob
+                });
+                
+                await navigator.clipboard.write([clipboardItem]);
+                alert('已复制到剪贴板！现在可以粘贴到Word或WPS中测试。');
+            } catch (error) {
+                console.error('复制失败:', error);
+                alert('复制失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -14,25 +14,57 @@ class WordOptimizer {
    * @returns {Promise<string>} 优化后的HTML
    */
   async optimize(html) {
+    console.log('[WordOptimizer] ========== 开始优化HTML ==========');
+    console.log('[WordOptimizer] 原始HTML长度:', html.length);
+    console.log('[WordOptimizer] 原始HTML预览:', html.substring(0, 200) + '...');
+    
     let optimized = html;
     
     // 1. 标准化HTML结构
+    console.log('[WordOptimizer] ---------- 步骤1: 标准化HTML结构 ----------');
+    const beforeStandardize = optimized;
     optimized = this.standardizeHtml(optimized);
+    console.log('[WordOptimizer] 标准化后HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 标准化变化:', optimized !== beforeStandardize ? '有变化' : '无变化');
     
     // 2. 内联关键样式
+    console.log('[WordOptimizer] ---------- 步骤2: 内联关键样式 ----------');
+    const beforeInlineStyles = optimized;
     optimized = this.inlineStyles(optimized);
+    console.log('[WordOptimizer] 内联样式后HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 内联样式变化:', optimized !== beforeInlineStyles ? '有变化' : '无变化');
     
     // 3. 处理特殊字符
+    console.log('[WordOptimizer] ---------- 步骤3: 处理特殊字符 ----------');
+    const beforeSpecialChars = optimized;
     optimized = this.handleSpecialCharacters(optimized);
+    console.log('[WordOptimizer] 特殊字符处理后HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 特殊字符处理变化:', optimized !== beforeSpecialChars ? '有变化' : '无变化');
     
     // 4. 优化列表结构
+    console.log('[WordOptimizer] ---------- 步骤4: 优化列表结构 ----------');
+    const beforeOptimizeLists = optimized;
     optimized = this.optimizeLists(optimized);
+    console.log('[WordOptimizer] 列表优化后HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 列表优化变化:', optimized !== beforeOptimizeLists ? '有变化' : '无变化');
     
     // 5. 优化表格结构
+    console.log('[WordOptimizer] ---------- 步骤5: 优化表格结构 ----------');
+    const beforeOptimizeTables = optimized;
     optimized = this.optimizeTables(optimized);
+    console.log('[WordOptimizer] 表格优化后HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 表格优化变化:', optimized !== beforeOptimizeTables ? '有变化' : '无变化');
     
-    // 5. 包装完整HTML文档
+    // 6. 包装完整HTML文档
+    console.log('[WordOptimizer] ---------- 步骤6: 包装完整HTML文档 ----------');
+    const beforeWrap = optimized;
     optimized = this.wrapCompleteDocument(optimized);
+    console.log('[WordOptimizer] 包装后HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 包装变化:', optimized !== beforeWrap ? '有变化' : '无变化');
+    
+    console.log('[WordOptimizer] ========== 优化完成 ==========');
+    console.log('[WordOptimizer] 最终HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 最终HTML预览:', optimized.substring(0, 300) + '...');
     
     return optimized;
   }
@@ -75,19 +107,6 @@ class WordOptimizer {
       .replace(/<h4([^>]*)>/g, '<h4$1 style="font-weight: bold; font-size: 14px; margin: 14px 0 6px 0; color: #333;">')
       .replace(/<h5([^>]*)>/g, '<h5$1 style="font-weight: bold; font-size: 12px; margin: 12px 0 4px 0; color: #333;">')
       .replace(/<h6([^>]*)>/g, '<h6$1 style="font-weight: bold; font-size: 11px; margin: 10px 0 4px 0; color: #333;">')
-      
-      // 为列表添加样式，确保Word兼容性
-      .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
-      .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
-      .replace(/<li([^>]*)>/g, '<li$1 style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">')
-      
-      // 处理嵌套列表样式
-      .replace(/<ul([^>]*)><ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ul$2 style="margin: 8px 0; padding-left: 24px; list-style-type: circle; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
-      .replace(/<ol([^>]*)><ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ol$2 style="margin: 8px 0; padding-left: 24px; list-style-type: lower-alpha; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
-      
-      // 处理更深层嵌套
-      .replace(/<ul([^>]*)><ul([^>]*)><ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 24px; list-style-type: disc; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ul$2 style="margin: 8px 0; padding-left: 24px; list-style-type: circle; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ul$3 style="margin: 8px 0; padding-left: 24px; list-style-type: square; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
-      .replace(/<ol([^>]*)><ol([^>]*)><ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ol$2 style="margin: 8px 0; padding-left: 24px; list-style-type: lower-alpha; list-style-position: outside; text-indent: -12px; padding-left: 24px;"><ol$3 style="margin: 8px 0; padding-left: 24px; list-style-type: lower-roman; list-style-position: outside; text-indent: -12px; padding-left: 24px;">')
       
       // 为引用块添加样式
       .replace(/<blockquote([^>]*)>/g, '<blockquote$1 style="margin: 16px 0; padding: 8px 16px; border-left: 4px solid #ccc; background: #f9f9f9; font-style: italic;">')
@@ -163,24 +182,89 @@ class WordOptimizer {
   }
   
   /**
-   * 优化列表结构，确保Word兼容性
+   * 优化列表结构，确保WPS和Word兼容性
    * @param {string} html - HTML字符串
    * @returns {string} 优化后的HTML
    */
   optimizeLists(html) {
-    return html
-      // 确保列表项内容不被额外包装
-      .replace(/<li[^>]*>\s*<div[^>]*class="paragraph"[^>]*>/g, '<li style="margin: 6px 0; line-height: 1.6; display: list-item; padding-left: 12px;">')
-      .replace(/<\/div>\s*<\/li>/g, '</li>')
-      
-      // 确保列表有足够的缩进
-      .replace(/<ul([^>]*style="[^"]*margin:[^"]*")/g, '<ul$1; padding-left: 24px;')
-      .replace(/<ol([^>]*style="[^"]*margin:[^"]*")/g, '<ol$1; padding-left: 24px;')
-      
-      // 添加Word特定的列表样式
+    console.log('[WordOptimizer] ---------- 开始优化列表结构 ----------');
+    console.log('[WordOptimizer] 输入HTML长度:', html.length);
+    
+    // 检查是否包含列表标签
+    const hasUl = html.includes('<ul');
+    const hasOl = html.includes('<ol');
+    const hasLi = html.includes('<li');
+    console.log('[WordOptimizer] 列表标签检查:', { hasUl, hasOl, hasLi });
+    
+    if (!hasUl && !hasOl && !hasLi) {
+      console.log('[WordOptimizer] 未发现列表标签，跳过列表优化');
+      return html;
+    }
+    
+    let optimized = html;
+    
+    // 1. 清理列表项内容，移除多余的包装
+    console.log('[WordOptimizer] 步骤1: 清理列表项内容');
+    const beforeClean = optimized;
+    optimized = optimized
+      .replace(/<li[^>]*>\s*<div[^>]*class="paragraph"[^>]*>/g, '<li>')
+      .replace(/<\/div>\s*<\/li>/g, '</li>');
+    console.log('[WordOptimizer] 清理变化:', optimized !== beforeClean ? '有变化' : '无变化');
+    
+    // 2. 为WPS优化的列表样式（精确缩进版本）
+    console.log('[WordOptimizer] 步骤2: 应用基础列表样式');
+    const beforeBaseStyles = optimized;
+    optimized = optimized
+      .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc; list-style-position: outside;">')
+      .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal; list-style-position: outside;">')
+      .replace(/<li([^>]*)>/g, '<li$1 style="margin: 6px 0; line-height: 1.6; padding-left: 8px;">');
+    console.log('[WordOptimizer] 基础样式变化:', optimized !== beforeBaseStyles ? '有变化' : '无变化');
+    
+    // 3. 处理嵌套列表 - 使用递增缩进
+    console.log('[WordOptimizer] 步骤3: 处理嵌套列表');
+    const beforeNested = optimized;
+    optimized = optimized
+      .replace(/<ul([^>]*)><ul([^>]*)>/g, 
+        '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc; list-style-position: outside;"><ul$2 style="margin: 8px 0; padding-left: 50px; list-style: circle; list-style-position: outside;">')
+      .replace(/<ol([^>]*)><ol([^>]*)>/g, 
+        '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal; list-style-position: outside;"><ol$2 style="margin: 8px 0; padding-left: 50px; list-style: lower-alpha; list-style-position: outside;">');
+    console.log('[WordOptimizer] 嵌套列表变化:', optimized !== beforeNested ? '有变化' : '无变化');
+    
+    // 4. 处理更深层嵌套
+    console.log('[WordOptimizer] 步骤4: 处理更深层嵌套');
+    const beforeDeepNested = optimized;
+    optimized = optimized
+      .replace(/<ul([^>]*)><ul([^>]*)><ul([^>]*)>/g, 
+        '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc; list-style-position: outside;"><ul$2 style="margin: 8px 0; padding-left: 50px; list-style: circle; list-style-position: outside;"><ul$3 style="margin: 8px 0; padding-left: 70px; list-style: square; list-style-position: outside;">')
+      .replace(/<ol([^>]*)><ol([^>]*)><ol([^>]*)>/g, 
+        '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal; list-style-position: outside;"><ol$2 style="margin: 8px 0; padding-left: 50px; list-style: lower-alpha; list-style-position: outside;"><ol$3 style="margin: 8px 0; padding-left: 70px; list-style: lower-roman; list-style-position: outside;">');
+    console.log('[WordOptimizer] 深层嵌套变化:', optimized !== beforeDeepNested ? '有变化' : '无变化');
+    
+    // 5. 添加Word特定的MSO样式（保持向后兼容）
+    console.log('[WordOptimizer] 步骤5: 添加MSO样式');
+    const beforeMso = optimized;
+    optimized = optimized
       .replace(/<ul([^>]*style="[^"]*")/g, '<ul$1; mso-list: l0 level1 lfo1;')
       .replace(/<ol([^>]*style="[^"]*")/g, '<ol$1; mso-list: l1 level1 lfo2;')
       .replace(/<li([^>]*style="[^"]*")/g, '<li$1; mso-list: l0 level1 lfo1;');
+    console.log('[WordOptimizer] MSO样式变化:', optimized !== beforeMso ? '有变化' : '无变化');
+    
+    // 6. 确保列表项内容正确显示
+    console.log('[WordOptimizer] 步骤6: 清理空列表项');
+    const beforeCleanEmpty = optimized;
+    optimized = optimized
+      .replace(/<li[^>]*>\s*<\/li>/g, '') // 移除空列表项
+      .replace(/<li[^>]*>(\s*)<\/li>/g, ''); // 移除只包含空白字符的列表项
+    console.log('[WordOptimizer] 清理空列表项变化:', optimized !== beforeCleanEmpty ? '有变化' : '无变化');
+    
+    console.log('[WordOptimizer] 列表优化完成，输出HTML长度:', optimized.length);
+    console.log('[WordOptimizer] 列表优化前后对比:', {
+      原始长度: html.length,
+      优化后长度: optimized.length,
+      是否有变化: optimized !== html
+    });
+    
+    return optimized;
   }
   
   /**
@@ -238,6 +322,50 @@ class WordOptimizer {
     p { 
       margin: 8px 0; 
       line-height: 1.6; 
+    }
+    
+    /* WPS和Word兼容的列表样式 */
+    ul {
+      margin: 12px 0;
+      padding-left: 30px;
+      list-style: disc;
+      list-style-position: outside;
+    }
+    
+    ol {
+      margin: 12px 0;
+      padding-left: 30px;
+      list-style: decimal;
+      list-style-position: outside;
+    }
+    
+    li {
+      margin: 6px 0;
+      line-height: 1.6;
+      padding-left: 8px;
+    }
+    
+    /* 嵌套列表样式 - 递增缩进 */
+    ul ul {
+      list-style: circle;
+      margin: 8px 0;
+      padding-left: 50px;
+    }
+    
+    ol ol {
+      list-style: lower-alpha;
+      margin: 8px 0;
+      padding-left: 50px;
+    }
+    
+    ul ul ul {
+      list-style: square;
+      padding-left: 70px;
+    }
+    
+    ol ol ol {
+      list-style: lower-roman;
+      padding-left: 70px;
     }
     
     /* 代码样式 */

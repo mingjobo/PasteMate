@@ -463,19 +463,29 @@ class KimiHtmlFormatter extends HtmlFormatter {
     const startAttr = element.getAttribute('start');
     const startValue = startAttr ? ` start="${startAttr}"` : '';
     
-    console.log(`[KimiHtmlFormatter] 处理${listType}列表，start="${startAttr || '1'}"`);
+    console.log(`[KimiHtmlFormatter] ---------- 处理${listType}列表 ----------`);
+    console.log(`[KimiHtmlFormatter] 列表类型: ${listType}`);
+    console.log(`[KimiHtmlFormatter] start属性: "${startAttr || '1'}"`);
+    console.log(`[KimiHtmlFormatter] 子元素数量: ${element.children.length}`);
     
     let html = `<${listType}${startValue}>`;
+    console.log(`[KimiHtmlFormatter] 开始标签: ${html}`);
     
     // 遍历子元素
     for (const child of element.children) {
+      console.log(`[KimiHtmlFormatter] 处理子元素: ${child.tagName}, 类名: ${child.className}`);
       if (child.tagName === 'LI') {
-        html += this.processListItemElement(child, context);
+        const liHtml = this.processListItemElement(child, context);
+        html += liHtml;
+        console.log(`[KimiHtmlFormatter] 列表项HTML: ${liHtml.substring(0, 100)}...`);
+      } else {
+        console.log(`[KimiHtmlFormatter] 跳过非LI元素: ${child.tagName}`);
       }
     }
     
     html += `</${listType}>`;
-    console.log(`[KimiHtmlFormatter] ${listType}列表处理完成，长度:`, html.length);
+    console.log(`[KimiHtmlFormatter] ${listType}列表处理完成，总长度: ${html.length}`);
+    console.log(`[KimiHtmlFormatter] 完整列表HTML: ${html.substring(0, 200)}...`);
     return html;
   }
   
@@ -486,25 +496,39 @@ class KimiHtmlFormatter extends HtmlFormatter {
    * @returns {string} 处理后的HTML
    */
   processListItemElement(element, context) {
-    console.log('[KimiHtmlFormatter] 处理列表项元素');
+    console.log('[KimiHtmlFormatter] ---------- 处理列表项元素 ----------');
+    console.log('[KimiHtmlFormatter] 列表项类名:', element.className || '(无)');
+    console.log('[KimiHtmlFormatter] 列表项子元素数量:', element.children.length);
     
     let html = '<li>';
+    console.log('[KimiHtmlFormatter] 开始列表项标签');
     
     // 处理列表项内容
     for (const child of element.children) {
+      console.log(`[KimiHtmlFormatter] 处理列表项子元素: ${child.tagName}, 类名: ${child.className}`);
+      
       if (child.classList.contains('paragraph')) {
         // 直接提取段落内容，不包装在额外的标签中
+        console.log('[KimiHtmlFormatter] 处理段落容器');
         const content = this.processParagraphContainer(child, context);
         html += content;
+        console.log('[KimiHtmlFormatter] 段落内容:', content.substring(0, 50) + '...');
       } else if (child.tagName === 'OL' || child.tagName === 'UL') {
-        html += this.processListElement(child, context);
+        console.log('[KimiHtmlFormatter] 处理嵌套列表');
+        const nestedListHtml = this.processListElement(child, context);
+        html += nestedListHtml;
+        console.log('[KimiHtmlFormatter] 嵌套列表HTML:', nestedListHtml.substring(0, 100) + '...');
       } else {
-        html += this.processElementNode(child, context);
+        console.log('[KimiHtmlFormatter] 处理其他元素');
+        const otherHtml = this.processElementNode(child, context);
+        html += otherHtml;
+        console.log('[KimiHtmlFormatter] 其他元素HTML:', otherHtml.substring(0, 50) + '...');
       }
     }
     
     html += '</li>';
-    console.log('[KimiHtmlFormatter] 列表项处理完成');
+    console.log('[KimiHtmlFormatter] 列表项处理完成，长度:', html.length);
+    console.log('[KimiHtmlFormatter] 完整列表项HTML:', html.substring(0, 150) + '...');
     return html;
   }
   

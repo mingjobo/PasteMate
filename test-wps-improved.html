@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一文本优化器测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .output-area {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            background: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .copy-btn {
+            background: #28a745;
+        }
+        .copy-btn:hover {
+            background: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <h1>统一文本优化器测试</h1>
+    
+    <div class="test-section">
+        <h2>测试内容</h2>
+        <div id="test-content">
+            <h1>测试标题</h1>
+            <p>这是一个测试段落，包含<strong>粗体文本</strong>和<em>斜体文本</em>。</p>
+            <ul>
+                <li>列表项1</li>
+                <li>列表项2</li>
+                <li>列表项3</li>
+            </ul>
+            <ol>
+                <li>有序列表项1</li>
+                <li>有序列表项2</li>
+            </ol>
+            <blockquote>这是一个引用块，测试WPS兼容性。</blockquote>
+            <code>console.log('Hello WPS');</code>
+            <p>测试结束。</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>操作按钮</h2>
+        <button onclick="testUnifiedOptimizer()">测试统一文本优化器</button>
+        <button onclick="copyToClipboard()" class="copy-btn">复制到剪贴板</button>
+        <button onclick="clearOutput()">清空输出</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>优化结果</h2>
+        <div id="optimized-output" class="output-area"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试说明</h2>
+        <ol>
+            <li>点击"测试统一文本优化器"按钮，查看优化结果</li>
+            <li>点击"复制到剪贴板"按钮，复制优化后的文本</li>
+            <li>分别粘贴到Word和WPS中，观察效果</li>
+            <li>对比两个软件中的显示效果和可编辑性</li>
+        </ol>
+    </div>
+
+    <script>
+        // 统一文本优化器
+        class UnifiedTextOptimizer {
+            constructor() {
+                this.name = 'UnifiedTextOptimizer';
+            }
+            
+            async optimize(html) {
+                console.log('[UnifiedTextOptimizer] 开始统一格式优化');
+                
+                // 1. 解析HTML结构
+                const parsedContent = this.parseHtmlStructure(html);
+                
+                // 2. 生成统一格式文本
+                const unifiedText = this.generateUnifiedText(parsedContent);
+                
+                console.log('[UnifiedTextOptimizer] 统一格式优化完成');
+                return unifiedText;
+            }
+            
+            parseHtmlStructure(html) {
+                const content = {
+                    title: '',
+                    paragraphs: [],
+                    lists: [],
+                    codeBlocks: [],
+                    quotes: []
+                };
+                
+                // 简单的HTML解析
+                const lines = html.split('\n');
+                let currentList = null;
+                
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    
+                    // 解析标题
+                    const titleMatch = trimmedLine.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/);
+                    if (titleMatch) {
+                        content.title = this.cleanHtmlTags(titleMatch[1]);
+                        continue;
+                    }
+                    
+                    // 解析段落
+                    const paragraphMatch = trimmedLine.match(/<p[^>]*>(.*?)<\/p>/);
+                    if (paragraphMatch) {
+                        const text = this.cleanHtmlTags(paragraphMatch[1]);
+                        if (text) {
+                            content.paragraphs.push(text);
+                        }
+                        continue;
+                    }
+                    
+                    // 解析列表
+                    if (trimmedLine.includes('<ul>')) {
+                        currentList = { type: 'unordered', items: [] };
+                        continue;
+                    }
+                    
+                    if (trimmedLine.includes('<ol>')) {
+                        currentList = { type: 'ordered', items: [] };
+                        continue;
+                    }
+                    
+                    if (trimmedLine.includes('</ul>') || trimmedLine.includes('</ol>')) {
+                        if (currentList && currentList.items.length > 0) {
+                            content.lists.push(currentList);
+                        }
+                        currentList = null;
+                        continue;
+                    }
+                    
+                    const listItemMatch = trimmedLine.match(/<li[^>]*>(.*?)<\/li>/);
+                    if (listItemMatch && currentList) {
+                        const text = this.cleanHtmlTags(listItemMatch[1]);
+                        if (text) {
+                            currentList.items.push(text);
+                        }
+                        continue;
+                    }
+                    
+                    // 解析代码块
+                    const codeMatch = trimmedLine.match(/<code[^>]*>(.*?)<\/code>/);
+                    if (codeMatch) {
+                        const text = this.cleanHtmlTags(codeMatch[1]);
+                        if (text) {
+                            content.codeBlocks.push(text);
+                        }
+                        continue;
+                    }
+                    
+                    // 解析引用块
+                    const quoteMatch = trimmedLine.match(/<blockquote[^>]*>(.*?)<\/blockquote>/);
+                    if (quoteMatch) {
+                        const text = this.cleanHtmlTags(quoteMatch[1]);
+                        if (text) {
+                            content.quotes.push(text);
+                        }
+                        continue;
+                    }
+                }
+                
+                return content;
+            }
+            
+            cleanHtmlTags(text) {
+                if (!text) return '';
+                
+                return text
+                    .replace(/<[^>]*>/g, '') // 移除所有HTML标签
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/&nbsp;/g, ' ')
+                    .trim();
+            }
+            
+            generateUnifiedText(content) {
+                let result = '';
+                
+                // 添加标题
+                if (content.title) {
+                    result += `${content.title}\n\n`;
+                }
+                
+                // 添加段落
+                for (const paragraph of content.paragraphs) {
+                    result += `${paragraph}\n\n`;
+                }
+                
+                // 添加列表
+                for (const list of content.lists) {
+                    if (list.type === 'unordered') {
+                        for (const item of list.items) {
+                            result += `• ${item}\n`;
+                        }
+                    } else {
+                        for (let i = 0; i < list.items.length; i++) {
+                            result += `${i + 1}. ${list.items[i]}\n`;
+                        }
+                    }
+                    result += '\n';
+                }
+                
+                // 添加引用块
+                for (const quote of content.quotes) {
+                    result += `"${quote}"\n\n`;
+                }
+                
+                // 添加代码块
+                for (const code of content.codeBlocks) {
+                    result += `代码: ${code}\n\n`;
+                }
+                
+                return result.trim();
+            }
+        }
+        
+        // 全局变量
+        let optimizedText = '';
+        const optimizer = new UnifiedTextOptimizer();
+        
+        // 测试函数
+        async function testUnifiedOptimizer() {
+            const testContent = document.getElementById('test-content').innerHTML;
+            const outputArea = document.getElementById('optimized-output');
+            
+            try {
+                optimizedText = await optimizer.optimize(testContent);
+                outputArea.textContent = optimizedText;
+                console.log('优化完成，结果长度:', optimizedText.length);
+            } catch (error) {
+                console.error('优化失败:', error);
+                outputArea.textContent = '优化失败: ' + error.message;
+            }
+        }
+        
+        // 复制到剪贴板
+        async function copyToClipboard() {
+            if (!optimizedText) {
+                alert('请先运行优化器生成文本！');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(optimizedText);
+                alert('已复制到剪贴板！请粘贴到Word和WPS中测试。');
+            } catch (error) {
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = optimizedText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('已复制到剪贴板！请粘贴到Word和WPS中测试。');
+            }
+        }
+        
+        // 清空输出
+        function clearOutput() {
+            document.getElementById('optimized-output').textContent = '';
+            optimizedText = '';
+        }
+        
+        // 页面加载完成后自动运行一次测试
+        window.addEventListener('load', function() {
+            console.log('页面加载完成，可以开始测试');
+        });
+    </script>
+</body>
+</html> 

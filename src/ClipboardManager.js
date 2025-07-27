@@ -2,7 +2,7 @@ import { HtmlFormatterManager } from './HtmlFormatterManager.js';
 
 /**
  * 剪贴板管理器类
- * 负责纯文本提取和剪贴板操作
+ * 负责统一文本格式化和剪贴板操作（Word和WPS兼容）
  */
 class ClipboardManager {
   // 静态实例，用于管理HTML格式化
@@ -18,8 +18,9 @@ class ClipboardManager {
       console.debug('[ClipboardManager] HTML formatter manager initialized');
     }
   }
+
   /**
-   * 复制元素的 HTML 内容到剪贴板（Word 可识别格式）
+   * 复制元素的统一格式文本到剪贴板（Word和WPS兼容）
    * @param {HTMLElement} element - 要复制内容的DOM元素
    * @returns {Promise<boolean>} 复制是否成功
    */
@@ -27,7 +28,7 @@ class ClipboardManager {
     const startTime = performance.now();
     
     try {
-      console.log('[ClipboardManager] ========== 开始HTML复制操作 ==========');
+      console.log('[ClipboardManager] ========== 开始统一文本复制操作 ==========');
       console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
       console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
       console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
@@ -47,25 +48,16 @@ class ClipboardManager {
       await this.initializeFormatterManager();
       console.log('[ClipboardManager] ✅ 格式化管理器已初始化');
       
-      // 使用新的HTML格式化系统
-      console.log('[ClipboardManager] 🔥 开始HTML格式化...');
-      const processedHtml = await this.formatHtmlForWord(element);
-      console.log('[ClipboardManager] ✅ HTML格式化完成');
-      console.log('[ClipboardManager] 格式化结果长度:', processedHtml.length);
-      console.log('[ClipboardManager] 格式化结果预览:', processedHtml.substring(0, 500) + '...');
-      
-      const html = `<html><body>${processedHtml}</body></html>`;
-      console.log('[ClipboardManager] 最终HTML长度:', html.length);
-      
-      const text = element.innerText || element.textContent || '';
-      console.log('[ClipboardManager] 提取的纯文本长度:', text.length);
-      console.log('[ClipboardManager] 纯文本预览:', text.substring(0, 200) + '...');
+      // 使用统一文本格式化系统
+      console.log('[ClipboardManager] 🔥 开始统一文本格式化...');
+      const unifiedText = await this.formatUnifiedText(element);
+      console.log('[ClipboardManager] ✅ 统一文本格式化完成');
+      console.log('[ClipboardManager] 格式化结果长度:', unifiedText.length);
+      console.log('[ClipboardManager] 格式化结果预览:', unifiedText.substring(0, 500) + '...');
 
       console.log('[ClipboardManager] 创建剪贴板数据...');
-      const blobHtml = new Blob([html], { type: 'text/html' });
-      const blobText = new Blob([text], { type: 'text/plain' });
+      const blobText = new Blob([unifiedText], { type: 'text/plain' });
       const clipboardItem = new window.ClipboardItem({
-        'text/html': blobHtml,
         'text/plain': blobText
       });
       
@@ -75,16 +67,16 @@ class ClipboardManager {
       
       // 记录性能指标
       const duration = performance.now() - startTime;
-      this.logPerformanceMetrics('copyHtmlToClipboard', duration, true, hostname);
+      this.logPerformanceMetrics('copyUnifiedTextToClipboard', duration, true, hostname);
       
-      console.log('[ClipboardManager] ========== HTML复制操作完成 ==========');
-      this.showSuccessMessage('已复制为 Word 格式，可直接粘贴到 Word');
+      console.log('[ClipboardManager] ========== 统一文本复制操作完成 ==========');
+      this.showSuccessMessage('已复制为统一格式，Word和WPS都能正常显示');
       return true;
       
     } catch (error) {
       const duration = performance.now() - startTime;
       const hostname = this.detectWebsite();
-      this.logPerformanceMetrics('copyHtmlToClipboard', duration, false, hostname);
+      this.logPerformanceMetrics('copyUnifiedTextToClipboard', duration, false, hostname);
       
       console.error(`[ClipboardManager] ❌ Copy operation failed after ${duration.toFixed(2)}ms:`, error);
       console.error('[ClipboardManager] 错误详情:', error.stack);
@@ -94,15 +86,15 @@ class ClipboardManager {
   }
 
   /**
-   * 使用HTML格式化系统格式化内容
+   * 使用统一文本格式化系统格式化内容（Word和WPS兼容）
    * @param {HTMLElement} element - 要格式化的DOM元素
-   * @returns {Promise<string>} 格式化后的HTML字符串
+   * @returns {Promise<string>} 格式化后的统一文本字符串
    */
-  static async formatHtmlForWord(element) {
+  static async formatUnifiedText(element) {
     const startTime = performance.now();
     
     try {
-      console.log('[ClipboardManager] ========== 开始HTML格式化 ==========');
+      console.log('[ClipboardManager] ========== 开始统一文本格式化 ==========');
       console.log('[ClipboardManager] 输入元素:', element?.tagName || 'Unknown', element?.className || '');
       console.log('[ClipboardManager] 输入元素内容长度:', (element?.textContent || '').length);
       
@@ -110,37 +102,162 @@ class ClipboardManager {
       const hostname = this.detectWebsite();
       console.log(`[ClipboardManager] 检测到网站: ${hostname}`);
       
-      // 使用集成的格式化管理器
+      // 使用集成的格式化管理器进行初步处理
+      let processedHtml = '';
       if (this.formatterManager) {
         console.log('[ClipboardManager] ✅ 使用集成的HTML格式化管理器');
         console.log('[ClipboardManager] 调用formatterManager.formatForWord...');
         
-        const result = await this.formatterManager.formatForWord(element, hostname);
-        
-        const duration = performance.now() - startTime;
-        console.log(`[ClipboardManager] ✅ HTML格式化完成，耗时: ${duration.toFixed(2)}ms`);
-        console.log('[ClipboardManager] 格式化结果长度:', result.length);
-        console.log('[ClipboardManager] 格式化结果预览:', result.substring(0, 300) + '...');
-        
-        return result;
+        processedHtml = await this.formatterManager.formatForWord(element, hostname);
+        console.log('[ClipboardManager] HTML格式化完成，开始转换为统一文本...');
       } else {
         console.warn('[ClipboardManager] ⚠️ 格式化管理器未初始化，使用旧版处理');
-        const result = this.legacyHtmlProcessing(element);
-        console.log('[ClipboardManager] 旧版处理结果长度:', result.length);
-        return result;
+        processedHtml = this.legacyHtmlProcessing(element);
       }
+      
+      // 将HTML转换为统一文本格式
+      const unifiedText = this.convertHtmlToUnifiedText(processedHtml);
+      
+      const duration = performance.now() - startTime;
+      console.log(`[ClipboardManager] ✅ 统一文本格式化完成，耗时: ${duration.toFixed(2)}ms`);
+      console.log('[ClipboardManager] 统一文本长度:', unifiedText.length);
+      console.log('[ClipboardManager] 统一文本预览:', unifiedText.substring(0, 300) + '...');
+      
+      return unifiedText;
       
     } catch (error) {
       const duration = performance.now() - startTime;
-      console.error(`[ClipboardManager] ❌ HTML格式化失败，耗时: ${duration.toFixed(2)}ms:`, error);
+      console.error(`[ClipboardManager] ❌ 统一文本格式化失败，耗时: ${duration.toFixed(2)}ms:`, error);
       console.error('[ClipboardManager] 错误详情:', error.stack);
       
-      // 降级到旧的处理方式
-      console.warn('[ClipboardManager] 🔄 降级到旧版HTML处理');
-      const result = this.legacyHtmlProcessing(element);
+      // 降级到纯文本提取
+      console.warn('[ClipboardManager] 🔄 降级到纯文本提取');
+      const result = this.extractPlainText(element);
       console.log('[ClipboardManager] 降级处理结果长度:', result.length);
       return result;
     }
+  }
+
+  /**
+   * 将HTML转换为统一文本格式（Word和WPS兼容）
+   * @param {string} html - HTML字符串
+   * @returns {string} 统一文本格式
+   */
+  static convertHtmlToUnifiedText(html) {
+    console.log('[ClipboardManager] 开始HTML到统一文本转换...');
+    
+    // 创建临时DOM元素来解析HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    let result = '';
+    let currentLevel = 0;
+    
+    // 递归处理DOM节点
+    const processNode = (node, level = 0) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent.trim();
+        if (text) {
+          result += text + '\n';
+        }
+        return;
+      }
+      
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return;
+      }
+      
+      const tagName = node.tagName.toLowerCase();
+      const text = node.textContent.trim();
+      
+      if (!text) return;
+      
+      switch (tagName) {
+        case 'h1':
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6':
+          result += '\n' + text + '\n\n';
+          break;
+          
+        case 'p':
+          result += text + '\n\n';
+          break;
+          
+        case 'ul':
+          result += '\n';
+          Array.from(node.children).forEach((li, index) => {
+            if (li.tagName.toLowerCase() === 'li') {
+              result += '• ' + li.textContent.trim() + '\n';
+            }
+          });
+          result += '\n';
+          break;
+          
+        case 'ol':
+          result += '\n';
+          Array.from(node.children).forEach((li, index) => {
+            if (li.tagName.toLowerCase() === 'li') {
+              result += (index + 1) + '. ' + li.textContent.trim() + '\n';
+            }
+          });
+          result += '\n';
+          break;
+          
+        case 'li':
+          // 列表项在ul/ol中处理，这里跳过
+          break;
+          
+        case 'blockquote':
+          result += '\n引用：\n' + text + '\n\n';
+          break;
+          
+        case 'code':
+          result += '【代码】' + text + '\n';
+          break;
+          
+        case 'strong':
+        case 'b':
+          result += '【粗体】' + text + '【/粗体】';
+          break;
+          
+        case 'em':
+        case 'i':
+          result += '【斜体】' + text + '【/斜体】';
+          break;
+          
+        case 'hr':
+          result += '\n' + '─'.repeat(50) + '\n\n';
+          break;
+          
+        case 'br':
+          result += '\n';
+          break;
+          
+        default:
+          // 处理其他标签，递归处理子节点
+          Array.from(node.childNodes).forEach(child => {
+            processNode(child, level + 1);
+          });
+          break;
+      }
+    };
+    
+    // 处理所有子节点
+    Array.from(tempDiv.childNodes).forEach(child => {
+      processNode(child);
+    });
+    
+    // 清理多余的换行符
+    result = result
+      .replace(/\n\s*\n\s*\n/g, '\n\n')  // 最多保留两个连续换行
+      .replace(/\n+$/, '\n')              // 去除末尾多余换行
+      .trim();
+    
+    console.log('[ClipboardManager] HTML到统一文本转换完成');
+    return result;
   }
   
   /**
@@ -692,14 +809,14 @@ class ClipboardManager {
       setTimeout(() => reject(new Error('Formatting operation timed out')), timeout);
     });
     
-    const formatPromise = this.formatHtmlForWord(element);
+    const formatPromise = this.formatUnifiedText(element);
     
     try {
       return await Promise.race([formatPromise, timeoutPromise]);
     } catch (error) {
       if (error.message === 'Formatting operation timed out') {
         console.warn('[ClipboardManager] Formatting timed out, using fallback');
-        return this.legacyHtmlProcessing(element);
+        return this.extractPlainText(element);
       }
       throw error;
     }

@@ -380,7 +380,7 @@ class ClipboardManager {
         const startTime = performance.now();
         
         try {
-            console.log('[ClipboardManager] ========== 开始HTML复制操作 ==========');
+            console.log('[ClipboardManager] ========== 开始统一文本复制操作 ==========');
             console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
             console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
             console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
@@ -395,25 +395,16 @@ class ClipboardManager {
             const hostname = window.location.hostname;
             console.log('[ClipboardManager] 检测到网站:', hostname);
             
-            // 使用简化的HTML处理（因为content-unified.js中没有格式化器）
-            console.log('[ClipboardManager] 🔥 开始HTML处理...');
-            const processedHtml = this.processElementForCopy(element);
-            console.log('[ClipboardManager] ✅ HTML处理完成');
-            console.log('[ClipboardManager] 处理结果长度:', processedHtml.length);
-            console.log('[ClipboardManager] 处理结果预览:', processedHtml.substring(0, 500) + '...');
-            
-            const html = `<html><body>${processedHtml}</body></html>`;
-            console.log('[ClipboardManager] 最终HTML长度:', html.length);
-            
-            const text = element.innerText || element.textContent || '';
-            console.log('[ClipboardManager] 提取的纯文本长度:', text.length);
-            console.log('[ClipboardManager] 纯文本预览:', text.substring(0, 200) + '...');
+            // 使用统一文本格式化
+            console.log('[ClipboardManager] 🔥 开始统一文本格式化...');
+            const unifiedText = this.convertElementToUnifiedText(element);
+            console.log('[ClipboardManager] ✅ 统一文本格式化完成');
+            console.log('[ClipboardManager] 格式化结果长度:', unifiedText.length);
+            console.log('[ClipboardManager] 格式化结果预览:', unifiedText.substring(0, 500) + '...');
 
             console.log('[ClipboardManager] 创建剪贴板数据...');
-            const blobHtml = new Blob([html], { type: 'text/html' });
-            const blobText = new Blob([text], { type: 'text/plain' });
+            const blobText = new Blob([unifiedText], { type: 'text/plain' });
             const clipboardItem = new window.ClipboardItem({
-                'text/html': blobHtml,
                 'text/plain': blobText
             });
             
@@ -424,8 +415,8 @@ class ClipboardManager {
             const duration = performance.now() - startTime;
             console.log(`[ClipboardManager] 复制操作耗时: ${duration.toFixed(2)}ms`);
             
-            console.log('[ClipboardManager] ========== HTML复制操作完成 ==========');
-            this.showSuccessMessage('已复制为 Word 格式，可直接粘贴到 Word');
+            console.log('[ClipboardManager] ========== 统一文本复制操作完成 ==========');
+            this.showSuccessMessage('已复制为统一格式，Word和WPS都能正常显示');
             return true;
             
         } catch (error) {
@@ -435,6 +426,133 @@ class ClipboardManager {
             this.showErrorMessage('复制失败，请重试');
             return false;
         }
+    }
+
+    static convertElementToUnifiedText(element) {
+        // 创建元素副本避免修改原DOM
+        const cloned = element.cloneNode(true);
+        
+        // 移除不需要的元素
+        this.removeUnwantedElements(cloned);
+        
+        // 转换为统一文本格式
+        return this.convertHtmlToUnifiedText(cloned.outerHTML);
+    }
+
+    static convertHtmlToUnifiedText(html) {
+        console.log('[ClipboardManager] 开始HTML到统一文本转换...');
+        
+        // 创建临时DOM元素来解析HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        let result = '';
+        
+        // 递归处理DOM节点
+        const processNode = (node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.textContent.trim();
+                if (text) {
+                    result += text + '\n';
+                }
+                return;
+            }
+            
+            if (node.nodeType !== Node.ELEMENT_NODE) {
+                return;
+            }
+            
+            const tagName = node.tagName.toLowerCase();
+            const text = node.textContent.trim();
+            
+            if (!text) return;
+            
+            switch (tagName) {
+                case 'h1':
+                case 'h2':
+                case 'h3':
+                case 'h4':
+                case 'h5':
+                case 'h6':
+                    result += '\n' + text + '\n\n';
+                    break;
+                    
+                case 'p':
+                    result += text + '\n\n';
+                    break;
+                    
+                case 'ul':
+                    result += '\n';
+                    Array.from(node.children).forEach((li, index) => {
+                        if (li.tagName.toLowerCase() === 'li') {
+                            result += '• ' + li.textContent.trim() + '\n';
+                        }
+                    });
+                    result += '\n';
+                    break;
+                    
+                case 'ol':
+                    result += '\n';
+                    Array.from(node.children).forEach((li, index) => {
+                        if (li.tagName.toLowerCase() === 'li') {
+                            result += (index + 1) + '. ' + li.textContent.trim() + '\n';
+                        }
+                    });
+                    result += '\n';
+                    break;
+                    
+                case 'li':
+                    // 列表项在ul/ol中处理，这里跳过
+                    break;
+                    
+                case 'blockquote':
+                    result += '\n引用：\n' + text + '\n\n';
+                    break;
+                    
+                case 'code':
+                    result += '【代码】' + text + '\n';
+                    break;
+                    
+                case 'strong':
+                case 'b':
+                    result += '【粗体】' + text + '【/粗体】';
+                    break;
+                    
+                case 'em':
+                case 'i':
+                    result += '【斜体】' + text + '【/斜体】';
+                    break;
+                    
+                case 'hr':
+                    result += '\n' + '─'.repeat(50) + '\n\n';
+                    break;
+                    
+                case 'br':
+                    result += '\n';
+                    break;
+                    
+                default:
+                    // 处理其他标签，递归处理子节点
+                    Array.from(node.childNodes).forEach(child => {
+                        processNode(child);
+                    });
+                    break;
+            }
+        };
+        
+        // 处理所有子节点
+        Array.from(tempDiv.childNodes).forEach(child => {
+            processNode(child);
+        });
+        
+        // 清理多余的换行符
+        result = result
+            .replace(/\n\s*\n\s*\n/g, '\n\n')  // 最多保留两个连续换行
+            .replace(/\n+$/, '\n')              // 去除末尾多余换行
+            .trim();
+        
+        console.log('[ClipboardManager] HTML到统一文本转换完成');
+        return result;
     }
 
     static processElementForCopy(element) {

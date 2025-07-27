@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>列表处理调试测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .debug-output {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            background: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #005a87;
+        }
+    </style>
+</head>
+<body>
+    <h1>列表处理调试测试</h1>
+    
+    <div class="test-section">
+        <h2>测试内容</h2>
+        <div id="test-content">
+            <h3>线上获取方式</h3>
+            <ol start="1">
+                <li><div class="paragraph"><strong>登录深圳市公共就业服务平台</strong>：</div>
+                    <ul start="1">
+                        <li><div class="paragraph">登录深圳市公共就业服务平台（网址：<a target="_blank" href="https://hrsspub.sz.gov.cn/ggjyfw/">https://hrsspub.sz.gov.cn/ggjyfw/</a>）。</div></li>
+                        <li><div class="paragraph">在平台上查看失业登记审核结果，通常审核通过后会有提示信息。</div></li>
+                        <li><div class="paragraph">如果平台支持打印功能，可以直接在平台上打印《深圳市失业人员登记证明》。</div></li>
+                    </ul>
+                </li>
+                <li><div class="paragraph"><strong>通过"深圳人社"微信公众号</strong>：</div>
+                    <ul start="1">
+                        <li><div class="paragraph">关注"深圳人社"微信公众号。</div></li>
+                        <li><div class="paragraph">在公众号内查找失业登记相关功能，查看审核结果并获取证明。</div></li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>操作按钮</h2>
+        <button onclick="testKimiFormatter()">测试Kimi格式化器</button>
+        <button onclick="testWordOptimizer()">测试Word优化器</button>
+        <button onclick="clearDebug()">清空调试输出</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>调试输出</h2>
+        <div id="debug-output" class="debug-output"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>结果预览</h2>
+        <div id="result-preview"></div>
+    </div>
+
+    <script type="module">
+        // 重写console.log来捕获调试信息
+        const originalLog = console.log;
+        const debugOutput = document.getElementById('debug-output');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            debugOutput.textContent += message + '\n';
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        };
+        
+        // 清空调试输出
+        window.clearDebug = function() {
+            debugOutput.textContent = '';
+        };
+        
+        // 测试Kimi格式化器
+        window.testKimiFormatter = async function() {
+            console.log('========== 开始测试Kimi格式化器 ==========');
+            
+            try {
+                const { KimiHtmlFormatter } = await import('./src/formatters/KimiHtmlFormatter.js');
+                const formatter = new KimiHtmlFormatter();
+                
+                const testElement = document.getElementById('test-content');
+                console.log('测试元素:', testElement);
+                console.log('测试元素HTML:', testElement.outerHTML);
+                
+                const result = await formatter.format(testElement);
+                console.log('格式化结果:', result);
+                
+                document.getElementById('result-preview').innerHTML = result;
+                
+            } catch (error) {
+                console.error('Kimi格式化器测试失败:', error);
+            }
+        };
+        
+        // 测试Word优化器
+        window.testWordOptimizer = async function() {
+            console.log('========== 开始测试Word优化器 ==========');
+            
+            try {
+                const { WordOptimizer } = await import('./src/WordOptimizer.js');
+                const optimizer = new WordOptimizer();
+                
+                // 先获取Kimi格式化结果
+                const { KimiHtmlFormatter } = await import('./src/formatters/KimiHtmlFormatter.js');
+                const formatter = new KimiHtmlFormatter();
+                const testElement = document.getElementById('test-content');
+                const formattedHtml = await formatter.format(testElement);
+                
+                console.log('Kimi格式化结果:', formattedHtml);
+                
+                // 然后进行Word优化
+                const optimizedHtml = await optimizer.optimize(formattedHtml);
+                console.log('Word优化结果:', optimizedHtml);
+                
+                document.getElementById('result-preview').innerHTML = optimizedHtml;
+                
+            } catch (error) {
+                console.error('Word优化器测试失败:', error);
+            }
+        };
+    </script>
+</body>
+</html> 

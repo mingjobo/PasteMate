@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集成测试 - 统一文本复制</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .output-area {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>集成测试 - 统一文本复制</h1>
+    
+    <div class="test-section">
+        <h2>模拟AI回复内容</h2>
+        <div id="ai-response" class="markdown-container">
+            <h1>测试标题</h1>
+            <p>这是一个测试段落，包含<strong>粗体文本</strong>和<em>斜体文本</em>。</p>
+            
+            <ul>
+                <li>列表项1</li>
+                <li>列表项2</li>
+                <li>列表项3</li>
+            </ul>
+            
+            <ol>
+                <li>有序列表项1</li>
+                <li>有序列表项2</li>
+            </ol>
+            
+            <blockquote>这是一个引用块，测试WPS兼容性。</blockquote>
+            
+            <code>console.log('Hello WPS');</code>
+            
+            <hr />
+            
+            <p>测试结束。</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>操作</h2>
+        <button onclick="testCopyOperation()">测试复制操作</button>
+        <button onclick="simulateButtonClick()">模拟按钮点击</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试结果</h2>
+        <div id="test-result" class="output-area">点击测试按钮查看结果...</div>
+    </div>
+
+    <script>
+        // 模拟ClipboardManager的统一文本复制功能
+        class MockClipboardManager {
+            static async copyHtmlToClipboard(element) {
+                console.log('[MockClipboardManager] 开始统一文本复制操作');
+                console.log('[MockClipboardManager] 接收到的元素:', element?.tagName, element?.className);
+                
+                if (!element) {
+                    console.error('[MockClipboardManager] 元素为空');
+                    return false;
+                }
+                
+                // 模拟统一文本格式化
+                const unifiedText = this.convertHtmlToUnifiedText(element.innerHTML);
+                
+                console.log('[MockClipboardManager] 统一文本格式化完成');
+                console.log('[MockClipboardManager] 结果长度:', unifiedText.length);
+                
+                // 模拟剪贴板写入
+                try {
+                    const blob = new Blob([unifiedText], { type: 'text/plain' });
+                    const clipboardItem = new ClipboardItem({
+                        'text/plain': blob
+                    });
+                    
+                    await navigator.clipboard.write([clipboardItem]);
+                    console.log('[MockClipboardManager] 剪贴板写入成功');
+                    return true;
+                } catch (error) {
+                    console.error('[MockClipboardManager] 剪贴板写入失败:', error);
+                    return false;
+                }
+            }
+            
+            static convertHtmlToUnifiedText(html) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                let result = '';
+                
+                const processNode = (node) => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent.trim();
+                        if (text) {
+                            result += text + '\n';
+                        }
+                        return;
+                    }
+                    
+                    if (node.nodeType !== Node.ELEMENT_NODE) {
+                        return;
+                    }
+                    
+                    const tagName = node.tagName.toLowerCase();
+                    const text = node.textContent.trim();
+                    
+                    if (!text) return;
+                    
+                    switch (tagName) {
+                        case 'h1':
+                        case 'h2':
+                        case 'h3':
+                        case 'h4':
+                        case 'h5':
+                        case 'h6':
+                            result += '\n' + text + '\n\n';
+                            break;
+                            
+                        case 'p':
+                            result += text + '\n\n';
+                            break;
+                            
+                        case 'ul':
+                            result += '\n';
+                            Array.from(node.children).forEach((li, index) => {
+                                if (li.tagName.toLowerCase() === 'li') {
+                                    result += '• ' + li.textContent.trim() + '\n';
+                                }
+                            });
+                            result += '\n';
+                            break;
+                            
+                        case 'ol':
+                            result += '\n';
+                            Array.from(node.children).forEach((li, index) => {
+                                if (li.tagName.toLowerCase() === 'li') {
+                                    result += (index + 1) + '. ' + li.textContent.trim() + '\n';
+                                }
+                            });
+                            result += '\n';
+                            break;
+                            
+                        case 'li':
+                            // 列表项在ul/ol中处理，这里跳过
+                            break;
+                            
+                        case 'blockquote':
+                            result += '\n引用：\n' + text + '\n\n';
+                            break;
+                            
+                        case 'code':
+                            result += '【代码】' + text + '\n';
+                            break;
+                            
+                        case 'strong':
+                        case 'b':
+                            result += '【粗体】' + text + '【/粗体】';
+                            break;
+                            
+                        case 'em':
+                        case 'i':
+                            result += '【斜体】' + text + '【/斜体】';
+                            break;
+                            
+                        case 'hr':
+                            result += '\n' + '─'.repeat(50) + '\n\n';
+                            break;
+                            
+                        case 'br':
+                            result += '\n';
+                            break;
+                            
+                        default:
+                            // 处理其他标签，递归处理子节点
+                            Array.from(node.childNodes).forEach(child => {
+                                processNode(child);
+                            });
+                            break;
+                    }
+                };
+                
+                // 处理所有子节点
+                Array.from(tempDiv.childNodes).forEach(child => {
+                    processNode(child);
+                });
+                
+                // 清理多余的换行符
+                result = result
+                    .replace(/\n\s*\n\s*\n/g, '\n\n')  // 最多保留两个连续换行
+                    .replace(/\n+$/, '\n')              // 去除末尾多余换行
+                    .trim();
+                
+                return result;
+            }
+        }
+        
+        async function testCopyOperation() {
+            const resultDiv = document.getElementById('test-result');
+            resultDiv.innerHTML = '正在测试复制操作...\n';
+            
+            try {
+                const aiResponse = document.getElementById('ai-response');
+                const result = await MockClipboardManager.copyHtmlToClipboard(aiResponse);
+                
+                if (result) {
+                    resultDiv.innerHTML += '<span class="success">✅ 复制操作成功！</span>\n';
+                    resultDiv.innerHTML += '现在可以粘贴到Word或WPS中测试格式。\n';
+                } else {
+                    resultDiv.innerHTML += '<span class="error">❌ 复制操作失败</span>\n';
+                }
+            } catch (error) {
+                resultDiv.innerHTML += '<span class="error">❌ 测试过程中发生错误: ' + error.message + '</span>\n';
+            }
+        }
+        
+        function simulateButtonClick() {
+            const resultDiv = document.getElementById('test-result');
+            resultDiv.innerHTML = '模拟按钮点击事件...\n';
+            
+            // 模拟找到内容元素
+            const contentElement = document.getElementById('ai-response');
+            resultDiv.innerHTML += '找到内容元素: ' + contentElement.tagName + ' (' + contentElement.className + ')\n';
+            
+            // 模拟复制操作
+            MockClipboardManager.copyHtmlToClipboard(contentElement).then(result => {
+                if (result) {
+                    resultDiv.innerHTML += '<span class="success">✅ 模拟按钮点击成功！</span>\n';
+                    resultDiv.innerHTML += '统一文本格式已复制到剪贴板。\n';
+                } else {
+                    resultDiv.innerHTML += '<span class="error">❌ 模拟按钮点击失败</span>\n';
+                }
+            }).catch(error => {
+                resultDiv.innerHTML += '<span class="error">❌ 模拟过程中发生错误: ' + error.message + '</span>\n';
+            });
+        }
+    </script>
+</body>
+</html> 
