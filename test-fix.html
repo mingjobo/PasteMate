@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PureText 修复测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .kimi-mock {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            background: #fafafa;
+        }
+        .segment-assistant {
+            position: relative;
+        }
+        .segment-content {
+            margin-bottom: 16px;
+        }
+        .segment-content-box {
+            position: relative;
+        }
+        .markdown-container {
+            background: white;
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .markdown {
+            line-height: 1.6;
+        }
+        .segment-assistant-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .simple-button {
+            padding: 6px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .simple-button:hover {
+            background: #f0f0f0;
+        }
+        .recommend-prompt-list {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .recommend-prompt-item {
+            margin: 4px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 16px 0;
+        }
+        .info-box h3 {
+            margin: 0 0 8px 0;
+            color: #1976d2;
+        }
+        .info-box p {
+            margin: 4px 0;
+            color: #424242;
+        }
+    </style>
+</head>
+<body>
+    <h1>PureText 修复测试页面</h1>
+    
+    <div class="info-box">
+        <h3>测试说明</h3>
+        <p>这个页面模拟了Kimi网站的DOM结构，用于测试我们的修复是否能够：</p>
+        <p>1. 正确识别内容元素（.markdown-container）</p>
+        <p>2. 正确注入复制按钮</p>
+        <p>3. 复制正确的内容而不是按钮文字</p>
+    </div>
+
+    <!-- 模拟Kimi的DOM结构 -->
+    <div class="kimi-mock">
+        <div data-v-dc94c17e="" data-v-3edc171b="" class="segment segment-assistant">
+            <div class="segment-container">
+                <!-- segment content -->
+                <div data-v-dc94c17e="" class="segment-content">
+                    <div data-v-dc94c17e="" class="segment-content-box">
+                        <div data-v-3a4aba44="" data-v-e8248998="" class="markdown-container">
+                            <div data-v-3a4aba44="" class="markdown">
+                                <div class="paragraph">
+                                    强平<strong>不是"那手资金全部没有了"</strong>，而是<strong>把你的持仓合约强制平仓掉</strong>，但<strong>账户里剩余的保证金（扣除亏损后）还是会退给你</strong>的。
+                                </div>
+                                <hr>
+                                <h3>✅ 举个例子你就明白了：</h3>
+                                <div class="paragraph">假设你开了一手螺纹钢期货：</div>
+                                <ul start="1">
+                                    <li>
+                                        <div class="paragraph"><strong>合约价值</strong>：10吨 × 4000元/吨 = <strong>4万元</strong></div>
+                                    </li>
+                                    <li>
+                                        <div class="paragraph"><strong>保证金比例</strong>：10%，所以你只交了 <strong>4000元保证金</strong></div>
+                                    </li>
+                                    <li>
+                                        <div class="paragraph"><strong>你账户里总共</strong>：5000元（4000保证金 + 1000可用资金）</div>
+                                    </li>
+                                </ul>
+                                <div class="paragraph">后来行情大跌，亏损了<strong>2000元</strong>，账户权益变成：</div>
+                                <blockquote>
+                                    <div class="paragraph">5000 - 2000 = <strong>3000元</strong><br>低于维持保证金（比如3500元），触发强平。</div>
+                                </blockquote>
+                                <hr>
+                                <h3>🔧 强平后会发生什么？</h3>
+                                <ul start="1">
+                                    <li>
+                                        <div class="paragraph">期货公司会<strong>强制把这1手螺纹钢卖掉</strong>（平仓）</div>
+                                    </li>
+                                    <li>
+                                        <div class="paragraph">平仓后，你账户里<strong>剩下的钱（3000元）还在你账户里</strong></div>
+                                    </li>
+                                    <li>
+                                        <div class="paragraph">只是这1手合约没了，仓位清掉了</div>
+                                    </li>
+                                </ul>
+                                <hr>
+                                <h3>❌ 不是"钱全没了"</h3>
+                                <ul start="1">
+                                    <li>
+                                        <div class="paragraph">不会倒扣你4万元（除非你穿仓，极端情况）</div>
+                                    </li>
+                                    <li>
+                                        <div class="paragraph">只是亏的那部分（2000元）从你账户里扣掉了</div>
+                                    </li>
+                                    <li>
+                                        <div class="paragraph">剩余的钱还是你的</div>
+                                    </li>
+                                </ul>
+                                <hr>
+                                <h3>✅ 总结一句话：</h3>
+                                <blockquote>
+                                    <div class="paragraph"><strong>强平只是强制把你的仓位平掉，亏的部分从保证金里扣，剩下的钱还在你账户里。</strong></div>
+                                </blockquote>
+                                <div class="paragraph">如果你还有具体的品种或交易所规则想确认，我可以帮你查。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span data-v-3edc171b="" class="segment-generate-tip">
+                    <svg data-v-3edc171b="" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" name="Info" class="icon iconify" width="1em" height="1em" viewBox="0 0 1024 1024">
+                        <path d="M512 89.6c-233.301333 0-422.4 189.098667-422.4 422.4s189.098667 422.4 422.4 422.4c233.258667 0 422.4-189.098667 422.4-422.4S745.258667 89.6 512 89.6zM166.4 512a345.6 345.6 0 1 1 691.2 0 345.6 345.6 0 1 1-691.2 0zM512 277.333333a38.4 38.4 0 1 0 0 76.8 38.4 38.4 0 0 0 0-76.8z m38.4 434.090667c0 19.456-17.194667 35.242667-38.4 35.242667s-38.4-15.786667-38.4-35.242667v-270.848c0-19.456 17.194667-35.242667 38.4-35.242667s38.4 15.786667 38.4 35.242667v270.848z" fill="currentColor"></path>
+                    </svg>
+                    本回答由 AI 生成，内容仅供参考
+                </span>
+                <div data-v-e23113e7="" data-v-dc94c17e="" class="segment-assistant-actions" chatting="false">
+                    <div data-v-e23113e7="" class="segment-assistant-actions-content">
+                        <div data-v-182d5fe2="" data-v-92afdd37="" data-v-e23113e7="" class="simple-button size-small">
+                            <svg data-v-182d5fe2="" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" name="Copy" class="simple-button-icon iconify" width="16" height="16" viewBox="0 0 1024 1024">
+                                <path d="M427.04896 379.12576a60.2112 60.2112 0 0 0-60.2112 60.2112v315.51488a60.2112 60.2112 0 0 0 60.2112 60.25216h315.51488a60.2112 60.2112 0 0 0 60.25216-60.2112v-315.55584a60.2112 60.2112 0 0 0-60.2112-60.2112H427.008z m-94.74048-34.48832a133.9392 133.9392 0 0 1 94.74048-39.23968h315.51488a133.98016 133.98016 0 0 1 133.98016 133.9392v315.51488a133.9392 133.9392 0 0 1-133.9392 133.98016H427.008a133.9392 133.9392 0 0 1-133.9392-133.9392v-315.55584c0-35.51232 14.09024-69.632 39.23968-94.69952z" fill="currentColor"></path>
+                                <path d="M257.14688 233.472a36.16768 36.16768 0 0 0-35.96288 35.96288v364.05248a35.96288 35.96288 0 0 0 18.18624 31.21152 36.864 36.864 0 1 1-36.41344 64.1024A109.64992 109.64992 0 0 1 147.456 633.56928v-364.1344A109.89568 109.89568 0 0 1 257.14688 159.744h364.09344c20.56192 0 38.87104 5.48864 54.51776 16.83456 14.86848 10.77248 24.82176 25.10848 32.31744 38.5024a36.864 36.864 0 0 1-64.47104 35.84c-4.95616-8.97024-8.6016-12.86144-11.14112-14.66368-1.72032-1.2288-4.5056-2.78528-11.22304-2.78528h-364.1344z" fill="currentColor"></path>
+                            </svg>
+                            <span data-v-182d5fe2="">复制</span>
+                        </div>
+                        <div data-v-182d5fe2="" data-v-e23113e7="" class="simple-button size-small">
+                            <svg data-v-182d5fe2="" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" name="Refresh" class="simple-button-icon iconify" width="16" height="16" viewBox="0 0 1024 1024">
+                                <path d="M303.104 315.392c114.688-114.688 303.104-114.688 417.792 0l-32.768 32.768c-20.48 20.48-4.096 57.344 24.576 57.344h118.784c16.384 0 32.768-16.384 32.768-32.768V253.952c0-28.672-36.864-45.056-57.344-24.576l-32.768 32.768c-143.36-143.36-376.832-143.36-520.192 0s-143.36 376.832 0 520.192 376.832 143.36 520.192 0c49.152-49.152 77.824-106.496 94.208-163.84 4.096-20.48-8.192-40.96-24.576-45.056-20.48-4.096-40.96 8.192-45.056 24.576-12.288 49.152-36.864 94.208-77.824 131.072-114.688 114.688-303.104 114.688-417.792 0-114.688-110.592-114.688-299.008 0-413.696z" fill="currentColor"></path>
+                            </svg>
+                            <span data-v-182d5fe2="">重试</span>
+                        </div>
+                        <div data-v-182d5fe2="" data-v-e23113e7="" class="simple-button size-small">
+                            <svg data-v-182d5fe2="" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" name="Share_a" class="simple-button-icon iconify" width="16" height="16" viewBox="0 0 1024 1024">
+                                <path d="M434.176 236.99456c0-66.92864 78.88896-102.64576 129.18784-58.49088l327.55712 287.78496a77.824 77.824 0 0 1 0.86016 116.16256l-327.55712 296.38656c-50.05312 45.2608-130.048 9.74848-130.048-57.7536v-129.2288c-43.8272-2.12992-79.6672-0.12288-115.34336 8.97024-44.40064 11.30496-91.42272 34.24256-154.13248 78.80704A36.864 36.864 0 0 1 106.496 749.568c0-126.93504 26.25536-225.40288 89.53856-291.67616C252.928 398.29504 333.86496 370.688 434.176 365.48608V236.99456z m74.30144-2.2528c-0.24576 0.32768-0.57344 0.90112-0.57344 2.2528V401.408a36.864 36.864 0 0 1-36.864 36.864c-107.84768 0-177.80736 24.576-221.63456 70.53312-34.816 36.4544-57.67168 91.01312-65.82272 170.55744 41.20576-24.1664 78.92992-40.30464 117.10464-49.9712 56.23808-14.336 110.51008-13.9264 173.42464-8.72448a36.864 36.864 0 0 1 33.792 36.74112v163.71712c0 1.35168 0.32768 1.92512 0.57344 2.2528a4.46464 4.46464 0 0 0 1.8432 1.47456 4.5056 4.5056 0 0 0 2.37568 0.4096c0.4096-0.04096 1.06496-0.2048 2.048-1.10592l327.55712-296.38656a4.096 4.096 0 0 0 0-6.10304l-327.59808-287.744c-0.98304-0.90112-1.6384-1.024-2.048-1.10592a4.46464 4.46464 0 0 0-2.33472 0.4096 4.46464 4.46464 0 0 0-1.8432 1.51552z" fill="currentColor"></path>
+                            </svg>
+                            <span data-v-182d5fe2="">分享</span>
+                        </div>
+                    </div>
+                </div>
+                <div data-v-ad9790f4="" data-v-3edc171b="" class="recommend-prompt-list">
+                    <div data-v-ad9790f4="" class="recommend-prompt">
+                        <p data-v-ad9790f4="" class="recommend-prompt-item" style="animation-delay: 0.14s;">
+                            <svg data-v-ad9790f4="" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" name="Search" class="recommend-prompt-item-icon iconify" width="1em" height="1em" viewBox="0 0 1024 1024">
+                                <path d="M491.52 155.648a348.16 348.16 0 0 1 270.86848 566.8864l123.82208 123.86304a36.864 36.864 0 1 1-52.10112 52.10112l-123.86304-123.82208A348.16 348.16 0 1 1 491.52 155.648z m0 622.592a274.432 274.432 0 1 0 0-548.864 274.432 274.432 0 0 0 0 548.864z" fill="currentColor"></path>
+                            </svg>
+                            搜索一下
+                        </p>
+                        <p data-v-ad9790f4="" class="recommend-prompt-item" style="animation-delay: 0.21s;">
+                            保证金比例是多少才算强平？
+                        </p>
+                        <p data-v-ad9790f4="" class="recommend-prompt-item" style="animation-delay: 0.28s;">
+                            强平后多久能拿回剩余保证金？
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h3>测试步骤：</h3>
+        <ol>
+            <li>打开浏览器开发者工具的控制台</li>
+            <li>加载PureText扩展</li>
+            <li>观察控制台日志，确认扩展正确识别了内容元素</li>
+            <li>点击复制按钮，观察是否复制了正确的内容</li>
+            <li>粘贴到Word中，检查格式是否正确</li>
+        </ol>
+    </div>
+
+    <div class="test-container">
+        <h3>预期结果：</h3>
+        <ul>
+            <li>✅ 扩展应该识别到 <code>.markdown-container</code> 元素</li>
+            <li>✅ 复制按钮应该被正确注入</li>
+            <li>✅ 点击复制按钮应该复制AI回复内容，而不是按钮文字</li>
+            <li>✅ 复制的内容应该包含完整的格式（粗体、列表、引用等）</li>
+        </ul>
+    </div>
+
+    <script>
+        // 模拟Kimi网站的hostname
+        Object.defineProperty(window.location, 'hostname', {
+            value: 'www.kimi.com',
+            writable: false
+        });
+        
+        console.log('🚀 测试页面加载完成');
+        console.log('当前hostname:', window.location.hostname);
+    </script>
+</body>
+</html> 

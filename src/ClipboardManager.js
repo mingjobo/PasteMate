@@ -27,23 +27,31 @@ class ClipboardManager {
     const startTime = performance.now();
     
     try {
+      console.log('[ClipboardManager] ========== 开始HTML复制操作 ==========');
+      console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
+      console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
+      console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
+      
       if (!element) {
+        console.error('[ClipboardManager] ❌ 元素为空，无法复制');
         this.showErrorMessage('未找到可复制内容');
         return false;
       }
       
-      console.log('[ClipboardManager] ========== 开始HTML复制操作 ==========');
-      console.log('[ClipboardManager] 目标元素:', element.tagName, element.className);
-      console.log('[ClipboardManager] 元素内容预览:', (element.textContent || '').substring(0, 200) + '...');
+      // 检测当前网站
+      const hostname = this.detectWebsite();
+      console.log('[ClipboardManager] 检测到网站:', hostname);
       
       // 确保格式化管理器已初始化
+      console.log('[ClipboardManager] 初始化格式化管理器...');
       await this.initializeFormatterManager();
-      console.log('[ClipboardManager] 格式化管理器已初始化');
+      console.log('[ClipboardManager] ✅ 格式化管理器已初始化');
       
       // 使用新的HTML格式化系统
-      console.log('[ClipboardManager] 开始HTML格式化...');
+      console.log('[ClipboardManager] 🔥 开始HTML格式化...');
       const processedHtml = await this.formatHtmlForWord(element);
-      console.log('[ClipboardManager] HTML格式化完成，结果长度:', processedHtml.length);
+      console.log('[ClipboardManager] ✅ HTML格式化完成');
+      console.log('[ClipboardManager] 格式化结果长度:', processedHtml.length);
       console.log('[ClipboardManager] 格式化结果预览:', processedHtml.substring(0, 500) + '...');
       
       const html = `<html><body>${processedHtml}</body></html>`;
@@ -51,7 +59,9 @@ class ClipboardManager {
       
       const text = element.innerText || element.textContent || '';
       console.log('[ClipboardManager] 提取的纯文本长度:', text.length);
+      console.log('[ClipboardManager] 纯文本预览:', text.substring(0, 200) + '...');
 
+      console.log('[ClipboardManager] 创建剪贴板数据...');
       const blobHtml = new Blob([html], { type: 'text/html' });
       const blobText = new Blob([text], { type: 'text/plain' });
       const clipboardItem = new window.ClipboardItem({
@@ -59,13 +69,15 @@ class ClipboardManager {
         'text/plain': blobText
       });
       
+      console.log('[ClipboardManager] 写入剪贴板...');
       await navigator.clipboard.write([clipboardItem]);
+      console.log('[ClipboardManager] ✅ 剪贴板写入成功');
       
       // 记录性能指标
       const duration = performance.now() - startTime;
-      const hostname = this.detectWebsite();
       this.logPerformanceMetrics('copyHtmlToClipboard', duration, true, hostname);
       
+      console.log('[ClipboardManager] ========== HTML复制操作完成 ==========');
       this.showSuccessMessage('已复制为 Word 格式，可直接粘贴到 Word');
       return true;
       
@@ -74,7 +86,8 @@ class ClipboardManager {
       const hostname = this.detectWebsite();
       this.logPerformanceMetrics('copyHtmlToClipboard', duration, false, hostname);
       
-      console.error(`[ClipboardManager] Copy operation failed after ${duration.toFixed(2)}ms:`, error);
+      console.error(`[ClipboardManager] ❌ Copy operation failed after ${duration.toFixed(2)}ms:`, error);
+      console.error('[ClipboardManager] 错误详情:', error.stack);
       this.showErrorMessage('复制失败，请重试');
       return false;
     }
@@ -89,31 +102,44 @@ class ClipboardManager {
     const startTime = performance.now();
     
     try {
+      console.log('[ClipboardManager] ========== 开始HTML格式化 ==========');
+      console.log('[ClipboardManager] 输入元素:', element?.tagName || 'Unknown', element?.className || '');
+      console.log('[ClipboardManager] 输入元素内容长度:', (element?.textContent || '').length);
+      
       // 检测当前网站
       const hostname = this.detectWebsite();
-      console.debug(`[ClipboardManager] Detected website: ${hostname}`);
+      console.log(`[ClipboardManager] 检测到网站: ${hostname}`);
       
       // 使用集成的格式化管理器
       if (this.formatterManager) {
-        console.debug('[ClipboardManager] Using integrated HTML formatter manager');
+        console.log('[ClipboardManager] ✅ 使用集成的HTML格式化管理器');
+        console.log('[ClipboardManager] 调用formatterManager.formatForWord...');
+        
         const result = await this.formatterManager.formatForWord(element, hostname);
         
         const duration = performance.now() - startTime;
-        console.debug(`[ClipboardManager] HTML formatting completed in ${duration.toFixed(2)}ms`);
+        console.log(`[ClipboardManager] ✅ HTML格式化完成，耗时: ${duration.toFixed(2)}ms`);
+        console.log('[ClipboardManager] 格式化结果长度:', result.length);
+        console.log('[ClipboardManager] 格式化结果预览:', result.substring(0, 300) + '...');
         
         return result;
       } else {
-        console.warn('[ClipboardManager] Formatter manager not initialized, using legacy processing');
-        return this.legacyHtmlProcessing(element);
+        console.warn('[ClipboardManager] ⚠️ 格式化管理器未初始化，使用旧版处理');
+        const result = this.legacyHtmlProcessing(element);
+        console.log('[ClipboardManager] 旧版处理结果长度:', result.length);
+        return result;
       }
       
     } catch (error) {
       const duration = performance.now() - startTime;
-      console.error(`[ClipboardManager] HTML formatting failed after ${duration.toFixed(2)}ms:`, error);
+      console.error(`[ClipboardManager] ❌ HTML格式化失败，耗时: ${duration.toFixed(2)}ms:`, error);
+      console.error('[ClipboardManager] 错误详情:', error.stack);
       
       // 降级到旧的处理方式
-      console.warn('[ClipboardManager] Falling back to legacy HTML processing');
-      return this.legacyHtmlProcessing(element);
+      console.warn('[ClipboardManager] 🔄 降级到旧版HTML处理');
+      const result = this.legacyHtmlProcessing(element);
+      console.log('[ClipboardManager] 降级处理结果长度:', result.length);
+      return result;
     }
   }
   

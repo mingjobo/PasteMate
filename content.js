@@ -247,39 +247,72 @@ class ButtonInjector {
      */
     injectButton(bubble) {
         try {
+            console.log('[ButtonInjector] ========== 开始按钮注入流程 ==========');
+            console.log('[ButtonInjector] 目标气泡元素:', bubble.tagName, bubble.className);
+            console.log('[ButtonInjector] 气泡元素内容预览:', (bubble.textContent || '').substring(0, 100) + '...');
+            
             // 检查元素是否仍在DOM中
             if (!document.contains(bubble)) {
+                console.warn('[ButtonInjector] 元素不在DOM中，跳过注入');
                 return false;
             }
 
             // 检查是否已经注入过按钮
             if (this.injectedButtons.has(bubble)) {
+                console.log('[ButtonInjector] 元素已注入过按钮，跳过');
                 return false;
             }
 
             // 检查是否已经存在按钮
             if (CopyButton.hasButton(bubble)) {
+                console.log('[ButtonInjector] 元素已存在按钮，跳过');
                 this.injectedButtons.add(bubble);
                 return false;
             }
 
             // 验证元素是否有足够的文本内容
             const text = bubble.textContent?.trim();
+            console.log('[ButtonInjector] 气泡元素文本长度:', text?.length || 0);
             if (!text || text.length < 20) {
+                console.warn('[ButtonInjector] 文本内容不足，跳过注入');
                 return false;
             }
 
             // 检查是否是AI回复而不是用户消息
+            console.log('[ButtonInjector] 检查是否是AI回复...');
             if (!this.isAIResponse(bubble)) {
+                console.log('[ButtonInjector] 不是AI回复，跳过注入');
                 return false;
             }
+            console.log('[ButtonInjector] ✅ 确认是AI回复');
 
-            // 找到最合适的容器元素
+            // 🔥 关键修复：找到包含AI回复内容的主要元素
+            console.log('[ButtonInjector] 开始查找内容元素...');
+            const contentElement = this.findContentElement(bubble);
+            if (!contentElement) {
+                console.error('[ButtonInjector] ❌ 无法找到内容元素，跳过按钮注入');
+                return false;
+            }
+            console.log('[ButtonInjector] ✅ 找到内容元素:', contentElement.tagName, contentElement.className);
+            console.log('[ButtonInjector] 内容元素文本长度:', (contentElement.textContent || '').length);
+            console.log('[ButtonInjector] 内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
+
+            // 找到最合适的按钮容器元素
+            console.log('[ButtonInjector] 查找按钮容器...');
             const targetContainer = this.findBestContainer(bubble);
+            console.log('[ButtonInjector] ✅ 找到按钮容器:', targetContainer.tagName, targetContainer.className);
 
-            // 创建按钮组件
+            // 创建按钮组件，传递内容元素而不是容器元素
+            console.log('[ButtonInjector] 创建复制按钮...');
             const buttonContainer = CopyButton.create(targetContainer, async (element) => {
-                return await ClipboardManager.copyHtmlToClipboard(element);
+                console.log('[ButtonInjector] 🔥 按钮点击事件触发');
+                console.log('[ButtonInjector] 传入的元素:', element.tagName, element.className);
+                console.log('[ButtonInjector] 实际复制的内容元素:', contentElement.tagName, contentElement.className);
+                
+                // 🔥 关键修复：使用找到的内容元素进行复制
+                const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
+                console.log('[ButtonInjector] 复制操作结果:', result);
+                return result;
             });
 
             // 定位按钮到右下角
@@ -289,17 +322,120 @@ class ButtonInjector {
             buttonContainer.style.zIndex = '1000';
 
             // 注入按钮
+            console.log('[ButtonInjector] 注入按钮到容器...');
             targetContainer.appendChild(buttonContainer);
+            console.log('[ButtonInjector] ✅ 按钮注入成功');
 
             // 标记为已注入
             this.injectedButtons.add(bubble);
             this.injectedButtons.add(targetContainer);
 
+            console.log('[ButtonInjector] ========== 按钮注入流程完成 ==========');
             return true;
 
         } catch (error) {
-            console.error('❌ 按钮注入失败:', error);
+            console.error('[ButtonInjector] ❌ 按钮注入失败:', error);
             return false;
+        }
+    }
+
+    /**
+     * 🔥 新增方法：找到包含AI回复内容的主要元素
+     * @param {HTMLElement} bubble - 初始气泡元素
+     * @returns {HTMLElement|null} 内容元素
+     */
+    findContentElement(bubble) {
+        try {
+            console.log('[ButtonInjector] ========== 开始查找内容元素 ==========');
+            console.log('[ButtonInjector] 当前网站:', window.location.hostname);
+            
+            // 对于Kimi网站，内容通常在 markdown-container 中
+            if (window.location.hostname === 'www.kimi.com') {
+                console.log('[ButtonInjector] 检测到Kimi网站，查找markdown容器...');
+                
+                const markdownContainer = bubble.querySelector('.markdown-container');
+                if (markdownContainer) {
+                    console.log('[ButtonInjector] ✅ 找到Kimi markdown容器:', markdownContainer.tagName, markdownContainer.className);
+                    console.log('[ButtonInjector] markdown容器文本长度:', (markdownContainer.textContent || '').length);
+                    return markdownContainer;
+                }
+                
+                // 备选：查找包含markdown类的元素
+                const markdownElement = bubble.querySelector('[class*="markdown"]');
+                if (markdownElement) {
+                    console.log('[ButtonInjector] ✅ 找到Kimi markdown元素:', markdownElement.tagName, markdownElement.className);
+                    console.log('[ButtonInjector] markdown元素文本长度:', (markdownElement.textContent || '').length);
+                    return markdownElement;
+                }
+                
+                console.warn('[ButtonInjector] ⚠️ Kimi网站未找到markdown容器');
+            }
+            
+            // 对于DeepSeek网站
+            if (window.location.hostname === 'chat.deepseek.com') {
+                console.log('[ButtonInjector] 检测到DeepSeek网站，查找消息内容...');
+                
+                const messageContent = bubble.querySelector('[data-message-author="assistant"]');
+                if (messageContent) {
+                    console.log('[ButtonInjector] ✅ 找到DeepSeek消息内容:', messageContent.tagName, messageContent.className);
+                    console.log('[ButtonInjector] 消息内容文本长度:', (messageContent.textContent || '').length);
+                    return messageContent;
+                }
+                
+                console.warn('[ButtonInjector] ⚠️ DeepSeek网站未找到消息内容');
+            }
+            
+            // 对于ChatGPT网站
+            if (window.location.hostname === 'chatgpt.com' || window.location.hostname === 'chat.openai.com') {
+                console.log('[ButtonInjector] 检测到ChatGPT网站，查找消息内容...');
+                
+                const messageContent = bubble.querySelector('[data-message-author-role="assistant"]');
+                if (messageContent) {
+                    console.log('[ButtonInjector] ✅ 找到ChatGPT消息内容:', messageContent.tagName, messageContent.className);
+                    console.log('[ButtonInjector] 消息内容文本长度:', (messageContent.textContent || '').length);
+                    return messageContent;
+                }
+                
+                console.warn('[ButtonInjector] ⚠️ ChatGPT网站未找到消息内容');
+            }
+            
+            // 通用查找策略：寻找包含大量文本的元素
+            console.log('[ButtonInjector] 使用通用查找策略...');
+            const contentSelectors = [
+                '[class*="content"]',
+                '[class*="message"]',
+                '[class*="text"]',
+                '[class*="body"]',
+                'p',
+                'div'
+            ];
+            
+            for (const selector of contentSelectors) {
+                console.log(`[ButtonInjector] 尝试选择器: ${selector}`);
+                const elements = bubble.querySelectorAll(selector);
+                console.log(`[ButtonInjector] 找到 ${elements.length} 个元素`);
+                
+                for (const element of elements) {
+                    const text = element.textContent?.trim();
+                    if (text && text.length > 50) { // 内容长度阈值
+                        console.log(`[ButtonInjector] ✅ 找到通用内容元素: ${selector}`);
+                        console.log('[ButtonInjector] 元素信息:', element.tagName, element.className);
+                        console.log('[ButtonInjector] 文本长度:', text.length);
+                        console.log('[ButtonInjector] 文本预览:', text.substring(0, 100) + '...');
+                        return element;
+                    }
+                }
+            }
+            
+            // 如果都找不到，返回原始元素
+            console.warn('[ButtonInjector] ⚠️ 未找到专门的内容元素，使用原始元素');
+            console.log('[ButtonInjector] 原始元素文本长度:', (bubble.textContent || '').length);
+            return bubble;
+            
+        } catch (error) {
+            console.error('[ButtonInjector] ❌ 查找内容元素失败:', error);
+            console.log('[ButtonInjector] 降级到原始元素');
+            return bubble; // 降级到原始元素
         }
     }
 

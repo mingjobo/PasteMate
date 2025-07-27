@@ -377,19 +377,39 @@ class KimiMessageDetector {
 // ==================== ClipboardManager ====================
 class ClipboardManager {
     static async copyHtmlToClipboard(element) {
+        const startTime = performance.now();
+        
         try {
+            console.log('[ClipboardManager] ========== 开始HTML复制操作 ==========');
+            console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
+            console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
+            console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
+            
             if (!element) {
+                console.error('[ClipboardManager] ❌ 元素为空，无法复制');
                 this.showErrorMessage('未找到可复制内容');
                 return false;
             }
             
-            console.log('[ClipboardManager] 开始复制操作');
+            // 检测当前网站
+            const hostname = window.location.hostname;
+            console.log('[ClipboardManager] 检测到网站:', hostname);
             
-            // 简化的HTML处理
+            // 使用简化的HTML处理（因为content-unified.js中没有格式化器）
+            console.log('[ClipboardManager] 🔥 开始HTML处理...');
             const processedHtml = this.processElementForCopy(element);
+            console.log('[ClipboardManager] ✅ HTML处理完成');
+            console.log('[ClipboardManager] 处理结果长度:', processedHtml.length);
+            console.log('[ClipboardManager] 处理结果预览:', processedHtml.substring(0, 500) + '...');
+            
             const html = `<html><body>${processedHtml}</body></html>`;
+            console.log('[ClipboardManager] 最终HTML长度:', html.length);
+            
             const text = element.innerText || element.textContent || '';
+            console.log('[ClipboardManager] 提取的纯文本长度:', text.length);
+            console.log('[ClipboardManager] 纯文本预览:', text.substring(0, 200) + '...');
 
+            console.log('[ClipboardManager] 创建剪贴板数据...');
             const blobHtml = new Blob([html], { type: 'text/html' });
             const blobText = new Blob([text], { type: 'text/plain' });
             const clipboardItem = new window.ClipboardItem({
@@ -397,13 +417,21 @@ class ClipboardManager {
                 'text/plain': blobText
             });
             
+            console.log('[ClipboardManager] 写入剪贴板...');
             await navigator.clipboard.write([clipboardItem]);
+            console.log('[ClipboardManager] ✅ 剪贴板写入成功');
             
+            const duration = performance.now() - startTime;
+            console.log(`[ClipboardManager] 复制操作耗时: ${duration.toFixed(2)}ms`);
+            
+            console.log('[ClipboardManager] ========== HTML复制操作完成 ==========');
             this.showSuccessMessage('已复制为 Word 格式，可直接粘贴到 Word');
             return true;
             
         } catch (error) {
-            console.error('[ClipboardManager] Copy operation failed:', error);
+            const duration = performance.now() - startTime;
+            console.error(`[ClipboardManager] ❌ Copy operation failed after ${duration.toFixed(2)}ms:`, error);
+            console.error('[ClipboardManager] 错误详情:', error.stack);
             this.showErrorMessage('复制失败，请重试');
             return false;
         }
@@ -1037,38 +1065,56 @@ class ButtonInjector {
     }
 
     injectButtonForElement(element, siteConfig) {
-        if (this.injectedButtons.has(element)) {
-            return;
-        }
-
-        if (!this.validateModuleAvailability()) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Required modules not available, skipping button injection');
-            return;
-        }
-
-        const textContent = element.textContent || '';
-        if (textContent.trim().length < 10) {
-            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping element with insufficient text content');
-            return;
-        }
-
-        if (!this.isElementVisible(element)) {
-            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping invisible element');
-            return;
-        }
-
-        // 🔥 关键修复：使用KimiMessageDetector验证是否应该注入按钮
-        if (!this.validateButtonInjection(element, siteConfig)) {
-            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button injection validation failed');
-            return;
-        }
-
         try {
+            debugLog(DEBUG_LEVEL.INFO, '========== 开始按钮注入流程 ==========');
+            debugLog(DEBUG_LEVEL.INFO, '目标元素:', element.tagName, element.className);
+            debugLog(DEBUG_LEVEL.INFO, '元素内容预览:', (element.textContent || '').substring(0, 100) + '...');
+            
+            if (this.injectedButtons.has(element)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '元素已注入过按钮，跳过');
+                return;
+            }
+
+            if (!this.validateModuleAvailability()) {
+                debugLog(DEBUG_LEVEL.ERROR, '❌ Required modules not available, skipping button injection');
+                return;
+            }
+
+            const textContent = element.textContent || '';
+            debugLog(DEBUG_LEVEL.INFO, '元素文本长度:', textContent.trim().length);
+            if (textContent.trim().length < 10) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping element with insufficient text content');
+                return;
+            }
+
+            if (!this.isElementVisible(element)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping invisible element');
+                return;
+            }
+
+            // 🔥 关键修复：使用KimiMessageDetector验证是否应该注入按钮
+            if (!this.validateButtonInjection(element, siteConfig)) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button injection validation failed');
+                return;
+            }
+
+            // 🔥 关键修复：找到包含AI回复内容的主要元素
+            debugLog(DEBUG_LEVEL.INFO, '开始查找内容元素...');
+            const contentElement = this.findContentElement(element, siteConfig);
+            if (!contentElement) {
+                debugLog(DEBUG_LEVEL.ERROR, '❌ 无法找到内容元素，跳过按钮注入');
+                return;
+            }
+            debugLog(DEBUG_LEVEL.INFO, '✅ 找到内容元素:', contentElement.tagName, contentElement.className);
+            debugLog(DEBUG_LEVEL.INFO, '内容元素文本长度:', (contentElement.textContent || '').length);
+            debugLog(DEBUG_LEVEL.INFO, '内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
+
             const targetContainer = this.findButtonContainer(element, siteConfig);
             if (!targetContainer) {
                 debugLog(DEBUG_LEVEL.DEBUG, '⏭️ No suitable container found for button');
                 return;
             }
+            debugLog(DEBUG_LEVEL.INFO, '✅ 找到按钮容器:', targetContainer.tagName, targetContainer.className);
 
             // 对于Kimi网站，检查是否已经有我们的按钮
             if (siteConfig.hostname === 'www.kimi.com') {
@@ -1078,22 +1124,31 @@ class ButtonInjector {
                 }
             }
 
+            debugLog(DEBUG_LEVEL.INFO, '创建复制按钮...');
             const buttonContainer = CopyButton.create(targetContainer, async (element) => {
-                return await ClipboardManager.copyHtmlToClipboard(element);
+                debugLog(DEBUG_LEVEL.INFO, '🔥 按钮点击事件触发');
+                debugLog(DEBUG_LEVEL.INFO, '传入的元素:', element.tagName, element.className);
+                debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
+                
+                // 🔥 关键修复：使用找到的内容元素进行复制
+                const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
+                debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
+                return result;
             });
 
             if (buttonContainer) {
                 // 对于Kimi网站，直接将按钮添加到容器中
                 if (siteConfig.hostname === 'www.kimi.com') {
                     targetContainer.appendChild(buttonContainer);
-                    debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected into Kimi container');
+                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into Kimi container');
                 } else {
                     // 其他网站使用原有的逻辑
                     targetContainer.appendChild(buttonContainer);
-                    debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected successfully');
+                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected successfully');
                 }
                 
                 this.injectedButtons.add(element);
+                debugLog(DEBUG_LEVEL.INFO, '========== 按钮注入流程完成 ==========');
             }
 
         } catch (error) {
@@ -1129,6 +1184,107 @@ class ButtonInjector {
                 debugLog(DEBUG_LEVEL.ERROR, '❌ Module recovery failed');
             }
         }, 1000);
+    }
+
+    /**
+     * 🔥 新增方法：找到包含AI回复内容的主要元素
+     * @param {HTMLElement} element - 初始元素
+     * @param {Object} siteConfig - 站点配置
+     * @returns {HTMLElement|null} 内容元素
+     */
+    findContentElement(element, siteConfig) {
+        try {
+            debugLog(DEBUG_LEVEL.INFO, '========== 开始查找内容元素 ==========');
+            debugLog(DEBUG_LEVEL.INFO, '当前网站:', siteConfig.hostname);
+            
+            // 对于Kimi网站，内容通常在 markdown-container 中
+            if (siteConfig.hostname === 'www.kimi.com') {
+                debugLog(DEBUG_LEVEL.INFO, '检测到Kimi网站，查找markdown容器...');
+                
+                const markdownContainer = element.querySelector('.markdown-container');
+                if (markdownContainer) {
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到Kimi markdown容器:', markdownContainer.tagName, markdownContainer.className);
+                    debugLog(DEBUG_LEVEL.INFO, 'markdown容器文本长度:', (markdownContainer.textContent || '').length);
+                    return markdownContainer;
+                }
+                
+                // 备选：查找包含markdown类的元素
+                const markdownElement = element.querySelector('[class*="markdown"]');
+                if (markdownElement) {
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到Kimi markdown元素:', markdownElement.tagName, markdownElement.className);
+                    debugLog(DEBUG_LEVEL.INFO, 'markdown元素文本长度:', (markdownElement.textContent || '').length);
+                    return markdownElement;
+                }
+                
+                debugLog(DEBUG_LEVEL.WARN, '⚠️ Kimi网站未找到markdown容器');
+            }
+            
+            // 对于DeepSeek网站
+            if (siteConfig.hostname === 'chat.deepseek.com') {
+                debugLog(DEBUG_LEVEL.INFO, '检测到DeepSeek网站，查找消息内容...');
+                
+                const messageContent = element.querySelector('[data-message-author="assistant"]');
+                if (messageContent) {
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到DeepSeek消息内容:', messageContent.tagName, messageContent.className);
+                    debugLog(DEBUG_LEVEL.INFO, '消息内容文本长度:', (messageContent.textContent || '').length);
+                    return messageContent;
+                }
+                
+                debugLog(DEBUG_LEVEL.WARN, '⚠️ DeepSeek网站未找到消息内容');
+            }
+            
+            // 对于ChatGPT网站
+            if (siteConfig.hostname === 'chatgpt.com' || siteConfig.hostname === 'chat.openai.com') {
+                debugLog(DEBUG_LEVEL.INFO, '检测到ChatGPT网站，查找消息内容...');
+                
+                const messageContent = element.querySelector('[data-message-author-role="assistant"]');
+                if (messageContent) {
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到ChatGPT消息内容:', messageContent.tagName, messageContent.className);
+                    debugLog(DEBUG_LEVEL.INFO, '消息内容文本长度:', (messageContent.textContent || '').length);
+                    return messageContent;
+                }
+                
+                debugLog(DEBUG_LEVEL.WARN, '⚠️ ChatGPT网站未找到消息内容');
+            }
+            
+            // 通用查找策略：寻找包含大量文本的元素
+            debugLog(DEBUG_LEVEL.INFO, '使用通用查找策略...');
+            const contentSelectors = [
+                '[class*="content"]',
+                '[class*="message"]',
+                '[class*="text"]',
+                '[class*="body"]',
+                'p',
+                'div'
+            ];
+            
+            for (const selector of contentSelectors) {
+                debugLog(DEBUG_LEVEL.INFO, `尝试选择器: ${selector}`);
+                const elements = element.querySelectorAll(selector);
+                debugLog(DEBUG_LEVEL.INFO, `找到 ${elements.length} 个元素`);
+                
+                for (const el of elements) {
+                    const text = el.textContent?.trim();
+                    if (text && text.length > 50) { // 内容长度阈值
+                        debugLog(DEBUG_LEVEL.INFO, `✅ 找到通用内容元素: ${selector}`);
+                        debugLog(DEBUG_LEVEL.INFO, '元素信息:', el.tagName, el.className);
+                        debugLog(DEBUG_LEVEL.INFO, '文本长度:', text.length);
+                        debugLog(DEBUG_LEVEL.INFO, '文本预览:', text.substring(0, 100) + '...');
+                        return el;
+                    }
+                }
+            }
+            
+            // 如果都找不到，返回原始元素
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ 未找到专门的内容元素，使用原始元素');
+            debugLog(DEBUG_LEVEL.INFO, '原始元素文本长度:', (element.textContent || '').length);
+            return element;
+            
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.ERROR, '❌ 查找内容元素失败:', error);
+            debugLog(DEBUG_LEVEL.INFO, '降级到原始元素');
+            return element; // 降级到原始元素
+        }
     }
 
     findButtonContainer(element, siteConfig) {
