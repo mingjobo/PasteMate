@@ -456,17 +456,17 @@ class ClipboardManager {
                 case 'h5':
                 case 'h6':
                     result += '\n' + '█'.repeat(20) + '\n';
-                    result += text + '\n';
+                    result += '　　' + text + '\n';
                     result += '█'.repeat(20) + '\n\n';
                     break;
                 case 'p':
-                    result += text + '\n\n';
+                    result += '　　' + text + '\n\n';
                     break;
                 case 'ul':
                     result += '\n';
                     Array.from(node.children).forEach((li, index) => {
                         if (li.tagName.toLowerCase() === 'li') {
-                            result += '  ● ' + li.textContent.trim() + '\n';
+                            result += '　　' + '● ' + li.textContent.trim() + '\n';
                         }
                     });
                     result += '\n';
@@ -475,7 +475,7 @@ class ClipboardManager {
                     result += '\n';
                     Array.from(node.children).forEach((li, index) => {
                         if (li.tagName.toLowerCase() === 'li') {
-                            result += '  ' + (index + 1) + '. ' + li.textContent.trim() + '\n';
+                            result += '　　' + (index + 1) + '. ' + li.textContent.trim() + '\n';
                         }
                     });
                     result += '\n';
@@ -557,8 +557,8 @@ class ClipboardManager {
             .replace(/<p([^>]*)>/g, '<p$1 style="margin: 8px 0; line-height: 1.6;">')
             .replace(/<strong([^>]*)>/g, '<strong$1 style="font-weight: bold;">')
             .replace(/<em([^>]*)>/g, '<em$1 style="font-style: italic;">')
-            .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc;">')
-            .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal;">')
+            .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 8px; list-style: disc;">')
+            .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 8px; list-style: decimal;">')
             .replace(/<li([^>]*)>/g, '<li$1 style="margin: 6px 0; line-height: 1.6;">');
     }
 
@@ -570,7 +570,7 @@ class ClipboardManager {
     }
 
     static wrapCompleteDocument(html) {
-        return `<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>复制的内容</title>\n  <style>\n    body { \n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; \n      line-height: 1.6; \n      color: #333; \n      max-width: 800px; \n      margin: 0 auto; \n      padding: 20px;\n    }\n    ul { margin: 12px 0; padding-left: 30px; list-style: disc; }\n    ol { margin: 12px 0; padding-left: 30px; list-style: decimal; }\n    li { margin: 6px 0; line-height: 1.6; }\n    code { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: monospace; }\n    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; }\n  </style>\n</head>\n<body>\n${html}\n</body>\n</html>`;
+        return `<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>复制的内容</title>\n  <style>\n    body { \n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; \n      line-height: 1.6; \n      color: #333; \n      max-width: 800px; \n      margin: 0 auto; \n      padding: 20px;\n    }\n    ul { margin: 12px 0; padding-left: 8px; list-style: disc; }\n    ol { margin: 12px 0; padding-left: 8px; list-style: decimal; }\n    li { margin: 6px 0; line-height: 1.6; }\n    code { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: monospace; }\n    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; }\n  </style>\n</head>\n<body>\n${html}\n</body>\n</html>`;
     }
 
     static processElementForCopy(element) {
@@ -1245,6 +1245,35 @@ class ButtonInjector {
             debugLog(DEBUG_LEVEL.INFO, '内容元素文本长度:', (contentElement.textContent || '').length);
             debugLog(DEBUG_LEVEL.INFO, '内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
 
+            // deepseek专用：查找操作区flex容器
+            if (siteConfig.hostname === 'chat.deepseek.com') {
+                const flexBlocks = element.querySelectorAll('.ds-flex');
+                let injected = false;
+                for (const flex of flexBlocks) {
+                    if (flex.querySelector('.ds-icon-button')) {
+                        if (flex.querySelector('.puretext-copy-btn')) {
+                            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in DeepSeek flex container');
+                            injected = true;
+                            break;
+                        }
+                        const buttonContainer = CopyButton.create(flex, async (el) => {
+                            debugLog(DEBUG_LEVEL.INFO, '🔥 DeepSeek按钮点击事件触发');
+                            debugLog(DEBUG_LEVEL.INFO, '传入的元素:', el.tagName, el.className);
+                            debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
+                            const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
+                            debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
+                            return result;
+                        });
+                        flex.appendChild(buttonContainer);
+                        this.injectedButtons.add(element);
+                        debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into DeepSeek flex container');
+                        injected = true;
+                        break;
+                    }
+                }
+                if (injected) return;
+            }
+
             const targetContainer = this.findButtonContainer(element, siteConfig);
             if (!targetContainer) {
                 debugLog(DEBUG_LEVEL.DEBUG, '⏭️ No suitable container found for button');
@@ -1357,16 +1386,23 @@ class ButtonInjector {
             
             // 对于DeepSeek网站
             if (siteConfig.hostname === 'chat.deepseek.com') {
-                debugLog(DEBUG_LEVEL.INFO, '检测到DeepSeek网站，查找消息内容...');
-                
+                debugLog(DEBUG_LEVEL.INFO, '检测到DeepSeek网站，查找AI回复主容器...');
+                // 优先选 .ds-markdown.ds-markdown--block
+                const markdownBlock = element.querySelector('.ds-markdown.ds-markdown--block');
+                if (markdownBlock) {
+                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到DeepSeek主内容容器:', markdownBlock.tagName, markdownBlock.className);
+                    debugLog(DEBUG_LEVEL.INFO, '主内容容器文本长度:', (markdownBlock.textContent || '').length);
+                    return markdownBlock;
+                }
+                // 备选：查找消息内容
                 const messageContent = element.querySelector('[data-message-author="assistant"]');
                 if (messageContent) {
                     debugLog(DEBUG_LEVEL.INFO, '✅ 找到DeepSeek消息内容:', messageContent.tagName, messageContent.className);
                     debugLog(DEBUG_LEVEL.INFO, '消息内容文本长度:', (messageContent.textContent || '').length);
                     return messageContent;
                 }
-                
-                debugLog(DEBUG_LEVEL.WARN, '⚠️ DeepSeek网站未找到消息内容');
+                debugLog(DEBUG_LEVEL.WARN, '⚠️ DeepSeek网站未找到主内容容器，降级为element');
+                return element;
             }
             
             // 对于ChatGPT网站

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剪贴板格式检测工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .format-section {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .format-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            color: #495057;
+        }
+        .format-content {
+            padding: 15px;
+            background: white;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .copy-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 剪贴板格式检测工具</h1>
+        
+        <div class="info">
+            <strong>使用说明：</strong><br>
+            1. 先复制你要检测的内容（比如从Kimi复制AI回复）<br>
+            2. 点击下面的"检测剪贴板内容"按钮<br>
+            3. 页面会显示剪贴板中的所有格式内容<br>
+            4. 你可以复制这些内容发给开发者进行调试
+        </div>
+
+        <div style="text-align: center;">
+            <button class="button" onclick="inspectClipboard()">🔍 检测剪贴板内容</button>
+            <button class="button" onclick="clearResults()">🗑️ 清空结果</button>
+        </div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        async function inspectClipboard() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">正在检测剪贴板内容...</div>';
+
+            try {
+                // 检查剪贴板API是否可用
+                if (!navigator.clipboard || !navigator.clipboard.read) {
+                    throw new Error('浏览器不支持剪贴板API，请使用Chrome、Edge或Firefox最新版本');
+                }
+
+                // 请求剪贴板权限
+                const items = await navigator.clipboard.read();
+                
+                if (items.length === 0) {
+                    resultsDiv.innerHTML = '<div class="error">剪贴板为空，请先复制一些内容</div>';
+                    return;
+                }
+
+                let html = '<h3>📋 检测结果</h3>';
+                
+                for (const item of items) {
+                    for (const type of item.types) {
+                        try {
+                            const blob = await item.getType(type);
+                            const text = await blob.text();
+                            
+                            html += `
+                                <div class="format-section">
+                                    <div class="format-header">
+                                        📄 格式: ${type}
+                                        <button class="copy-btn" onclick="copyToClipboard(this, \`${escapeHtml(text)}\`)">复制内容</button>
+                                    </div>
+                                    <div class="format-content">${escapeHtml(text)}</div>
+                                </div>
+                            `;
+                        } catch (error) {
+                            html += `
+                                <div class="format-section">
+                                    <div class="format-header">📄 格式: ${type}</div>
+                                    <div class="format-content">无法读取此格式: ${error.message}</div>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('剪贴板检测失败:', error);
+                
+                if (error.name === 'NotAllowedError') {
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <strong>权限被拒绝</strong><br>
+                            浏览器拒绝了剪贴板访问权限。请：<br>
+                            1. 确保在HTTPS环境下使用，或者<br>
+                            2. 使用localhost本地文件，或者<br>
+                            3. 在浏览器设置中允许剪贴板访问
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <strong>检测失败</strong><br>
+                            错误信息: ${error.message}<br>
+                            请确保使用现代浏览器（Chrome、Edge、Firefox等）
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function copyToClipboard(btn, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // 显示复制成功提示
+                const originalText = btn.textContent;
+                btn.textContent = '✅ 已复制';
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#28a745';
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败: ' + err.message);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载完成后的提示
+        window.addEventListener('load', () => {
+            console.log('剪贴板检测工具已加载');
+            console.log('使用方法：复制内容后点击"检测剪贴板内容"按钮');
+        });
+    </script>
+</body>
+</html> 

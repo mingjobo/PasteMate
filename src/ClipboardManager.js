@@ -28,7 +28,7 @@ class ClipboardManager {
     const startTime = performance.now();
     
     try {
-      console.log('[ClipboardManager] ========== 开始统一文本复制操作 ==========');
+      console.log('[ClipboardManager] copyHtmlToClipboard: 开始，element=', element);
       console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
       console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
       console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
@@ -51,7 +51,7 @@ class ClipboardManager {
       // 使用统一文本格式化系统
       console.log('[ClipboardManager] 🔥 开始统一文本格式化...');
       const unifiedText = await this.formatUnifiedText(element);
-      console.log('[ClipboardManager] ✅ 统一文本格式化完成');
+      console.log('[ClipboardManager] ✅ 统一文本格式化完成 unifiedText.length=', unifiedText.length, '内容片段：', unifiedText.substring(0, 200));
       console.log('[ClipboardManager] 格式化结果长度:', unifiedText.length);
       console.log('[ClipboardManager] 格式化结果预览:', unifiedText.substring(0, 500) + '...');
 
@@ -94,6 +94,7 @@ class ClipboardManager {
     const startTime = performance.now();
     
     try {
+      console.log('[ClipboardManager] formatUnifiedText: 输入element=', element);
       console.log('[ClipboardManager] ========== 开始统一文本格式化 ==========');
       console.log('[ClipboardManager] 输入元素:', element?.tagName || 'Unknown', element?.className || '');
       console.log('[ClipboardManager] 输入元素内容长度:', (element?.textContent || '').length);
@@ -109,6 +110,7 @@ class ClipboardManager {
         console.log('[ClipboardManager] 调用formatterManager.formatForWord...');
         
         processedHtml = await this.formatterManager.formatForWord(element, hostname);
+        console.log('[ClipboardManager] formatterManager.formatForWord 返回 processedHtml.length=', processedHtml.length, '片段：', processedHtml.substring(0, 200));
         console.log('[ClipboardManager] HTML格式化完成，开始转换为统一文本...');
       } else {
         console.warn('[ClipboardManager] ⚠️ 格式化管理器未初始化，使用旧版处理');

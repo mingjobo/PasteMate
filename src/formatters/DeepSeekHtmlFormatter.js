@@ -3,8 +3,7 @@ import { StructureConverter } from '../StructureConverter.js';
 
 /**
  * DeepSeek网站专用HTML格式化器
- * 处理DeepSeek网站的标准HTML结构，主要做优化和清理
- * DeepSeek已经使用良好的HTML结构，重点是样式清理和格式优化
+ * 递归结构化遍历，输出标准HTML，保证Word/WPS格式和Kimi一致
  */
 class DeepSeekHtmlFormatter extends HtmlFormatter {
   constructor() {
@@ -12,7 +11,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     this.name = 'DeepSeekHtmlFormatter';
     this.structureConverter = new StructureConverter();
   }
-  
+
   /**
    * 格式化DeepSeek的DOM元素为标准HTML
    * @param {HTMLElement} element - 要格式化的DOM元素
@@ -20,306 +19,217 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
    */
   async format(element) {
     try {
-      console.log('[DeepSeekHtmlFormatter] ========== 开始DeepSeek格式化 ==========');
-      console.log('[DeepSeekHtmlFormatter] 输入元素:', element?.tagName || 'Unknown', element?.className || '');
-      console.log('[DeepSeekHtmlFormatter] 元素内容预览:', (element?.textContent || '').substring(0, 100) + '...');
-      
-      // DeepSeek已经使用标准HTML结构，主要做清理和优化
-      const optimizedHtml = this.optimizeStandardHtml(element);
-      
-      console.log('[DeepSeekHtmlFormatter] ========== 格式化完成 ==========');
-      console.log('[DeepSeekHtmlFormatter] 最终HTML长度:', optimizedHtml.length);
-      console.log('[DeepSeekHtmlFormatter] 最终HTML预览:', optimizedHtml.substring(0, 200) + '...');
-      
-      return optimizedHtml;
-      
+      let html = '<div>';
+      const context = {
+        inList: false,
+        listItems: [],
+        currentLevel: 0,
+        textBuffer: ''
+      };
+      console.log('[DeepSeekHtmlFormatter] format: 开始递归，根节点:', element.tagName, element.className);
+      html += this.processNode(element, context, 0);
+      if (context.inList && context.listItems.length > 0) {
+        console.log('[DeepSeekHtmlFormatter] format: 结尾输出剩余 listItems', context.listItems);
+        html += this.structureConverter.generateListHtml(context.listItems);
+      }
+      html += '</div>';
+      console.log('[DeepSeekHtmlFormatter] format: 最终HTML长度', html.length);
+      return html;
     } catch (error) {
-      console.error('[DeepSeekHtmlFormatter] 格式化失败:', error);
-      console.error('[DeepSeekHtmlFormatter] 错误堆栈:', error.stack);
-      // 降级到基本处理
+      console.error('[DeepSeekHtmlFormatter] format: 异常', error);
       return this.fallbackFormat(element);
     }
   }
-  
+
   /**
-   * 优化标准HTML结构 - 实现标准HTML的优化和清理逻辑
-   * @param {HTMLElement} element - DOM元素
-   * @returns {string} 优化后的HTML
+   * 递归分块处理节点，保证所有内容完整输出
    */
-  optimizeStandardHtml(element) {
-    console.log('[DeepSeekHtmlFormatter] ---------- 优化标准HTML结构 ----------');
-    
-    let html = '<div>';
-    
-    // 遍历子元素，保持原有结构
-    const children = Array.from(element.children);
-    console.log('[DeepSeekHtmlFormatter] 子元素数量:', children.length);
-    
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      console.log(`[DeepSeekHtmlFormatter] 处理子元素 ${i + 1}/${children.length}:`, child.tagName, child.className);
-      
-      if (this.shouldIncludeElement(child)) {
-        const processedHtml = this.processStandardElement(child);
-        html += processedHtml;
-        console.log(`[DeepSeekHtmlFormatter] 子元素处理结果长度:`, processedHtml.length);
-      } else {
-        console.log(`[DeepSeekHtmlFormatter] 跳过子元素:`, child.tagName, child.className);
+  processNode(node, context, depth = 0) {
+    const indent = '  '.repeat(depth);
+    if (!node) return '';
+    // 文本节点
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent?.trim();
+      if (!text) return '';
+      console.log(`${indent}[processNode] TEXT_NODE: "${text}" inList=${context.inList} listItems=${JSON.stringify(context.listItems)}`);
+      // 列表项
+      if (this.structureConverter.isListItemStart(text)) {
+        if (!context.inList) {
+          context.inList = true;
+          context.listItems = [];
+          console.log(`${indent}[processNode] TEXT_NODE: 开始新列表`);
+        }
+        context.listItems.push(text);
+        console.log(`${indent}[processNode] TEXT_NODE: 新增列表项，当前listItems=`, context.listItems);
+        return '';
+      }
+      // 列表内追加
+      if (context.inList && text.length > 0) {
+        if (context.listItems.length > 0) {
+          context.listItems[context.listItems.length - 1] += ' ' + text;
+          console.log(`${indent}[processNode] TEXT_NODE: 列表内追加，当前listItems=`, context.listItems);
+        }
+        return '';
+      }
+      // 非列表文本，先输出当前列表
+      let html = '';
+      if (context.inList) {
+        console.log(`${indent}[processNode] TEXT_NODE: 非列表文本，先输出当前列表`, context.listItems);
+        html += this.structureConverter.generateListHtml(context.listItems);
+        context.inList = false;
+        context.listItems = [];
+      }
+      const formatted = this.formatTextContent(text);
+      console.log(`${indent}[processNode] TEXT_NODE: 输出段落/标题/引用 html=`, formatted);
+      html += formatted;
+      return html;
+    }
+    // 元素节点
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = node.tagName;
+      console.log(`${indent}[processNode] ELEMENT_NODE: <${tag}> class=${node.className}`);
+      // 块级结构：每遇到都要先输出当前列表
+      if ([
+        'P','UL','OL','LI','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','PRE','CODE'
+      ].includes(tag)) {
+        let html = '';
+        if (context.inList) {
+          console.log(`${indent}[processNode] ELEMENT_NODE: 块级前输出当前列表`, context.listItems);
+          html += this.structureConverter.generateListHtml(context.listItems);
+          context.inList = false;
+          context.listItems = [];
+        }
+        // 分别处理不同块级结构
+        if (tag === 'UL' || tag === 'OL') {
+          html += this.processListElement(node, context, depth+1);
+        } else if (tag === 'LI') {
+          html += this.processListItemElement(node, context, depth+1);
+        } else if (tag === 'P' || node.classList.contains('ds-markdown-paragraph')) {
+          html += this.processParagraphContainer(node, context, depth+1);
+        } else if (/^H[1-6]$/.test(tag)) {
+          html += this.processHeading(node, context, depth+1);
+        } else if (tag === 'BLOCKQUOTE') {
+          html += this.processBlockquote(node, context, depth+1);
+        } else if (tag === 'PRE') {
+          html += this.processPre(node, context, depth+1);
+        } else if (tag === 'CODE') {
+          html += this.processCode(node, context, depth+1);
+        }
+        console.log(`${indent}[processNode] ELEMENT_NODE: <${tag}> 输出 html=`, html);
+        return html;
+      }
+      // 其他内联/容器结构，递归处理子节点
+      let html = '';
+      for (const child of node.childNodes) {
+        html += this.processNode(child, context, depth+1);
+      }
+      return html;
+    }
+    return '';
+  }
+
+  processListElement(element, context, depth) {
+    const listType = element.tagName.toLowerCase();
+    const startAttr = element.getAttribute('start');
+    const startValue = startAttr ? ` start="${startAttr}"` : '';
+    let html = `<${listType}${startValue}>`;
+    for (const child of element.children) {
+      if (child.tagName === 'LI') {
+        html += this.processListItemElement(child, context, depth+1);
       }
     }
-    
-    html += '</div>';
-    
-    console.log('[DeepSeekHtmlFormatter] 标准HTML优化完成，总长度:', html.length);
+    html += `</${listType}>`;
+    console.log(`${'  '.repeat(depth)}[processListElement] <${listType}> 输出 html=`, html);
     return html;
   }
-  
-  /**
-   * 判断是否应该包含该元素
-   * @param {HTMLElement} element - DOM元素
-   * @returns {boolean} 是否包含
-   */
-  shouldIncludeElement(element) {
-    // 排除按钮和其他界面元素
-    if (element.tagName === 'BUTTON' || 
-        element.classList.contains('puretext-copy-btn') ||
-        element.classList.contains('puretext-button-container')) {
-      console.log('[DeepSeekHtmlFormatter] 排除按钮元素:', element.tagName, element.className);
-      return false;
+
+  processListItemElement(element, context, depth) {
+    let html = '<li>';
+    for (const child of element.childNodes) {
+      html += this.processNode(child, context, depth+1);
     }
-    
-    // 排除工具栏和操作元素
-    if (element.classList.contains('toolbar') ||
-        element.classList.contains('action') ||
-        element.classList.contains('controls')) {
-      console.log('[DeepSeekHtmlFormatter] 排除工具栏元素:', element.className);
-      return false;
-    }
-    
-    // 排除空元素
-    const text = element.textContent?.trim();
-    if (!text || text.length === 0) {
-      console.log('[DeepSeekHtmlFormatter] 排除空元素:', element.tagName);
-      return false;
-    }
-    
-    return true;
+    html += '</li>';
+    console.log(`${'  '.repeat(depth)}[processListItemElement] <li> 输出 html=`, html);
+    return html;
   }
-  
-  /**
-   * 处理标准HTML元素 - 保持DeepSeek原有的良好HTML结构，主要做样式清理
-   * @param {HTMLElement} element - DOM元素
-   * @returns {string} 处理后的HTML
-   */
-  processStandardElement(element) {
-    console.log('[DeepSeekHtmlFormatter] ---------- 处理标准元素 ----------');
-    console.log('[DeepSeekHtmlFormatter] 元素类型:', element.tagName);
-    console.log('[DeepSeekHtmlFormatter] 元素类名:', element.className || '(无)');
-    
-    // 克隆元素以避免修改原DOM
-    const cloned = element.cloneNode(true);
-    
-    // 实现内联样式移除功能，保持结构化格式
-    this.removeInlineStyles(cloned);
-    
-    // 清理DeepSeek特有的属性
-    this.cleanDeepSeekAttributes(cloned);
-    
-    // 优化特定HTML标签
-    this.optimizeHtmlTags(cloned);
-    
-    const result = cloned.outerHTML || cloned.innerHTML || '';
-    console.log('[DeepSeekHtmlFormatter] 标准元素处理完成，结果长度:', result.length);
-    
-    return result;
+
+  processParagraphContainer(element, context, depth) {
+    let html = '';
+    for (const child of element.childNodes) {
+      html += this.processNode(child, context, depth+1);
+    }
+    html = `<p>${html}</p>`;
+    console.log(`${'  '.repeat(depth)}[processParagraphContainer] <p> 输出 html=`, html);
+    return html;
   }
-  
-  /**
-   * 移除内联样式 - 实现内联样式移除功能，保持结构化格式
-   * @param {HTMLElement} element - DOM元素
-   */
-  removeInlineStyles(element) {
-    console.log('[DeepSeekHtmlFormatter] 移除内联样式...');
-    
-    // 移除当前元素的style属性，但保持class
-    if (element.hasAttribute('style')) {
-      console.log('[DeepSeekHtmlFormatter] 移除style属性:', element.getAttribute('style'));
-      element.removeAttribute('style');
-    }
-    
-    // 移除其他不需要的属性
-    const attributesToRemove = ['data-v-', 'data-testid', 'data-role'];
-    attributesToRemove.forEach(attrPrefix => {
-      Array.from(element.attributes).forEach(attr => {
-        if (attr.name.startsWith(attrPrefix)) {
-          console.log('[DeepSeekHtmlFormatter] 移除属性:', attr.name);
-          element.removeAttribute(attr.name);
-        }
-      });
-    });
-    
-    // 递归处理子元素
-    const children = Array.from(element.children);
-    children.forEach(child => this.removeInlineStyles(child));
-    
-    console.log('[DeepSeekHtmlFormatter] 内联样式移除完成');
+
+  processHeading(element, context, depth) {
+    const level = Number(element.tagName[1]) || 3;
+    const text = element.textContent?.trim() || '';
+    const html = this.structureConverter.generateHeadingHtml(text, level);
+    console.log(`${'  '.repeat(depth)}[processHeading] <h${level}> 输出 html=`, html);
+    return html;
   }
-  
-  /**
-   * 清理DeepSeek特有的属性
-   * @param {HTMLElement} element - DOM元素
-   */
-  cleanDeepSeekAttributes(element) {
-    console.log('[DeepSeekHtmlFormatter] 清理DeepSeek特有属性...');
-    
-    // 移除DeepSeek特有的data属性
-    const deepseekAttributes = ['data-ds-', 'data-deepseek-'];
-    deepseekAttributes.forEach(attrPrefix => {
-      Array.from(element.attributes).forEach(attr => {
-        if (attr.name.startsWith(attrPrefix)) {
-          console.log('[DeepSeekHtmlFormatter] 移除DeepSeek属性:', attr.name);
-          element.removeAttribute(attr.name);
-        }
-      });
-    });
-    
-    // 递归处理子元素
-    const children = Array.from(element.children);
-    children.forEach(child => this.cleanDeepSeekAttributes(child));
-    
-    console.log('[DeepSeekHtmlFormatter] DeepSeek属性清理完成');
+
+  processBlockquote(element, context, depth) {
+    let html = '';
+    for (const child of element.childNodes) {
+      html += this.processNode(child, context, depth+1);
+    }
+    html = `<blockquote><p>${html}</p></blockquote>`;
+    console.log(`${'  '.repeat(depth)}[processBlockquote] <blockquote> 输出 html=`, html);
+    return html;
   }
-  
-  /**
-   * 优化HTML标签
-   * @param {HTMLElement} element - DOM元素
-   */
-  optimizeHtmlTags(element) {
-    console.log('[DeepSeekHtmlFormatter] 优化HTML标签...');
-    
-    // 处理代码块
-    if (element.tagName === 'PRE' || element.classList.contains('code-block')) {
-      console.log('[DeepSeekHtmlFormatter] 优化代码块');
-      // 确保代码块有正确的结构
-      if (!element.querySelector('code')) {
-        const codeElement = document.createElement('code');
-        codeElement.textContent = element.textContent;
-        element.innerHTML = '';
-        element.appendChild(codeElement);
-      }
-    }
-    
-    // 处理表格
-    if (element.tagName === 'TABLE') {
-      console.log('[DeepSeekHtmlFormatter] 优化表格');
-      // 确保表格有正确的边框样式（通过class而不是内联样式）
-      element.classList.add('formatted-table');
-    }
-    
-    // 处理列表
-    if (element.tagName === 'UL' || element.tagName === 'OL') {
-      console.log('[DeepSeekHtmlFormatter] 优化列表');
-      element.classList.add('formatted-list');
-    }
-    
-    // 处理标题
-    if (/^H[1-6]$/.test(element.tagName)) {
-      console.log('[DeepSeekHtmlFormatter] 优化标题:', element.tagName);
-      element.classList.add('formatted-heading');
-    }
-    
-    // 递归处理子元素
-    const children = Array.from(element.children);
-    children.forEach(child => this.optimizeHtmlTags(child));
-    
-    console.log('[DeepSeekHtmlFormatter] HTML标签优化完成');
+
+  processPre(element, context, depth) {
+    const text = element.textContent?.trim() || '';
+    const html = `<pre>${this.escapeHtml(text)}</pre>`;
+    console.log(`${'  '.repeat(depth)}[processPre] <pre> 输出 html=`, html);
+    return html;
   }
-  
-  /**
-   * 降级格式化处理
-   * @param {HTMLElement} element - DOM元素
-   * @returns {string} 基本HTML格式
-   */
+
+  processCode(element, context, depth) {
+    const text = element.textContent?.trim() || '';
+    const html = `<code>${this.escapeHtml(text)}</code>`;
+    console.log(`${'  '.repeat(depth)}[processCode] <code> 输出 html=`, html);
+    return html;
+  }
+
+  formatTextContent(text) {
+    if (this.structureConverter.isHeading(text)) {
+      return this.structureConverter.generateHeadingHtml(text);
+    } else if (this.structureConverter.isBlockQuote(text)) {
+      return this.structureConverter.generateBlockQuoteHtml(text);
+    } else if (text.length > 0) {
+      return this.structureConverter.generateParagraphHtml(text);
+    }
+    return '';
+  }
+
+  escapeHtml(text) {
+    if (!text || typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   fallbackFormat(element) {
     try {
-      console.debug('[DeepSeekHtmlFormatter] Using fallback formatting');
-      
-      // 直接使用元素的HTML，但清理样式
-      let html = element.innerHTML || '';
-      
-      if (!html.trim()) {
-        const text = element.innerText || element.textContent || '';
-        if (text.trim()) {
-          return `<div><p>${this.structureConverter.escapeHtml(text)}</p></div>`;
-        }
-        return '<div><p>无内容</p></div>';
-      }
-      
-      // 清理内联样式和属性
-      html = this.structureConverter.cleanInlineStyles(html);
-      
-      // 优化HTML结构
-      html = this.structureConverter.optimizeHtmlStructure(html);
-      
-      console.debug('[DeepSeekHtmlFormatter] Fallback formatting completed');
-      return `<div>${html}</div>`;
-      
+      let html = element.innerText || element.textContent || '';
+      if (!html.trim()) return '<div><p>无内容</p></div>';
+      html = this.structureConverter.escapeHtml(html);
+      return `<div><p>${html}</p></div>`;
     } catch (error) {
-      console.error('[DeepSeekHtmlFormatter] Fallback formatting failed:', error);
       return '<div><p>格式化失败</p></div>';
     }
   }
-  
-  /**
-   * 检查是否支持当前DOM结构
-   * @param {HTMLElement} element - DOM元素
-   * @returns {boolean} 是否支持
-   */
-  canHandle(element) {
-    if (!element) {
-      return false;
-    }
-    
-    // 检查是否包含DeepSeek特有的类名
-    const deepseekIndicators = [
-      '.ds-markdown',
-      '.ds-markdown--block',
-      '.ds-markdown-paragraph',
-      '[class*="ds-"]'
-    ];
-    
-    return deepseekIndicators.some(selector => {
-      try {
-        if (selector.includes('[class*=')) {
-          // 检查是否有以ds-开头的类名
-          return element.querySelector('[class*="ds-"]') !== null ||
-                 element.classList.toString().includes('ds-');
-        }
-        return element.querySelector(selector) !== null ||
-               element.classList.contains(selector.replace('.', ''));
-      } catch (error) {
-        return false;
-      }
-    });
-  }
-  
-  /**
-   * 获取格式化器的优先级
-   * DeepSeek格式化器有中等优先级
-   * @returns {number} 优先级
-   */
+
   getPriority() {
     return 8;
   }
-  
-  /**
-   * 获取格式化器名称
-   * @returns {string} 格式化器名称
-   */
   getName() {
     return this.name;
   }
 }
 
-// 导出类
 export { DeepSeekHtmlFormatter };
