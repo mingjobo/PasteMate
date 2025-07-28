@@ -1,6 +1,5 @@
 import './src/ClipboardManager.js';
-import { CopyButton } from './src/CopyButton.js';
-// 一键纯文扩展 - 统一内容脚本
+import { CopyButton } from './src/CopyButton.js';// 一键纯文扩展 - 统一内容脚本
 // 将所有模块合并到一个文件中，避免ES模块导入问题
 
 // ==================== 调试日志系统 ====================
@@ -613,7 +612,18 @@ class ButtonInjector {
         }
 
         try {
-            // 使用站点配置中的选择器查找 AI 回复容器
+            // Kimi网站特殊处理：直接查找segment-assistant-actions-content容器
+            if (window.location.hostname === 'www.kimi.com') {
+                const actionContainers = document.querySelectorAll('.segment-assistant-actions-content');
+                debugLog(DEBUG_LEVEL.DEBUG, `🔍 Found ${actionContainers.length} action containers for Kimi`);
+                
+                for (const container of actionContainers) {
+                    this.injectButtonToKimiActions(container);
+                }
+                return;
+            }
+
+            // 其他网站使用原有逻辑
             const selectors = siteConfig.selectors || [];
             let bubbles = [];
             
@@ -636,6 +646,39 @@ class ButtonInjector {
             }
         } catch (error) {
             debugLog(DEBUG_LEVEL.ERROR, '❌ Error scanning for buttons:', error);
+        }
+    }
+
+    injectButtonToKimiActions(actionContainer) {
+        try {
+            if (!document.contains(actionContainer)) {
+                return;
+            }
+
+            if (this.injectedButtons.has(actionContainer)) {
+                return;
+            }
+
+            // 检查是否已经存在我们的按钮
+            if (actionContainer.querySelector(`.${this.buttonClass}`)) {
+                return;
+            }
+
+            // 检查是否是AI回复的actions容器
+            const segmentAssistant = actionContainer.closest('.segment-assistant');
+            if (!segmentAssistant) {
+                debugLog(DEBUG_LEVEL.DEBUG, '🔄 Skipping non-assistant actions container');
+                return;
+            }
+
+            const button = this.createButtonForKimiActions(actionContainer);
+            actionContainer.appendChild(button);
+            this.injectedButtons.add(actionContainer);
+
+            debugLog(DEBUG_LEVEL.DEBUG, '✅ Kimi actions button injected successfully');
+
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.ERROR, '❌ Error injecting Kimi actions button:', error);
         }
     }
 
@@ -670,6 +713,153 @@ class ButtonInjector {
         } catch (error) {
             debugLog(DEBUG_LEVEL.ERROR, '❌ Error injecting button:', error);
         }
+    }
+
+    createButtonForKimiActions(actionContainer) {
+        const onCopy = async (buttonContainer) => {
+            try {
+                // 从actions容器向上查找AI回复内容
+                const segmentAssistant = buttonContainer.closest('.segment-assistant');
+                if (!segmentAssistant) {
+                    debugLog(DEBUG_LEVEL.ERROR, '❌ 未找到 segment-assistant 容器');
+                    return false;
+                }
+
+                const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+                if (!aiContent) {
+                    debugLog(DEBUG_LEVEL.ERROR, '❌ 未找到 AI 回复内容');
+                    return false;
+                }
+
+                // 添加详细日志
+                console.log('[PureText] ========== Kimi复制操作开始 ==========');
+                console.log('[PureText] 按钮容器:', buttonContainer?.tagName, buttonContainer?.className);
+                console.log('[PureText] 找到的 AI 内容容器:', aiContent?.tagName, aiContent?.className);
+                console.log('[PureText] AI 内容文本预览:', (aiContent?.textContent || '').substring(0, 100) + '...');
+
+                const success = await window.ClipboardManager.copyHtmlToClipboard(aiContent);
+                
+                console.log('[PureText] 复制结果:', success ? '成功' : '失败');
+                console.log('[PureText] ========== Kimi复制操作结束 ==========');
+                
+                return success;
+            } catch (error) {
+                debugLog(DEBUG_LEVEL.ERROR, '❌ Kimi copy operation failed:', error);
+                return false;
+            }
+        };
+
+        // 为Kimi actions容器创建特殊样式的按钮
+        const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制到 Word';
+        
+        const container = document.createElement('div');
+        container.className = 'puretext-button-container';
+        container.style.cssText = `
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+            pointer-events: auto;
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+        `;
+
+        const button = document.createElement('button');
+        button.className = 'puretext-action-btn';
+        button.textContent = buttonText;
+        button.type = 'button';
+        button.setAttribute('aria-label', buttonText);
+        button.setAttribute('title', buttonText);
+        
+        // 应用Kimi actions按钮的特殊样式
+        button.style.cssText = `
+            all: initial;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px;
+            min-width: auto;
+            height: 24px;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.2;
+            text-align: center;
+            white-space: nowrap;
+            background: transparent;
+            color: var(--color-text-1, #374151);
+            border: none;
+            border-radius: 4px;
+            box-shadow: none;
+            cursor: pointer;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition: all 0.15s ease;
+            transform: translateZ(0);
+            will-change: background-color;
+            opacity: 1;
+        `;
+
+        // 添加交互效果
+        button.addEventListener('mouseenter', () => {
+            button.style.opacity = '1';
+            button.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
+            button.style.transform = 'translateY(-1px) translateZ(0)';
+        });
+        button.addEventListener('mouseleave', () => {
+            button.style.opacity = '0.9';
+            button.style.background = 'transparent';
+            button.style.transform = 'translateY(0) translateZ(0)';
+        });
+        button.addEventListener('focus', () => {
+            button.style.outline = '2px solid #3b82f6';
+            button.style.outlineOffset = '2px';
+            button.style.opacity = '1';
+        });
+        button.addEventListener('blur', () => {
+            button.style.outline = 'none';
+            button.style.opacity = '0.9';
+        });
+        button.addEventListener('mousedown', () => {
+            button.style.transform = 'translateY(0) scale(0.98) translateZ(0)';
+            button.style.background = 'var(--color-fill-3, rgba(0, 0, 0, 0.08))';
+        });
+        button.addEventListener('mouseup', () => {
+            button.style.transform = 'translateY(-1px) translateZ(0)';
+            button.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
+        });
+
+        // 添加点击事件
+        button.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // 点击反馈
+            button.style.transform = 'scale(0.95) translateZ(0)';
+            setTimeout(() => {
+                button.style.transform = 'translateZ(0)';
+            }, 150);
+            
+            const originalText = button.textContent;
+            button.textContent = '处理中...';
+            
+            try {
+                await onCopy(actionContainer);
+            } catch (error) {
+                console.error('PureText: Kimi action failed:', error);
+            } finally {
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 500);
+            }
+        });
+
+        container.appendChild(button);
+        return container;
     }
 
     createButton(targetBubble) {

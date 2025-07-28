@@ -19,7 +19,7 @@ console.log('🚀 Building PureText One-Click Extension...');
 
 // Build configuration - 将所有模块打包到content.js中
 const buildConfig = {
-  entryPoints: ['content-with-modules.js'],
+  entryPoints: ['content.js'],
   bundle: true,
   minify: false, // 暂时关闭压缩以便调试
   format: 'iife',
