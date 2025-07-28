@@ -877,3 +877,8 @@ class ClipboardManager {
 
 // 导出类
 export { ClipboardManager };
+
+// 挂载到window，供content.js全局使用
+if (typeof window !== 'undefined') {
+  window.ClipboardManager = ClipboardManager;
+}
