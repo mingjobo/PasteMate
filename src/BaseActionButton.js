@@ -7,14 +7,14 @@ class BaseActionButton {
    * 创建按钮容器和按钮元素
    * @param {string} text - 按钮文本
    * @param {Function} onAction - 按钮点击回调
-   * @param {Object} options - 额外参数（如 isKimi、自定义样式等）
+   * @param {Object} options - 额外参数（如 isKimi、isDeepSeek、自定义样式等）
    * @returns {HTMLElement} 按钮容器元素
    */
   static createBaseButton(text, onAction, options = {}) {
-    const { targetElement, isKimi = false, customStyle = {} } = options;
+    const { targetElement, isKimi = false, isDeepSeek = false, customStyle = {} } = options;
     const container = document.createElement('div');
     container.className = this.CONTAINER_CLASS;
-    this.applyContainerStyles(container, isKimi, customStyle);
+    this.applyContainerStyles(container, isKimi, isDeepSeek, customStyle);
 
     const button = document.createElement('button');
     button.className = this.BUTTON_CLASS;
@@ -22,15 +22,28 @@ class BaseActionButton {
     button.type = 'button';
     button.setAttribute('aria-label', text);
     button.setAttribute('title', text);
-    this.applyButtonStyles(button, isKimi);
-    this.addButtonInteractions(button, this.getColorScheme());
+    this.applyButtonStyles(button, isKimi, isDeepSeek);
+    this.addButtonInteractions(button, this.getColorScheme(isDeepSeek));
     this.addActionEventListeners(button, targetElement, onAction);
 
     container.appendChild(button);
     return container;
   }
 
-  static getColorScheme() {
+  static getColorScheme(isDeepSeek = false) {
+    if (isDeepSeek) {
+      return {
+        background: 'transparent',
+        text: 'rgba(255, 255, 255, 0.7)',
+        border: 'none',
+        shadow: 'none',
+        hoverBackground: 'rgba(255, 255, 255, 0.1)',
+        hoverShadow: 'none',
+        activeBackground: 'rgba(255, 255, 255, 0.15)',
+        focus: '#3b82f6'
+      };
+    }
+    
     return {
       background: 'transparent',
       text: 'var(--color-text-1, #374151)',
@@ -43,52 +56,56 @@ class BaseActionButton {
     };
   }
 
-  static applyContainerStyles(container, isKimi = false, customStyle = {}) {
-    container.style.cssText = `
-      display: inline-flex;
-      align-items: center;
-      margin-left: 8px;
-      pointer-events: auto;
-      background: none;
-      border: none;
-      box-shadow: none;
-      padding: 0;
-    `;
-    Object.assign(container.style, customStyle);
+  static applyContainerStyles(container, isKimi = false, isDeepSeek = false, customStyle = {}) {
+    const baseStyles = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      marginLeft: isDeepSeek ? '4px' : '8px',
+      pointerEvents: 'auto',
+      background: 'none',
+      border: 'none',
+      boxShadow: 'none',
+      padding: '0'
+    };
+    
+    Object.assign(container.style, baseStyles, customStyle);
   }
 
-  static applyButtonStyles(button, isKimi = false) {
-    const colorScheme = this.getColorScheme();
-    button.style.cssText = `
-      all: initial;
-      font-family: inherit;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px 8px;
-      min-width: auto;
-      height: 24px;
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 1.2;
-      text-align: center;
-      white-space: nowrap;
-      background: ${colorScheme.background};
-      color: ${colorScheme.text};
-      border: ${colorScheme.border};
-      border-radius: 4px;
-      box-shadow: ${colorScheme.shadow};
-      cursor: pointer;
-      pointer-events: auto;
-      user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      transition: all 0.15s ease;
-      transform: translateZ(0);
-      will-change: background-color;
-      opacity: 1;
-    `;
+  static applyButtonStyles(button, isKimi = false, isDeepSeek = false) {
+    const colorScheme = this.getColorScheme(isDeepSeek);
+    
+    const baseStyles = {
+      all: 'initial',
+      fontFamily: 'inherit',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: isDeepSeek ? '2px 6px' : '4px 8px',
+      minWidth: 'auto',
+      height: isDeepSeek ? '20px' : '24px',
+      fontSize: isDeepSeek ? '11px' : '12px',
+      fontWeight: '400',
+      lineHeight: '1.2',
+      textAlign: 'center',
+      whiteSpace: 'nowrap',
+      background: colorScheme.background,
+      color: colorScheme.text,
+      border: colorScheme.border,
+      borderRadius: '4px',
+      boxShadow: colorScheme.shadow,
+      cursor: 'pointer',
+      pointerEvents: 'auto',
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      MozUserSelect: 'none',
+      msUserSelect: 'none',
+      transition: 'all 0.15s ease',
+      transform: 'translateZ(0)',
+      willChange: 'background-color',
+      opacity: isDeepSeek ? '0.8' : '1'
+    };
+    
+    Object.assign(button.style, baseStyles);
   }
 
   static addButtonInteractions(button, colorScheme) {

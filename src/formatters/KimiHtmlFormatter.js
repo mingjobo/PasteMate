@@ -417,22 +417,33 @@ class KimiHtmlFormatter extends HtmlFormatter {
       return false;
     }
     
+    // 首先检查是否是DeepSeek的内容，如果是则不处理
+    if (element.classList?.contains('ds-markdown') || 
+        element.querySelector('.ds-markdown') ||
+        element.querySelector('.ds-icon-button')) {
+      console.log('[KimiHtmlFormatter] canHandle: 检测到DeepSeek内容，拒绝处理');
+      return false;
+    }
+    
     // 检查是否包含Kimi特有的DOM结构
     const kimiIndicators = [
-      '.markdown',
-      '.segment-content-box',
-      '.markdown-container',
-      '.segment-content',
-      '[data-v-3a4aba44]'  // Kimi的Vue组件标识
+      '.segment-content-box',  // Kimi特有的内容框
+      '.markdown-container',   // Kimi的markdown容器
+      '.segment-content',      // Kimi的段落内容
+      '[data-v-3a4aba44]'     // Kimi的Vue组件标识
     ];
     
-    return kimiIndicators.some(selector => {
+    // 必须包含Kimi特有的结构才处理
+    const hasKimiStructure = kimiIndicators.some(selector => {
       try {
         return element.querySelector(selector) !== null;
       } catch (error) {
         return false;
       }
     });
+    
+    console.log('[KimiHtmlFormatter] canHandle: hasKimiStructure=', hasKimiStructure, ', element.className=', element.className);
+    return hasKimiStructure;
   }
   
   /**
