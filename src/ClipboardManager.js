@@ -31,7 +31,7 @@ class ClipboardManager {
     
     try {
       console.log('[ClipboardManager] copyHtmlToClipboard: 开始，element=', element);
-      console.log('[ClipboardManager] 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
+      console.log('[ClipboardManager] 🔥 🔥 🔥 接收到的元素:', element?.tagName || 'Unknown', element?.className || '');
       console.log('[ClipboardManager] 元素内容长度:', (element?.textContent || '').length);
       console.log('[ClipboardManager] 元素内容预览:', (element?.textContent || '').substring(0, 300) + '...');
       
@@ -51,7 +51,7 @@ class ClipboardManager {
       console.log('[ClipboardManager] ✅ 格式化管理器已初始化');
       
       // 使用统一文本格式化系统
-      console.log('[ClipboardManager] 🔥 开始统一文本格式化...');
+      console.log('[ClipboardManager] 🔥 开始统一文本格式化！！！');
       const unifiedText = await this.formatUnifiedText(element);
       console.log('[ClipboardManager] ✅ 统一文本格式化完成 unifiedText.length=', unifiedText.length, '内容片段：', unifiedText.substring(0, 200));
       console.log('[ClipboardManager] 格式化结果长度:', unifiedText.length);

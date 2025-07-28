@@ -4,7 +4,7 @@ module.exports = {
   mode: 'development',
   entry: './content.js',
   output: {
-    filename: 'content.bundle.js',
+    filename: 'content.js',
     path: path.resolve(__dirname, 'dist'),
     devtoolModuleFilenameTemplate: '[absolute-resource-path]',
   },

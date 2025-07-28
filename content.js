@@ -3,6 +3,141 @@ import { CopyButton } from './src/CopyButton.js';
 // 一键纯文扩展 - 统一内容脚本
 // 将所有模块合并到一个文件中，避免ES模块导入问题
 
+// ==================== 调试日志系统 ====================
+const DEBUG_LEVEL = {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    DEBUG: 3
+};
+
+window.PURETEXT_DEBUG_LEVEL = window.PURETEXT_DEBUG_LEVEL || DEBUG_LEVEL.INFO;
+
+function debugLog(level, message, ...args) {
+    if (level <= window.PURETEXT_DEBUG_LEVEL) {
+        const timestamp = new Date().toLocaleTimeString();
+        const levelNames = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
+        const prefix = `[${timestamp}] PureText-${levelNames[level]}:`;
+
+        switch (level) {
+            case DEBUG_LEVEL.ERROR:
+                console.error(prefix, message, ...args);
+                break;
+            case DEBUG_LEVEL.WARN:
+                console.warn(prefix, message, ...args);
+                break;
+            case DEBUG_LEVEL.INFO:
+                console.info(prefix, message, ...args);
+                break;
+            case DEBUG_LEVEL.DEBUG:
+                console.log(prefix, message, ...args);
+                break;
+        }
+    }
+}
+
+debugLog(DEBUG_LEVEL.INFO, '🚀 Content script loaded');
+
+// ==================== 站点管理器 ====================
+class SiteManager {
+    constructor() {
+        this.siteConfig = null;
+        this.currentSite = null;
+    }
+
+    async loadSiteConfig() {
+        debugLog(DEBUG_LEVEL.DEBUG, '📋 Loading site configuration...');
+
+        try {
+            debugLog(DEBUG_LEVEL.DEBUG, '🔍 Checking SUPPORTED_SITES availability:', typeof SUPPORTED_SITES);
+
+            if (typeof SUPPORTED_SITES === 'undefined') {
+                debugLog(DEBUG_LEVEL.ERROR, '❌ SUPPORTED_SITES is undefined!');
+                this.siteConfig = {};
+                return;
+            }
+
+            debugLog(DEBUG_LEVEL.DEBUG, '📊 Available sites:', Object.keys(SUPPORTED_SITES));
+
+            const baseSites = { ...SUPPORTED_SITES };
+
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                const result = await chrome.storage.sync.get(['customSites', 'disabledSites']);
+                if (result.customSites || result.disabledSites) {
+                    this.siteConfig = this.mergeConfigs(baseSites, result);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ Loaded user configuration');
+                    return;
+                }
+            }
+
+            this.siteConfig = baseSites;
+            debugLog(DEBUG_LEVEL.INFO, '✅ Using built-in site configuration');
+
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ Failed to load user config, using built-in config:', error);
+            this.siteConfig = typeof SUPPORTED_SITES !== 'undefined' ? { ...SUPPORTED_SITES } : {};
+        }
+    }
+
+    mergeConfigs(builtInConfig, userConfig) {
+        const merged = { ...builtInConfig };
+
+        if (userConfig.customSites) {
+            Object.assign(merged, userConfig.customSites);
+        }
+
+        if (userConfig.disabledSites) {
+            userConfig.disabledSites.forEach(hostname => {
+                delete merged[hostname];
+            });
+        }
+
+        return merged;
+    }
+
+    identifyCurrentSite() {
+        if (!this.siteConfig) {
+            debugLog(DEBUG_LEVEL.WARN, '⚠️ Site config not loaded');
+            return null;
+        }
+
+        const hostname = window.location.hostname;
+        debugLog(DEBUG_LEVEL.DEBUG, `🔍 Identifying site for hostname: ${hostname}`);
+
+        if (this.siteConfig[hostname]) {
+            this.currentSite = { hostname, ...this.siteConfig[hostname] };
+            debugLog(DEBUG_LEVEL.INFO, `✅ Direct match found for ${hostname}`);
+            return this.currentSite;
+        }
+
+        for (const [configHostname, config] of Object.entries(this.siteConfig)) {
+            if (hostname.includes(configHostname) || configHostname.includes(hostname)) {
+                this.currentSite = { hostname: configHostname, ...config };
+                debugLog(DEBUG_LEVEL.INFO, `✅ Fuzzy match found: ${hostname} -> ${configHostname}`);
+                return this.currentSite;
+            }
+        }
+
+        debugLog(DEBUG_LEVEL.INFO, `ℹ️ No configuration found for ${hostname}`);
+        return null;
+    }
+
+    isCurrentSiteSupported() {
+        return this.identifyCurrentSite() !== null;
+    }
+
+    getCurrentSiteConfig() {
+        return this.currentSite || this.identifyCurrentSite();
+    }
+
+    getSupportedSites() {
+        if (!this.siteConfig) {
+            return [];
+        }
+        return Object.keys(this.siteConfig);
+    }
+}
+
 // ==================== 站点配置 ====================
 const SUPPORTED_SITES = {
   "chat.openai.com": {
@@ -384,141 +519,6 @@ class KimiMessageDetector {
 // ==================== CopyButton ====================
 // 使用 src/CopyButton.js 导出的 CopyButton 类
 
-// ==================== 调试日志系统 ====================
-const DEBUG_LEVEL = {
-    ERROR: 0,
-    WARN: 1,
-    INFO: 2,
-    DEBUG: 3
-};
-
-window.PURETEXT_DEBUG_LEVEL = window.PURETEXT_DEBUG_LEVEL || DEBUG_LEVEL.INFO;
-
-function debugLog(level, message, ...args) {
-    if (level <= window.PURETEXT_DEBUG_LEVEL) {
-        const timestamp = new Date().toLocaleTimeString();
-        const levelNames = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
-        const prefix = `[${timestamp}] PureText-${levelNames[level]}:`;
-
-        switch (level) {
-            case DEBUG_LEVEL.ERROR:
-                console.error(prefix, message, ...args);
-                break;
-            case DEBUG_LEVEL.WARN:
-                console.warn(prefix, message, ...args);
-                break;
-            case DEBUG_LEVEL.INFO:
-                console.info(prefix, message, ...args);
-                break;
-            case DEBUG_LEVEL.DEBUG:
-                console.log(prefix, message, ...args);
-                break;
-        }
-    }
-}
-
-debugLog(DEBUG_LEVEL.INFO, '🚀 Content script loaded');
-
-// ==================== 站点管理器 ====================
-class SiteManager {
-    constructor() {
-        this.siteConfig = null;
-        this.currentSite = null;
-    }
-
-    async loadSiteConfig() {
-        debugLog(DEBUG_LEVEL.DEBUG, '📋 Loading site configuration...');
-
-        try {
-            debugLog(DEBUG_LEVEL.DEBUG, '🔍 Checking SUPPORTED_SITES availability:', typeof SUPPORTED_SITES);
-
-            if (typeof SUPPORTED_SITES === 'undefined') {
-                debugLog(DEBUG_LEVEL.ERROR, '❌ SUPPORTED_SITES is undefined!');
-                this.siteConfig = {};
-                return;
-            }
-
-            debugLog(DEBUG_LEVEL.DEBUG, '📊 Available sites:', Object.keys(SUPPORTED_SITES));
-
-            const baseSites = { ...SUPPORTED_SITES };
-
-            if (typeof chrome !== 'undefined' && chrome.storage) {
-                const result = await chrome.storage.sync.get(['customSites', 'disabledSites']);
-                if (result.customSites || result.disabledSites) {
-                    this.siteConfig = this.mergeConfigs(baseSites, result);
-                    debugLog(DEBUG_LEVEL.INFO, '✅ Loaded user configuration');
-                    return;
-                }
-            }
-
-            this.siteConfig = baseSites;
-            debugLog(DEBUG_LEVEL.INFO, '✅ Using built-in site configuration');
-
-        } catch (error) {
-            debugLog(DEBUG_LEVEL.WARN, '⚠️ Failed to load user config, using built-in config:', error);
-            this.siteConfig = typeof SUPPORTED_SITES !== 'undefined' ? { ...SUPPORTED_SITES } : {};
-        }
-    }
-
-    mergeConfigs(builtInConfig, userConfig) {
-        const merged = { ...builtInConfig };
-
-        if (userConfig.customSites) {
-            Object.assign(merged, userConfig.customSites);
-        }
-
-        if (userConfig.disabledSites) {
-            userConfig.disabledSites.forEach(hostname => {
-                delete merged[hostname];
-            });
-        }
-
-        return merged;
-    }
-
-    identifyCurrentSite() {
-        if (!this.siteConfig) {
-            debugLog(DEBUG_LEVEL.WARN, '⚠️ Site config not loaded');
-            return null;
-        }
-
-        const hostname = window.location.hostname;
-        debugLog(DEBUG_LEVEL.DEBUG, `🔍 Identifying site for hostname: ${hostname}`);
-
-        if (this.siteConfig[hostname]) {
-            this.currentSite = { hostname, ...this.siteConfig[hostname] };
-            debugLog(DEBUG_LEVEL.INFO, `✅ Direct match found for ${hostname}`);
-            return this.currentSite;
-        }
-
-        for (const [configHostname, config] of Object.entries(this.siteConfig)) {
-            if (hostname.includes(configHostname) || configHostname.includes(hostname)) {
-                this.currentSite = { hostname: configHostname, ...config };
-                debugLog(DEBUG_LEVEL.INFO, `✅ Fuzzy match found: ${hostname} -> ${configHostname}`);
-                return this.currentSite;
-            }
-        }
-
-        debugLog(DEBUG_LEVEL.INFO, `ℹ️ No configuration found for ${hostname}`);
-        return null;
-    }
-
-    isCurrentSiteSupported() {
-        return this.identifyCurrentSite() !== null;
-    }
-
-    getCurrentSiteConfig() {
-        return this.currentSite || this.identifyCurrentSite();
-    }
-
-    getSupportedSites() {
-        if (!this.siteConfig) {
-            return [];
-        }
-        return Object.keys(this.siteConfig);
-    }
-}
-
 // ==================== 按钮注入器 ====================
 class ButtonInjector {
     constructor(siteManager) {
@@ -526,595 +526,266 @@ class ButtonInjector {
         this.observer = null;
         this.injectedButtons = new WeakSet();
         this.buttonClass = 'puretext-copy-btn';
-        this.containerClass = 'puretext-button-container';
-        this.isObserving = false;
+        this.debounceTimer = null;
+        this.debounceDelay = 100;
     }
 
     start() {
-        if (this.isObserving) {
-            debugLog(DEBUG_LEVEL.DEBUG, '🔄 Button injector already running');
-            return;
-        }
-
-        const siteConfig = this.siteManager.getCurrentSiteConfig();
-        if (!siteConfig) {
-            debugLog(DEBUG_LEVEL.WARN, '⚠️ No site configuration available, skipping button injection');
-            return;
-        }
-
-        debugLog(DEBUG_LEVEL.INFO, '🚀 Starting button injection for:', siteConfig.hostname);
-
-        this.injectButtonsForExistingElements(siteConfig);
-        this.startObserving(siteConfig);
-    }
-
-    injectButtonsForExistingElements(siteConfig) {
-        console.log('[PureText] injectButtonsForExistingElements: siteConfig:', siteConfig);
-        const selectors = siteConfig.selectors;
-        if (!selectors || selectors.length === 0) {
-            debugLog(DEBUG_LEVEL.WARN, '⚠️ No selectors available, skipping button injection');
-            return;
-        }
-
-        debugLog(DEBUG_LEVEL.DEBUG, '🔍 Checking existing elements with selectors:', selectors);
-
-        selectors.forEach(selector => {
-            try {
-                const elements = document.querySelectorAll(selector);
-                debugLog(DEBUG_LEVEL.DEBUG, `📍 Found ${elements.length} elements for selector: ${selector}`);
-
-                elements.forEach(element => {
-                    this.injectButtonForElement(element, siteConfig);
-                });
-            } catch (error) {
-                debugLog(DEBUG_LEVEL.ERROR, `❌ Error querying selector "${selector}":`, error);
-            }
-        });
-    }
-
-    startObserving(siteConfig) {
-        if (this.observer) {
-            this.observer.disconnect();
-        }
-
-        this.observer = new MutationObserver((mutations) => {
-            this.handleMutations(mutations, siteConfig);
-        });
-
-        const observerConfig = {
-            childList: true,
-            subtree: true,
-            attributes: false
-        };
-
-        this.observer.observe(document.body, observerConfig);
-        this.isObserving = true;
-
-        debugLog(DEBUG_LEVEL.DEBUG, '👁️ Started observing DOM changes');
-    }
-
-    handleMutations(mutations, siteConfig) {
-        const selectors = siteConfig.selectors;
-        if (!selectors || selectors.length === 0) return;
-
-        let foundNewElements = false;
-
-        mutations.forEach(mutation => {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        foundNewElements = this.checkNodeForTargets(node, selectors, siteConfig) || foundNewElements;
-                    }
-                });
-            }
-        });
-
-        if (foundNewElements) {
-            debugLog(DEBUG_LEVEL.DEBUG, '✨ Injected buttons for new elements');
-        }
-    }
-
-    checkNodeForTargets(node, selectors, siteConfig) {
-        let foundElements = false;
-
-        selectors.forEach(selector => {
-            try {
-                if (node.matches && node.matches(selector)) {
-                    this.injectButtonForElement(node, siteConfig);
-                    foundElements = true;
-                }
-
-                const childElements = node.querySelectorAll(selector);
-                childElements.forEach(element => {
-                    this.injectButtonForElement(element, siteConfig);
-                    foundElements = true;
-                });
-            } catch (error) {
-                debugLog(DEBUG_LEVEL.ERROR, `❌ Error checking selector "${selector}":`, error);
-            }
-        });
-
-        return foundElements;
-    }
-
-    injectButtonForElement(element, siteConfig) {
-        console.log('[PureText] injectButtonForElement: target element:', element?.tagName, element?.className, (element?.innerText || '').slice(0, 50));
-        debugLog(DEBUG_LEVEL.INFO, '========== 开始按钮注入流程 ==========');
-        debugLog(DEBUG_LEVEL.INFO, '目标元素:', element.tagName, element.className);
-        debugLog(DEBUG_LEVEL.INFO, '元素内容预览:', (element.textContent || '').substring(0, 100) + '...');
-        
-        if (this.injectedButtons.has(element)) {
-            debugLog(DEBUG_LEVEL.DEBUG, '元素已注入过按钮，跳过');
-            return;
-        }
-
-        if (!this.validateModuleAvailability()) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Required modules not available, skipping button injection');
-            return;
-        }
-
-        const textContent = element.textContent || '';
-        debugLog(DEBUG_LEVEL.INFO, '元素文本长度:', textContent.trim().length);
-        if (textContent.trim().length < 10) {
-            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping element with insufficient text content');
-            return;
-        }
-
-        if (!this.isElementVisible(element)) {
-            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping invisible element');
-            return;
-        }
-
-        // 🔥 关键修复：使用KimiMessageDetector验证是否应该注入按钮
-        if (!this.validateButtonInjection(element, siteConfig)) {
-            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button injection validation failed');
-            return;
-        }
-
-        // 🔥 关键修复：找到包含AI回复内容的主要元素
-        debugLog(DEBUG_LEVEL.INFO, '开始查找内容元素...');
-        const contentElement = this.findContentElement(element, siteConfig);
-        if (!contentElement) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ 无法找到内容元素，跳过按钮注入');
-            return;
-        }
-        debugLog(DEBUG_LEVEL.INFO, '✅ 找到内容元素:', contentElement.tagName, contentElement.className);
-        debugLog(DEBUG_LEVEL.INFO, '内容元素文本长度:', (contentElement.textContent || '').length);
-        debugLog(DEBUG_LEVEL.INFO, '内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
-
-        // deepseek专用：查找操作区flex容器
-        if (siteConfig.hostname === 'chat.deepseek.com') {
-            const flexBlocks = element.querySelectorAll('.ds-flex');
-            let injected = false;
-            for (const flex of flexBlocks) {
-                if (flex.querySelector('.ds-icon-button')) {
-                    if (flex.querySelector('.puretext-copy-btn')) {
-                        debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in DeepSeek flex container');
-                        injected = true;
-                        break;
-                    }
-                    const buttonContainer = CopyButton.create(flex, async (el) => {
-                        debugLog(DEBUG_LEVEL.INFO, '🔥 DeepSeek按钮点击事件触发');
-                        debugLog(DEBUG_LEVEL.INFO, '传入的元素:', el.tagName, el.className);
-                        debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
-                        const result = await window.ClipboardManager.copyHtmlToClipboard(contentElement);
-                        debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
-                        return result;
-                    });
-                    flex.appendChild(buttonContainer);
-                    this.injectedButtons.add(element);
-                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into DeepSeek flex container');
-                    injected = true;
-                    break;
-                }
-            }
-            if (injected) return;
-        }
-
-        const targetContainer = this.findButtonContainer(element, siteConfig);
-        if (!targetContainer) {
-            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ No suitable container found for button');
-            return;
-        }
-        debugLog(DEBUG_LEVEL.INFO, '✅ 找到按钮容器:', targetContainer.tagName, targetContainer.className);
-
-        // 对于Kimi网站，检查是否已经有我们的按钮
-        if (siteConfig.hostname === 'www.kimi.com') {
-            if (targetContainer.querySelector('.puretext-copy-btn')) {
-                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in Kimi container');
-                return;
-            }
-        }
-
-        debugLog(DEBUG_LEVEL.INFO, '创建复制按钮...');
-        const buttonContainer = CopyButton.create(targetContainer, async (element) => {
-            debugLog(DEBUG_LEVEL.INFO, '🔥 按钮点击事件触发');
-            debugLog(DEBUG_LEVEL.INFO, '传入的元素:', element.tagName, element.className);
-            debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
-            
-            // 🔥 关键修复：使用找到的内容元素进行复制
-            const result = await window.ClipboardManager.copyHtmlToClipboard(contentElement);
-            debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
-            return result;
-        });
-
-        if (buttonContainer) {
-            // 对于Kimi网站，直接将按钮添加到容器中
-            if (siteConfig.hostname === 'www.kimi.com') {
-                targetContainer.appendChild(buttonContainer);
-                debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into Kimi container');
-            } else {
-                // 其他网站使用原有的逻辑
-                targetContainer.appendChild(buttonContainer);
-                debugLog(DEBUG_LEVEL.INFO, '✅ Button injected successfully');
-            }
-            
-            this.injectedButtons.add(element);
-            debugLog(DEBUG_LEVEL.INFO, '========== 按钮注入流程完成 ==========');
-        }
-    }
-
-    validateModuleAvailability() {
-        const requiredModules = [
-            { name: 'CopyButton', ref: CopyButton },
-            { name: 'ClipboardManager', ref: window.ClipboardManager }
-        ];
-
-        for (const module of requiredModules) {
-            if (typeof module.ref === 'undefined' || module.ref === null) {
-                debugLog(DEBUG_LEVEL.ERROR, `❌ Module ${module.name} is not available`);
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    attemptModuleRecovery() {
-        debugLog(DEBUG_LEVEL.WARN, '🔄 Attempting module recovery...');
-        
-        setTimeout(() => {
-            if (this.validateModuleAvailability()) {
-                debugLog(DEBUG_LEVEL.INFO, '✅ Module recovery successful');
-                this.start();
-            } else {
-                debugLog(DEBUG_LEVEL.ERROR, '❌ Module recovery failed');
-            }
-        }, 1000);
-    }
-
-    /**
-     * 🔥 新增方法：找到包含AI回复内容的主要元素
-     * @param {HTMLElement} element - 初始元素
-     * @param {Object} siteConfig - 站点配置
-     * @returns {HTMLElement|null} 内容元素
-     */
-    findContentElement(element, siteConfig) {
-        try {
-            debugLog(DEBUG_LEVEL.INFO, '========== 开始查找内容元素 ==========');
-            debugLog(DEBUG_LEVEL.INFO, '当前网站:', siteConfig.hostname);
-            
-            // 对于Kimi网站，内容通常在 markdown-container 中
-            if (siteConfig.hostname === 'www.kimi.com') {
-                debugLog(DEBUG_LEVEL.INFO, '检测到Kimi网站，查找markdown容器...');
-                
-                const markdownContainer = element.querySelector('.markdown-container');
-                if (markdownContainer) {
-                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到Kimi markdown容器:', markdownContainer.tagName, markdownContainer.className);
-                    debugLog(DEBUG_LEVEL.INFO, 'markdown容器文本长度:', (markdownContainer.textContent || '').length);
-                    return markdownContainer;
-                }
-                
-                // 备选：查找包含markdown类的元素
-                const markdownElement = element.querySelector('[class*="markdown"]');
-                if (markdownElement) {
-                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到Kimi markdown元素:', markdownElement.tagName, markdownElement.className);
-                    debugLog(DEBUG_LEVEL.INFO, 'markdown元素文本长度:', (markdownElement.textContent || '').length);
-                    return markdownElement;
-                }
-                
-                debugLog(DEBUG_LEVEL.WARN, '⚠️ Kimi网站未找到markdown容器');
-            }
-            
-            // 对于DeepSeek网站
-            if (siteConfig.hostname === 'chat.deepseek.com') {
-                debugLog(DEBUG_LEVEL.INFO, '检测到DeepSeek网站，查找AI回复主容器...');
-                // 优先选 .ds-markdown.ds-markdown--block
-                const markdownBlock = element.querySelector('.ds-markdown.ds-markdown--block');
-                if (markdownBlock) {
-                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到DeepSeek主内容容器:', markdownBlock.tagName, markdownBlock.className);
-                    debugLog(DEBUG_LEVEL.INFO, '主内容容器文本长度:', (markdownBlock.textContent || '').length);
-                    return markdownBlock;
-                }
-                // 备选：查找消息内容
-                const messageContent = element.querySelector('[data-message-author="assistant"]');
-                if (messageContent) {
-                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到DeepSeek消息内容:', messageContent.tagName, messageContent.className);
-                    debugLog(DEBUG_LEVEL.INFO, '消息内容文本长度:', (messageContent.textContent || '').length);
-                    return messageContent;
-                }
-                debugLog(DEBUG_LEVEL.WARN, '⚠️ DeepSeek网站未找到主内容容器，降级为element');
-                return element;
-            }
-            
-            // 对于ChatGPT网站
-            if (siteConfig.hostname === 'chatgpt.com' || siteConfig.hostname === 'chat.openai.com') {
-                debugLog(DEBUG_LEVEL.INFO, '检测到ChatGPT网站，查找消息内容...');
-                
-                const messageContent = element.querySelector('[data-message-author-role="assistant"]');
-                if (messageContent) {
-                    debugLog(DEBUG_LEVEL.INFO, '✅ 找到ChatGPT消息内容:', messageContent.tagName, messageContent.className);
-                    debugLog(DEBUG_LEVEL.INFO, '消息内容文本长度:', (messageContent.textContent || '').length);
-                    return messageContent;
-                }
-                
-                debugLog(DEBUG_LEVEL.WARN, '⚠️ ChatGPT网站未找到消息内容');
-            }
-            
-            // 通用查找策略：寻找包含大量文本的元素
-            debugLog(DEBUG_LEVEL.INFO, '使用通用查找策略...');
-            const contentSelectors = [
-                '[class*="content"]',
-                '[class*="message"]',
-                '[class*="text"]',
-                '[class*="body"]',
-                'p',
-                'div'
-            ];
-            
-            for (const selector of contentSelectors) {
-                debugLog(DEBUG_LEVEL.INFO, `尝试选择器: ${selector}`);
-                const elements = element.querySelectorAll(selector);
-                debugLog(DEBUG_LEVEL.INFO, `找到 ${elements.length} 个元素`);
-                
-                for (const el of elements) {
-                    const text = el.textContent?.trim();
-                    if (text && text.length > 50) { // 内容长度阈值
-                        debugLog(DEBUG_LEVEL.INFO, `✅ 找到通用内容元素: ${selector}`);
-                        debugLog(DEBUG_LEVEL.INFO, '元素信息:', el.tagName, el.className);
-                        debugLog(DEBUG_LEVEL.INFO, '文本长度:', text.length);
-                        debugLog(DEBUG_LEVEL.INFO, '文本预览:', text.substring(0, 100) + '...');
-                        return el;
-                    }
-                }
-            }
-            
-            // 如果都找不到，返回原始元素
-            debugLog(DEBUG_LEVEL.WARN, '⚠️ 未找到专门的内容元素，使用原始元素');
-            debugLog(DEBUG_LEVEL.INFO, '原始元素文本长度:', (element.textContent || '').length);
-            return element;
-            
-        } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ 查找内容元素失败:', error);
-            debugLog(DEBUG_LEVEL.INFO, '降级到原始元素');
-            return element; // 降级到原始元素
-        }
-    }
-
-    findButtonContainer(element, siteConfig) {
-        // 对于Kimi网站，使用特殊的按钮容器查找逻辑
-        if (siteConfig.hostname === 'www.kimi.com') {
-            return this.findKimiButtonContainer(element, siteConfig);
-        }
-
-        if (siteConfig.buttonContainer) {
-            const container = element.querySelector(siteConfig.buttonContainer) ||
-                element.closest(siteConfig.buttonContainer);
-            if (container) {
-                return container;
-            }
-        }
-
-        let current = element;
-        let attempts = 0;
-        const maxAttempts = 5;
-
-        while (current && attempts < maxAttempts) {
-            if (this.isGoodButtonContainer(current)) {
-                return current;
-            }
-
-            current = current.parentElement;
-            attempts++;
-        }
-
-        return element;
-    }
-
-    findKimiButtonContainer(element, siteConfig) {
-        // 首先尝试找到segment-assistant-actions-content容器
-        let container = element.querySelector('.segment-assistant-actions-content');
-        if (container) {
-            debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container: .segment-assistant-actions-content');
-            return container;
-        }
-
-        // 如果没找到，向上查找父级元素
-        let current = element;
-        let attempts = 0;
-        const maxAttempts = 10;
-
-        while (current && attempts < maxAttempts) {
-            container = current.querySelector('.segment-assistant-actions-content');
-            if (container) {
-                debugLog(DEBUG_LEVEL.DEBUG, '✅ Found Kimi button container in parent element');
-                return container;
-            }
-
-            current = current.parentElement;
-            attempts++;
-        }
-
-        // 如果还是没找到，尝试查找segment-assistant-actions容器
-        current = element;
-        attempts = 0;
-
-        while (current && attempts < maxAttempts) {
-            container = current.querySelector('.segment-assistant-actions');
-            if (container) {
-                debugLog(DEBUG_LEVEL.DEBUG, '⚠️ Found segment-assistant-actions, will create content container');
-                return container;
-            }
-
-            current = current.parentElement;
-            attempts++;
-        }
-
-        debugLog(DEBUG_LEVEL.WARN, '❌ No Kimi button container found');
-        return element;
-    }
-
-    isGoodButtonContainer(element) {
-        if (!element) return false;
-
-        const style = window.getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-
-        const hasSpace = rect.width > 100 && rect.height > 30;
-        const isPositioned = ['relative', 'absolute', 'fixed'].includes(style.position) ||
-            ['block', 'flex', 'grid'].includes(style.display);
-        const notInline = style.display !== 'inline';
-
-        return hasSpace && isPositioned && notInline;
-    }
-
-    isElementVisible(element) {
-        if (!element) return false;
-
-        const style = window.getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-
-        return style.display !== 'none' &&
-            style.visibility !== 'hidden' &&
-            style.opacity !== '0' &&
-            rect.width > 0 &&
-            rect.height > 0;
-    }
-
-    validateButtonInjection(element, siteConfig) {
-        try {
-            // 对于Kimi网站，使用专门的消息检测器
-            if (siteConfig.hostname === 'www.kimi.com') {
-                const analysis = KimiMessageDetector.analyzeMessageType(element);
-                
-                debugLog(DEBUG_LEVEL.DEBUG, `🔍 Kimi消息分析结果:`, {
-                    type: analysis.type,
-                    confidence: (analysis.confidence * 100).toFixed(1) + '%',
-                    indicators: analysis.indicators.join(', ')
-                });
-
-                // 如果是用户消息，不注入按钮
-                if (analysis.type === MessageType.HUMAN) {
-                    debugLog(DEBUG_LEVEL.DEBUG, '❌ 检测到用户消息，跳过按钮注入');
-                    return false;
-                }
-
-                // 如果是AI回复，注入按钮
-                if (analysis.type === MessageType.AI) {
-                    debugLog(DEBUG_LEVEL.DEBUG, '✅ 检测到AI回复，允许按钮注入');
-                    return true;
-                }
-
-                // 如果类型未知但置信度较低，使用备用检测方法
-                if (analysis.confidence < 0.6) {
-                    debugLog(DEBUG_LEVEL.DEBUG, '⚠️ 置信度较低，使用备用检测方法');
-                    return this.fallbackMessageDetection(element);
-                }
-
-                return true;
-            }
-
-            // 对于其他网站，使用通用检测逻辑
-            return this.genericMessageValidation(element, siteConfig);
-
-        } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ 消息类型验证出错:', error);
-            return true;
-        }
-    }
-
-    fallbackMessageDetection(element) {
-        const text = element.textContent?.trim() || '';
-        
-        const userPatterns = [
-            /^(请|帮我|告诉我|我想|我需要)/,
-            /[？?]$/,
-            /^.{1,50}[？?]$/
-        ];
-
-        const isLikelyUserMessage = userPatterns.some(pattern => pattern.test(text));
-        
-        if (isLikelyUserMessage) {
-            debugLog(DEBUG_LEVEL.DEBUG, '❌ 备用检测：识别为用户消息');
-            return false;
-        }
-
-        debugLog(DEBUG_LEVEL.DEBUG, '✅ 备用检测：允许按钮注入');
-        return true;
-    }
-
-    genericMessageValidation(element, siteConfig) {
-        let current = element;
-        for (let i = 0; i < 3 && current; i++) {
-            const dataRole = current.getAttribute('data-role')?.toLowerCase();
-            const dataAuthor = current.getAttribute('data-author')?.toLowerCase();
-            const className = current.className?.toLowerCase() || '';
-
-            if (dataRole === 'user' || dataAuthor === 'user' || className.includes('user-message')) {
-                debugLog(DEBUG_LEVEL.DEBUG, '❌ 通用检测：识别为用户消息');
-                return false;
-            }
-
-            if (dataRole === 'assistant' || dataAuthor === 'assistant' || className.includes('assistant')) {
-                debugLog(DEBUG_LEVEL.DEBUG, '✅ 通用检测：识别为AI回复');
-                return true;
-            }
-
-            current = current.parentElement;
-        }
-
-        debugLog(DEBUG_LEVEL.DEBUG, '✅ 通用检测：默认允许按钮注入');
-        return true;
-    }
-
-    cleanupIncorrectButtons() {
-        const allButtons = document.querySelectorAll(`.${this.containerClass}`);
-        let removedCount = 0;
-
-        allButtons.forEach(buttonContainer => {
-            const parentElement = buttonContainer.parentElement;
-            if (parentElement) {
-                const siteConfig = this.siteManager.getCurrentSiteConfig();
-                if (siteConfig && !this.validateButtonInjection(parentElement, siteConfig)) {
-                    buttonContainer.remove();
-                    removedCount++;
-                    debugLog(DEBUG_LEVEL.DEBUG, '🧹 移除了错误放置的按钮');
-                }
-            }
-        });
-
-        if (removedCount > 0) {
-            debugLog(DEBUG_LEVEL.INFO, `🧹 清理了 ${removedCount} 个错误放置的按钮`);
-        }
+        this.startObserving();
     }
 
     stop() {
+        this.stopObserving();
+    }
+
+    cleanup() {
+        this.stopObserving();
+        // 清理所有注入的按钮
+        document.querySelectorAll('.puretext-button-container').forEach(btn => btn.remove());
+        this.injectedButtons = new WeakSet();
+    }
+
+    startObserving() {
+        if (this.observer) {
+            this.stopObserving();
+        }
+
+        this.scanAndInjectButtons();
+
+        this.observer = new MutationObserver((mutations) => {
+            this.handleMutations(mutations);
+        });
+
+        this.observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: false
+        });
+    }
+
+    stopObserving() {
         if (this.observer) {
             this.observer.disconnect();
             this.observer = null;
         }
-        this.isObserving = false;
-        debugLog(DEBUG_LEVEL.INFO, '🛑 Button injection stopped');
+
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
+        }
     }
 
-    cleanup() {
-        const buttons = document.querySelectorAll(`.${this.containerClass}`);
-        buttons.forEach(button => {
-            button.remove();
-        });
+    handleMutations(mutations) {
+        let shouldScan = false;
 
-        this.injectedButtons = new WeakSet();
-        debugLog(DEBUG_LEVEL.INFO, '🧹 Cleaned up all injected buttons');
+        for (const mutation of mutations) {
+            if (mutation.type === 'childList') {
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        shouldScan = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (shouldScan) break;
+        }
+
+        if (shouldScan) {
+            this.debouncedScan();
+        }
+    }
+
+    debouncedScan() {
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+        }
+
+        this.debounceTimer = setTimeout(() => {
+            this.scanAndInjectButtons();
+        }, this.debounceDelay);
+    }
+
+    scanAndInjectButtons() {
+        const siteConfig = this.siteManager.getCurrentSiteConfig();
+        if (!siteConfig) {
+            return;
+        }
+
+        try {
+            // 使用站点配置中的选择器查找 AI 回复容器
+            const selectors = siteConfig.selectors || [];
+            let bubbles = [];
+            
+            for (const selector of selectors) {
+                const elements = document.querySelectorAll(selector);
+                if (elements.length > 0) {
+                    bubbles = Array.from(elements);
+                    break;
+                }
+            }
+            
+            // 如果没有找到，尝试使用按钮容器选择器
+            if (bubbles.length === 0 && siteConfig.buttonContainer) {
+                const buttonContainers = document.querySelectorAll(siteConfig.buttonContainer);
+                bubbles = Array.from(buttonContainers);
+            }
+            
+            for (const bubble of bubbles) {
+                this.injectButton(bubble);
+            }
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.ERROR, '❌ Error scanning for buttons:', error);
+        }
+    }
+
+    injectButton(bubble) {
+        try {
+            if (!document.contains(bubble)) {
+                return;
+            }
+
+            if (this.injectedButtons.has(bubble)) {
+                return;
+            }
+
+            if (bubble.querySelector(`.${this.buttonClass}`)) {
+                return;
+            }
+
+            // 检查是否是 AI 回复（对于 Kimi 网站）
+            if (window.location.hostname === 'www.kimi.com') {
+                if (!KimiMessageDetector.isAIResponse(bubble)) {
+                    debugLog(DEBUG_LEVEL.DEBUG, '🔄 Skipping human message for Kimi');
+                    return;
+                }
+            }
+
+            const button = this.createButton(bubble);
+            bubble.appendChild(button);
+            this.injectedButtons.add(bubble);
+
+            debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected successfully');
+
+        } catch (error) {
+            debugLog(DEBUG_LEVEL.ERROR, '❌ Error injecting button:', error);
+        }
+    }
+
+    createButton(targetBubble) {
+        const onCopy = async (buttonContainer) => {
+            try {
+                // 关键修正：找到正确的 AI 回复内容，而不是按钮容器
+                const aiContent = this.findAIResponseContent(buttonContainer);
+                if (!aiContent) {
+                    debugLog(DEBUG_LEVEL.ERROR, '❌ 未找到 AI 回复内容');
+                    return false;
+                }
+
+                // 添加详细日志
+                console.log('[PureText] ========== 复制操作开始 ==========');
+                console.log('[PureText] 按钮容器:', buttonContainer?.tagName, buttonContainer?.className);
+                console.log('[PureText] 找到的 AI 内容容器:', aiContent?.tagName, aiContent?.className);
+                console.log('[PureText] AI 内容文本预览:', (aiContent?.textContent || '').substring(0, 100) + '...');
+                console.log('[PureText] AI 内容 outerHTML 预览:', (aiContent?.outerHTML || '').substring(0, 200) + '...');
+
+                const success = await window.ClipboardManager.copyHtmlToClipboard(aiContent);
+                
+                console.log('[PureText] 复制结果:', success ? '成功' : '失败');
+                console.log('[PureText] ========== 复制操作结束 ==========');
+                
+                return success;
+            } catch (error) {
+                debugLog(DEBUG_LEVEL.ERROR, '❌ Copy operation failed:', error);
+                return false;
+            }
+        };
+
+        return CopyButton.create(targetBubble, onCopy);
+    }
+
+    /**
+     * 关键方法：找到正确的 AI 回复内容
+     * @param {HTMLElement} buttonContainer - 按钮所在的容器
+     * @returns {HTMLElement|null} AI 回复内容容器
+     */
+    findAIResponseContent(buttonContainer) {
+        const hostname = window.location.hostname;
+        
+        if (hostname === 'www.kimi.com') {
+            // Kimi 网站：从按钮容器向上查找 AI 回复内容
+            console.log('[PureText] 查找 Kimi AI 回复内容...');
+            
+            // 方法1：从 segment-assistant-actions-content 向上查找 segment-content-box
+            let current = buttonContainer;
+            while (current && current !== document.body) {
+                console.log('[PureText] 检查元素:', current.tagName, current.className);
+                
+                // 检查是否是 AI 回复容器
+                if (current.classList.contains('segment-content-box')) {
+                    console.log('[PureText] 找到 segment-content-box');
+                    return current;
+                }
+                
+                // 检查是否包含 markdown-container
+                const markdownContainer = current.querySelector('.markdown-container');
+                if (markdownContainer) {
+                    console.log('[PureText] 找到 markdown-container');
+                    return markdownContainer;
+                }
+                
+                current = current.parentElement;
+            }
+            
+            // 方法2：直接查找最近的 AI 回复内容
+            const aiContent = buttonContainer.closest('.segment-content-box')?.querySelector('.markdown-container');
+            if (aiContent) {
+                console.log('[PureText] 通过 closest 找到 AI 内容');
+                return aiContent;
+            }
+            
+            console.log('[PureText] 未找到 Kimi AI 回复内容');
+            return null;
+        }
+        
+        // 其他网站：直接使用按钮容器
+        return buttonContainer;
+    }
+
+    detectDarkTheme() {
+        try {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ||
+                   document.documentElement.classList.contains('dark') ||
+                   document.body.classList.contains('dark');
+        } catch (error) {
+            return false;
+        }
+    }
+
+    getColorScheme(isDark) {
+        if (isDark) {
+            return {
+                background: 'rgba(255, 255, 255, 0.1)',
+                text: 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                shadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                hoverBackground: 'rgba(255, 255, 255, 0.15)',
+                hoverShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                activeBackground: 'rgba(255, 255, 255, 0.2)',
+                focus: '#60a5fa'
+            };
+        }
+        
+        return {
+            background: 'rgba(255, 255, 255, 0.9)',
+            text: '#374151',
+            border: '1px solid rgba(0, 0, 0, 0.1)',
+            shadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            hoverBackground: 'rgba(255, 255, 255, 1)',
+            hoverShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            activeBackground: 'rgba(0, 0, 0, 0.05)',
+            focus: '#3b82f6'
+        };
     }
 }
 
