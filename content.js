@@ -1113,6 +1113,7 @@ class ButtonInjector {
     }
 
     injectButtonsForExistingElements(siteConfig) {
+        console.log('[PureText] injectButtonsForExistingElements: siteConfig:', siteConfig);
         const selectors = siteConfig.selectors;
         if (!selectors || selectors.length === 0) {
             debugLog(DEBUG_LEVEL.WARN, '⚠️ No selectors available, skipping button injection');
@@ -1201,124 +1202,119 @@ class ButtonInjector {
     }
 
     injectButtonForElement(element, siteConfig) {
-        try {
-            debugLog(DEBUG_LEVEL.INFO, '========== 开始按钮注入流程 ==========');
-            debugLog(DEBUG_LEVEL.INFO, '目标元素:', element.tagName, element.className);
-            debugLog(DEBUG_LEVEL.INFO, '元素内容预览:', (element.textContent || '').substring(0, 100) + '...');
-            
-            if (this.injectedButtons.has(element)) {
-                debugLog(DEBUG_LEVEL.DEBUG, '元素已注入过按钮，跳过');
-                return;
-            }
+        console.log('[PureText] injectButtonForElement: target element:', element?.tagName, element?.className, (element?.innerText || '').slice(0, 50));
+        debugLog(DEBUG_LEVEL.INFO, '========== 开始按钮注入流程 ==========');
+        debugLog(DEBUG_LEVEL.INFO, '目标元素:', element.tagName, element.className);
+        debugLog(DEBUG_LEVEL.INFO, '元素内容预览:', (element.textContent || '').substring(0, 100) + '...');
+        
+        if (this.injectedButtons.has(element)) {
+            debugLog(DEBUG_LEVEL.DEBUG, '元素已注入过按钮，跳过');
+            return;
+        }
 
-            if (!this.validateModuleAvailability()) {
-                debugLog(DEBUG_LEVEL.ERROR, '❌ Required modules not available, skipping button injection');
-                return;
-            }
+        if (!this.validateModuleAvailability()) {
+            debugLog(DEBUG_LEVEL.ERROR, '❌ Required modules not available, skipping button injection');
+            return;
+        }
 
-            const textContent = element.textContent || '';
-            debugLog(DEBUG_LEVEL.INFO, '元素文本长度:', textContent.trim().length);
-            if (textContent.trim().length < 10) {
-                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping element with insufficient text content');
-                return;
-            }
+        const textContent = element.textContent || '';
+        debugLog(DEBUG_LEVEL.INFO, '元素文本长度:', textContent.trim().length);
+        if (textContent.trim().length < 10) {
+            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping element with insufficient text content');
+            return;
+        }
 
-            if (!this.isElementVisible(element)) {
-                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping invisible element');
-                return;
-            }
+        if (!this.isElementVisible(element)) {
+            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Skipping invisible element');
+            return;
+        }
 
-            // 🔥 关键修复：使用KimiMessageDetector验证是否应该注入按钮
-            if (!this.validateButtonInjection(element, siteConfig)) {
-                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button injection validation failed');
-                return;
-            }
+        // 🔥 关键修复：使用KimiMessageDetector验证是否应该注入按钮
+        if (!this.validateButtonInjection(element, siteConfig)) {
+            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button injection validation failed');
+            return;
+        }
 
-            // 🔥 关键修复：找到包含AI回复内容的主要元素
-            debugLog(DEBUG_LEVEL.INFO, '开始查找内容元素...');
-            const contentElement = this.findContentElement(element, siteConfig);
-            if (!contentElement) {
-                debugLog(DEBUG_LEVEL.ERROR, '❌ 无法找到内容元素，跳过按钮注入');
-                return;
-            }
-            debugLog(DEBUG_LEVEL.INFO, '✅ 找到内容元素:', contentElement.tagName, contentElement.className);
-            debugLog(DEBUG_LEVEL.INFO, '内容元素文本长度:', (contentElement.textContent || '').length);
-            debugLog(DEBUG_LEVEL.INFO, '内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
+        // 🔥 关键修复：找到包含AI回复内容的主要元素
+        debugLog(DEBUG_LEVEL.INFO, '开始查找内容元素...');
+        const contentElement = this.findContentElement(element, siteConfig);
+        if (!contentElement) {
+            debugLog(DEBUG_LEVEL.ERROR, '❌ 无法找到内容元素，跳过按钮注入');
+            return;
+        }
+        debugLog(DEBUG_LEVEL.INFO, '✅ 找到内容元素:', contentElement.tagName, contentElement.className);
+        debugLog(DEBUG_LEVEL.INFO, '内容元素文本长度:', (contentElement.textContent || '').length);
+        debugLog(DEBUG_LEVEL.INFO, '内容元素预览:', (contentElement.textContent || '').substring(0, 200) + '...');
 
-            // deepseek专用：查找操作区flex容器
-            if (siteConfig.hostname === 'chat.deepseek.com') {
-                const flexBlocks = element.querySelectorAll('.ds-flex');
-                let injected = false;
-                for (const flex of flexBlocks) {
-                    if (flex.querySelector('.ds-icon-button')) {
-                        if (flex.querySelector('.puretext-copy-btn')) {
-                            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in DeepSeek flex container');
-                            injected = true;
-                            break;
-                        }
-                        const buttonContainer = CopyButton.create(flex, async (el) => {
-                            debugLog(DEBUG_LEVEL.INFO, '🔥 DeepSeek按钮点击事件触发');
-                            debugLog(DEBUG_LEVEL.INFO, '传入的元素:', el.tagName, el.className);
-                            debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
-                            const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
-                            debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
-                            return result;
-                        });
-                        flex.appendChild(buttonContainer);
-                        this.injectedButtons.add(element);
-                        debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into DeepSeek flex container');
+        // deepseek专用：查找操作区flex容器
+        if (siteConfig.hostname === 'chat.deepseek.com') {
+            const flexBlocks = element.querySelectorAll('.ds-flex');
+            let injected = false;
+            for (const flex of flexBlocks) {
+                if (flex.querySelector('.ds-icon-button')) {
+                    if (flex.querySelector('.puretext-copy-btn')) {
+                        debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in DeepSeek flex container');
                         injected = true;
                         break;
                     }
+                    const buttonContainer = CopyButton.create(flex, async (el) => {
+                        debugLog(DEBUG_LEVEL.INFO, '🔥 DeepSeek按钮点击事件触发');
+                        debugLog(DEBUG_LEVEL.INFO, '传入的元素:', el.tagName, el.className);
+                        debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
+                        const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
+                        debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
+                        return result;
+                    });
+                    flex.appendChild(buttonContainer);
+                    this.injectedButtons.add(element);
+                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into DeepSeek flex container');
+                    injected = true;
+                    break;
                 }
-                if (injected) return;
             }
+            if (injected) return;
+        }
 
-            const targetContainer = this.findButtonContainer(element, siteConfig);
-            if (!targetContainer) {
-                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ No suitable container found for button');
+        const targetContainer = this.findButtonContainer(element, siteConfig);
+        if (!targetContainer) {
+            debugLog(DEBUG_LEVEL.DEBUG, '⏭️ No suitable container found for button');
+            return;
+        }
+        debugLog(DEBUG_LEVEL.INFO, '✅ 找到按钮容器:', targetContainer.tagName, targetContainer.className);
+
+        // 对于Kimi网站，检查是否已经有我们的按钮
+        if (siteConfig.hostname === 'www.kimi.com') {
+            if (targetContainer.querySelector('.puretext-copy-btn')) {
+                debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in Kimi container');
                 return;
             }
-            debugLog(DEBUG_LEVEL.INFO, '✅ 找到按钮容器:', targetContainer.tagName, targetContainer.className);
+        }
 
-            // 对于Kimi网站，检查是否已经有我们的按钮
+        debugLog(DEBUG_LEVEL.INFO, '创建复制按钮...');
+        const buttonContainer = CopyButton.create(targetContainer, async (element) => {
+            debugLog(DEBUG_LEVEL.INFO, '🔥 按钮点击事件触发');
+            debugLog(DEBUG_LEVEL.INFO, '传入的元素:', element.tagName, element.className);
+            debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
+            
+            // 🔥 关键修复：使用找到的内容元素进行复制
+            const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
+            debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
+            return result;
+        });
+
+        if (buttonContainer) {
+            // 对于Kimi网站，直接将按钮添加到容器中
             if (siteConfig.hostname === 'www.kimi.com') {
-                if (targetContainer.querySelector('.puretext-copy-btn')) {
-                    debugLog(DEBUG_LEVEL.DEBUG, '⏭️ Button already exists in Kimi container');
-                    return;
-                }
+                targetContainer.appendChild(buttonContainer);
+                debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into Kimi container');
+            } else {
+                // 其他网站使用原有的逻辑
+                targetContainer.appendChild(buttonContainer);
+                debugLog(DEBUG_LEVEL.INFO, '✅ Button injected successfully');
             }
-
-            debugLog(DEBUG_LEVEL.INFO, '创建复制按钮...');
-            const buttonContainer = CopyButton.create(targetContainer, async (element) => {
-                debugLog(DEBUG_LEVEL.INFO, '🔥 按钮点击事件触发');
-                debugLog(DEBUG_LEVEL.INFO, '传入的元素:', element.tagName, element.className);
-                debugLog(DEBUG_LEVEL.INFO, '实际复制的内容元素:', contentElement.tagName, contentElement.className);
-                
-                // 🔥 关键修复：使用找到的内容元素进行复制
-                const result = await ClipboardManager.copyHtmlToClipboard(contentElement);
-                debugLog(DEBUG_LEVEL.INFO, '复制操作结果:', result);
-                return result;
-            });
-
-            if (buttonContainer) {
-                // 对于Kimi网站，直接将按钮添加到容器中
-                if (siteConfig.hostname === 'www.kimi.com') {
-                    targetContainer.appendChild(buttonContainer);
-                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected into Kimi container');
-                } else {
-                    // 其他网站使用原有的逻辑
-                    targetContainer.appendChild(buttonContainer);
-                    debugLog(DEBUG_LEVEL.INFO, '✅ Button injected successfully');
-                }
-                
-                this.injectedButtons.add(element);
-                debugLog(DEBUG_LEVEL.INFO, '========== 按钮注入流程完成 ==========');
-            }
-
-        } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Error injecting button:', error);
-            this.attemptModuleRecovery();
+            
+            this.injectedButtons.add(element);
+            debugLog(DEBUG_LEVEL.INFO, '========== 按钮注入流程完成 ==========');
         }
     }
 

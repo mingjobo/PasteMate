@@ -25,6 +25,8 @@ class ClipboardManager {
    * @returns {Promise<boolean>} 复制是否成功
    */
   static async copyHtmlToClipboard(element) {
+    console.log('[ClipboardManager] copyHtmlToClipboard: 传入element:', element?.tagName, element?.className, (element?.innerText || '').slice(0, 50));
+    console.log('[ClipboardManager] copyHtmlToClipboard: element.outerHTML:', (element?.outerHTML || '').slice(0, 200));
     const startTime = performance.now();
     
     try {
@@ -107,9 +109,14 @@ class ClipboardManager {
       let processedHtml = '';
       if (this.formatterManager) {
         console.log('[ClipboardManager] ✅ 使用集成的HTML格式化管理器');
+        if (hostname === 'chat.deepseek.com') {
+          console.log('[ClipboardManager] 🔍 DeepSeek: 即将调用formatterManager.formatForWord...');
+        }
         console.log('[ClipboardManager] 调用formatterManager.formatForWord...');
-        
         processedHtml = await this.formatterManager.formatForWord(element, hostname);
+        if (hostname === 'chat.deepseek.com') {
+          console.log('[ClipboardManager] 🔍 DeepSeek: formatterManager.formatForWord返回 processedHtml.length=', processedHtml.length, '片段：', processedHtml.substring(0, 200));
+        }
         console.log('[ClipboardManager] formatterManager.formatForWord 返回 processedHtml.length=', processedHtml.length, '片段：', processedHtml.substring(0, 200));
         console.log('[ClipboardManager] HTML格式化完成，开始转换为统一文本...');
       } else {

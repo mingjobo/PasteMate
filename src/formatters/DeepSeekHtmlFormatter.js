@@ -19,6 +19,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
    */
   async format(element) {
     try {
+      console.log('[DeepSeekHtmlFormatter] format: 入口', element.tagName, element.className);
       let html = '<div>';
       const context = {
         inList: false,
@@ -26,14 +27,13 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
         currentLevel: 0,
         textBuffer: ''
       };
-      console.log('[DeepSeekHtmlFormatter] format: 开始递归，根节点:', element.tagName, element.className);
       html += this.processNode(element, context, 0);
       if (context.inList && context.listItems.length > 0) {
         console.log('[DeepSeekHtmlFormatter] format: 结尾输出剩余 listItems', context.listItems);
         html += this.structureConverter.generateListHtml(context.listItems);
       }
       html += '</div>';
-      console.log('[DeepSeekHtmlFormatter] format: 最终HTML长度', html.length);
+      console.log('[DeepSeekHtmlFormatter] format: 最终HTML长度', html.length, '片段：', html.substring(0, 200));
       return html;
     } catch (error) {
       console.error('[DeepSeekHtmlFormatter] format: 异常', error);
@@ -51,50 +51,50 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
       if (!text) return '';
-      console.log(`${indent}[processNode] TEXT_NODE: "${text}" inList=${context.inList} listItems=${JSON.stringify(context.listItems)}`);
+      console.log(`${indent}[DeepSeekHtmlFormatter] processNode TEXT_NODE: "${text.slice(0, 40)}" inList=${context.inList} listItems=${JSON.stringify(context.listItems)}`);
       // 列表项
       if (this.structureConverter.isListItemStart(text)) {
         if (!context.inList) {
           context.inList = true;
           context.listItems = [];
-          console.log(`${indent}[processNode] TEXT_NODE: 开始新列表`);
+          console.log(`${indent}[DeepSeekHtmlFormatter] processNode TEXT_NODE: 开始新列表`);
         }
         context.listItems.push(text);
-        console.log(`${indent}[processNode] TEXT_NODE: 新增列表项，当前listItems=`, context.listItems);
+        console.log(`${indent}[DeepSeekHtmlFormatter] processNode TEXT_NODE: 新增列表项，当前listItems=`, context.listItems);
         return '';
       }
       // 列表内追加
       if (context.inList && text.length > 0) {
         if (context.listItems.length > 0) {
           context.listItems[context.listItems.length - 1] += ' ' + text;
-          console.log(`${indent}[processNode] TEXT_NODE: 列表内追加，当前listItems=`, context.listItems);
+          console.log(`${indent}[DeepSeekHtmlFormatter] processNode TEXT_NODE: 列表内追加，当前listItems=`, context.listItems);
         }
         return '';
       }
       // 非列表文本，先输出当前列表
       let html = '';
       if (context.inList) {
-        console.log(`${indent}[processNode] TEXT_NODE: 非列表文本，先输出当前列表`, context.listItems);
+        console.log(`${indent}[DeepSeekHtmlFormatter] processNode TEXT_NODE: 非列表文本，先输出当前列表`, context.listItems);
         html += this.structureConverter.generateListHtml(context.listItems);
         context.inList = false;
         context.listItems = [];
       }
       const formatted = this.formatTextContent(text);
-      console.log(`${indent}[processNode] TEXT_NODE: 输出段落/标题/引用 html=`, formatted);
+      console.log(`${indent}[DeepSeekHtmlFormatter] processNode TEXT_NODE: 输出段落/标题/引用 html=`, formatted.slice(0, 80));
       html += formatted;
       return html;
     }
     // 元素节点
     if (node.nodeType === Node.ELEMENT_NODE) {
       const tag = node.tagName;
-      console.log(`${indent}[processNode] ELEMENT_NODE: <${tag}> class=${node.className}`);
+      console.log(`${indent}[DeepSeekHtmlFormatter] processNode ELEMENT_NODE: <${tag}> class=${node.className}`);
       // 块级结构：每遇到都要先输出当前列表
       if ([
         'P','UL','OL','LI','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','PRE','CODE'
       ].includes(tag)) {
         let html = '';
         if (context.inList) {
-          console.log(`${indent}[processNode] ELEMENT_NODE: 块级前输出当前列表`, context.listItems);
+          console.log(`${indent}[DeepSeekHtmlFormatter] processNode ELEMENT_NODE: 块级前输出当前列表`, context.listItems);
           html += this.structureConverter.generateListHtml(context.listItems);
           context.inList = false;
           context.listItems = [];
@@ -115,7 +115,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
         } else if (tag === 'CODE') {
           html += this.processCode(node, context, depth+1);
         }
-        console.log(`${indent}[processNode] ELEMENT_NODE: <${tag}> 输出 html=`, html);
+        console.log(`${indent}[DeepSeekHtmlFormatter] processNode ELEMENT_NODE: <${tag}> 输出 html=`, html.slice(0, 80));
         return html;
       }
       // 其他内联/容器结构，递归处理子节点
@@ -139,7 +139,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
       }
     }
     html += `</${listType}>`;
-    console.log(`${'  '.repeat(depth)}[processListElement] <${listType}> 输出 html=`, html);
+    console.log(`${'  '.repeat(depth)}[DeepSeekHtmlFormatter] processListElement <${listType}> 输出 html=`, html.slice(0, 80));
     return html;
   }
 
@@ -149,7 +149,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
       html += this.processNode(child, context, depth+1);
     }
     html += '</li>';
-    console.log(`${'  '.repeat(depth)}[processListItemElement] <li> 输出 html=`, html);
+    console.log(`${'  '.repeat(depth)}[DeepSeekHtmlFormatter] processListItemElement <li> 输出 html=`, html.slice(0, 80));
     return html;
   }
 
@@ -159,7 +159,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
       html += this.processNode(child, context, depth+1);
     }
     html = `<p>${html}</p>`;
-    console.log(`${'  '.repeat(depth)}[processParagraphContainer] <p> 输出 html=`, html);
+    console.log(`${'  '.repeat(depth)}[DeepSeekHtmlFormatter] processParagraphContainer <p> 输出 html=`, html.slice(0, 80));
     return html;
   }
 
@@ -167,7 +167,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     const level = Number(element.tagName[1]) || 3;
     const text = element.textContent?.trim() || '';
     const html = this.structureConverter.generateHeadingHtml(text, level);
-    console.log(`${'  '.repeat(depth)}[processHeading] <h${level}> 输出 html=`, html);
+    console.log(`${'  '.repeat(depth)}[DeepSeekHtmlFormatter] processHeading <h${level}> 输出 html=`, html.slice(0, 80));
     return html;
   }
 
@@ -177,21 +177,21 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
       html += this.processNode(child, context, depth+1);
     }
     html = `<blockquote><p>${html}</p></blockquote>`;
-    console.log(`${'  '.repeat(depth)}[processBlockquote] <blockquote> 输出 html=`, html);
+    console.log(`${'  '.repeat(depth)}[DeepSeekHtmlFormatter] processBlockquote <blockquote> 输出 html=`, html.slice(0, 80));
     return html;
   }
 
   processPre(element, context, depth) {
     const text = element.textContent?.trim() || '';
     const html = `<pre>${this.escapeHtml(text)}</pre>`;
-    console.log(`${'  '.repeat(depth)}[processPre] <pre> 输出 html=`, html);
+    console.log(`${'  '.repeat(depth)}[DeepSeekHtmlFormatter] processPre <pre> 输出 html=`, html.slice(0, 80));
     return html;
   }
 
   processCode(element, context, depth) {
     const text = element.textContent?.trim() || '';
     const html = `<code>${this.escapeHtml(text)}</code>`;
-    console.log(`${'  '.repeat(depth)}[processCode] <code> 输出 html=`, html);
+    console.log(`${'  '.repeat(depth)}[DeepSeekHtmlFormatter] processCode <code> 输出 html=`, html.slice(0, 80));
     return html;
   }
 
@@ -229,6 +229,12 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
   }
   getName() {
     return this.name;
+  }
+
+  canHandle(element) {
+    const result = element?.classList?.contains('ds-markdown');
+    console.log('[DeepSeekHtmlFormatter] canHandle: classList=', element?.className, ', 结果=', result);
+    return result;
   }
 }
 

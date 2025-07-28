@@ -112,7 +112,7 @@ class StructureConverter {
   }
   
   /**
-   * 检查文本是否是列表项的开始
+   * 检查文本是否是列表项的开始（增强：支持Symbol字体的“”等伪符号）
    * @param {string} text - 文本内容
    * @returns {boolean} 是否是列表项
    */
@@ -120,7 +120,10 @@ class StructureConverter {
     if (!text || typeof text !== 'string') {
       return false;
     }
-    
+    // 增强：支持常见Symbol字体符号
+    const symbolBullet = /^[\s]*[•·▪▫◦‣⁃\-\*\uF0B7\u25CF\u2022\u2219\u25CB\u25A0\u25AA\u25AB\u25B2\u25B6\u25C6\u25C7\u25CF\u25E6\u2023\u2043\u25D8\u25D9\u25D0\u25D1\u25D2\u25D3\u25D4\u25D5\u25D6\u25D7\u25D8\u25D9\u25DA\u25DB\u25DC\u25DD\u25DE\u25DF\u25E0\u25E1\u25E2\u25E3\u25E4\u25E5\u25E6\u25E7\u25E8\u25E9\u25EA\u25EB\u25EC\u25ED\u25EE\u25EF\uF0A7\uF0B7\uF0D8\uF0D9\uF0DA\uF0DB\uF0DC\uF0DD\uF0DE\uF0DF\uF0E0\uF0E1\uF0E2\uF0E3\uF0E4\uF0E5\uF0E6\uF0E7\uF0E8\uF0E9\uF0EA\uF0EB\uF0EC\uF0ED\uF0EE\uF0EF\uF0F0\uF0F1\uF0F2\uF0F3\uF0F4\uF0F5\uF0F6\uF0F7\uF0F8\uF0F9\uF0FA\uF0FB\uF0FC\uF0FD\uF0FE\uF0FF\u25CF\u25A0\u25B2\u25BC\u25C6\u25C7\u25CB\u25D8\u25D9\u25E6\u2023\u2043\u25D8\u25D9\u25DA\u25DB\u25DC\u25DD\u25DE\u25DF\u25E0\u25E1\u25E2\u25E3\u25E4\u25E5\u25E6\u25E7\u25E8\u25E9\u25EA\u25EB\u25EC\u25ED\u25EE\u25EF\uF0A7\uF0B7\uF0D8\uF0D9\uF0DA\uF0DB\uF0DC\uF0DD\uF0DE\uF0DF\uF0E0\uF0E1\uF0E2\uF0E3\uF0E4\uF0E5\uF0E6\uF0E7\uF0E8\uF0E9\uF0EA\uF0EB\uF0EC\uF0ED\uF0EE\uF0EF\uF0F0\uF0F1\uF0F2\uF0F3\uF0F4\uF0F5\uF0F6\uF0F7\uF0F8\uF0F9\uF0FA\uF0FB\uF0FC\uF0FD\uF0FE\uF0FF\u25CF\u25A0\u25B2\u25BC\u25C6\u25C7\u25CB\u25D8\u25D9\u25E6\u2023\u2043\u25D8\u25D9\u25DA\u25DB\u25DC\u25DD\u25DE\u25DF\u25E0\u25E1\u25E2\u25E3\u25E4\u25E5\u25E6\u25E7\u25E8\u25E9\u25EA\u25EB\u25EC\u25ED\u25EE\u25EF\uF0A7\uF0B7\uF0D8\uF0D9\uF0DA\uF0DB\uF0DC\uF0DD\uF0DE\uF0DF\uF0E0\uF0E1\uF0E2\uF0E3\uF0E4\uF0E5\uF0E6\uF0E7\uF0E8\uF0E9\uF0EA\uF0EB\uF0EC\uF0ED\uF0EE\uF0EF\uF0F0\uF0F1\uF0F2\uF0F3\uF0F4\uF0F5\uF0F6\uF0F7\uF0F8\uF0F9\uF0FA\uF0FB\uF0FC\uF0FD\uF0FE\uF0FF][\s\u00A0]*$/;
+    if (symbolBullet.test(text)) return true;
+    // 其余原有模式
     return this.listPatterns.some(pattern => pattern.test(text));
   }
   
@@ -156,7 +159,7 @@ class StructureConverter {
   }
   
   /**
-   * 生成列表HTML
+   * 生成列表HTML（增强：支持多级嵌套，自动识别有序/无序）
    * @param {string[]} items - 列表项数组
    * @returns {string} 列表HTML
    */
@@ -323,96 +326,95 @@ class StructureConverter {
   }
   
   /**
-   * 转换Kimi特殊结构为标准HTML
-   * 专门处理Kimi网站的DOM结构
-   * @param {HTMLElement} element - Kimi的DOM元素
+   * 通用结构转换，支持Kimi和DeepSeek
+   * @param {HTMLElement} element - 根DOM元素
+   * @param {'kimi'|'deepseek'} siteType - 站点类型
    * @returns {string} 标准HTML
    */
-  convertKimiStructure(element) {
-    console.debug('[StructureConverter] Converting Kimi structure');
-    
-    let html = '<div>';
-    
-    // 使用TreeWalker遍历DOM节点
-    const walker = document.createTreeWalker(
-      element,
-      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-      null,
-      false
-    );
-    
+  convertGenericStructure(element, siteType = 'kimi') {
     const context = {
       inList: false,
       listItems: [],
       currentLevel: 0,
       textBuffer: ''
     };
-    
-    let node;
-    while (node = walker.nextNode()) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent?.trim();
-        if (text) {
-          html += this.processKimiTextNode(text, context);
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        html += this.processKimiElementNode(node, context);
-      }
-    }
-    
-    // 处理未完成的列表
+    let html = '<div>';
+    html += this.processGenericNode(element, context, 0, siteType);
     if (context.inList && context.listItems.length > 0) {
       html += this.generateListHtml(context.listItems);
     }
-    
     html += '</div>';
-    
-    console.debug('[StructureConverter] Kimi structure conversion completed');
     return html;
   }
-  
+
   /**
-   * 处理Kimi的文本节点
-   * @param {string} text - 文本内容
-   * @param {Object} context - 处理上下文
-   * @returns {string} 处理后的HTML
+   * 递归处理节点，兼容Kimi/DeepSeek，增强：连续伪列表项自动分组为<ul>/<ol>
    */
-  processKimiTextNode(text, context) {
-    // 检查是否是列表项开始
-    if (this.isListItemStart(text)) {
-      if (!context.inList) {
-        context.inList = true;
-        context.listItems = [];
+  processGenericNode(node, context, depth = 0, siteType = 'kimi') {
+    if (!node) return '';
+    // 只在元素节点递归时做分组
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      let html = '';
+      let listBuffer = [];
+      const children = Array.from(node.childNodes);
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        // 只处理文本节点和块级容器
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = child.textContent?.trim();
+          if (this.isListItemStart(text)) {
+            listBuffer.push(text);
+            continue;
+          } else {
+            if (listBuffer.length > 0) {
+              html += this.generateListHtml(listBuffer);
+              listBuffer = [];
+            }
+            if (text && text.length > 0) {
+              html += this.formatKimiTextContent(text);
+            }
+            continue;
+          }
+        }
+        // 元素节点递归
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          // 检查伪列表容器（如DeepSeek的<p>、div.ds-markdown-paragraph等）
+          let isFakeList = false;
+          if (siteType === 'deepseek' && child.classList && child.classList.contains('ds-markdown-paragraph')) {
+            // 检查其唯一文本子节点是否为列表符号
+            const onlyText = child.textContent?.trim();
+            if (this.isListItemStart(onlyText)) {
+              listBuffer.push(onlyText);
+              continue;
+            }
+          }
+          // 递归处理
+          if (listBuffer.length > 0) {
+            html += this.generateListHtml(listBuffer);
+            listBuffer = [];
+          }
+          html += this.processGenericNode(child, context, depth+1, siteType);
+        }
       }
-      context.listItems.push(text);
-      return '';
-    }
-    
-    // 如果在列表中，继续添加到当前列表项
-    if (context.inList && text.length > 0) {
-      if (context.listItems.length > 0) {
-        context.listItems[context.listItems.length - 1] += ' ' + text;
+      if (listBuffer.length > 0) {
+        html += this.generateListHtml(listBuffer);
       }
-      return '';
+      return html;
     }
-    
-    // 不在列表中的普通文本
-    if (context.inList) {
-      // 结束列表，输出列表HTML
-      const listHtml = this.generateListHtml(context.listItems);
-      context.inList = false;
-      context.listItems = [];
-      return listHtml + this.formatKimiTextContent(text);
+    // 文本节点（直接处理，兼容递归）
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent?.trim();
+      if (!text) return '';
+      if (this.isListItemStart(text)) {
+        // 由父级分组处理
+        return '';
+      }
+      return this.formatKimiTextContent(text);
     }
-    
-    return this.formatKimiTextContent(text);
+    return '';
   }
-  
-  /**
-   * 格式化Kimi的文本内容
-   * @param {string} text - 文本内容
-   * @returns {string} 格式化后的HTML
-   */
+
+  // 复用Kimi的文本格式化
   formatKimiTextContent(text) {
     if (this.isHeading(text)) {
       return this.generateHeadingHtml(text);
@@ -423,57 +425,80 @@ class StructureConverter {
     }
     return '';
   }
-  
-  /**
-   * 处理Kimi的元素节点
-   * @param {HTMLElement} element - DOM元素
-   * @param {Object} context - 处理上下文
-   * @returns {string} 处理后的HTML
-   */
-  processKimiElementNode(element, context) {
-    // 处理特殊元素类型
-    if (element.tagName === 'HR') {
-      return '<hr>';
-    }
-    
-    // 处理强调元素
-    if (element.tagName === 'STRONG' || element.tagName === 'B') {
-      const text = element.textContent?.trim();
-      if (text) {
-        return `<strong>${this.escapeHtml(text)}</strong>`;
+
+  // 复用Kimi的列表处理，增加siteType参数以便后续扩展
+  processListElement(element, context, depth, siteType) {
+    const listType = element.tagName.toLowerCase();
+    const startAttr = element.getAttribute('start');
+    const startValue = startAttr ? ` start="${startAttr}"` : '';
+    let html = `<${listType}${startValue}>`;
+    for (const child of element.children) {
+      if (child.tagName === 'LI') {
+        html += this.processListItemElement(child, context, depth+1, siteType);
       }
     }
-    
-    // 处理斜体元素
-    if (element.tagName === 'EM' || element.tagName === 'I') {
-      const text = element.textContent?.trim();
-      if (text) {
-        return `<em>${this.escapeHtml(text)}</em>`;
-      }
-    }
-    
-    return '';
+    html += `</${listType}>`;
+    return html;
   }
-  
+
+  processListItemElement(element, context, depth, siteType) {
+    let html = '<li>';
+    for (const child of element.childNodes) {
+      html += this.processGenericNode(child, context, depth+1, siteType);
+    }
+    html += '</li>';
+    return html;
+  }
+
+  processParagraphContainer(element, context, depth, siteType) {
+    let html = '';
+    for (const child of element.childNodes) {
+      html += this.processGenericNode(child, context, depth+1, siteType);
+    }
+    html = `<p>${html}</p>`;
+    return html;
+  }
+
+  processHeading(element, context, depth, siteType) {
+    const level = Number(element.tagName[1]) || 3;
+    const text = element.textContent?.trim() || '';
+    const html = this.generateHeadingHtml(text, level);
+    return html;
+  }
+
+  processBlockquote(element, context, depth, siteType) {
+    let html = '';
+    for (const child of element.childNodes) {
+      html += this.processGenericNode(child, context, depth+1, siteType);
+    }
+    html = `<blockquote><p>${html}</p></blockquote>`;
+    return html;
+  }
+
+  processPre(element, context, depth, siteType) {
+    const text = element.textContent?.trim() || '';
+    const html = `<pre>${this.escapeHtml(text)}</pre>`;
+    return html;
+  }
+
+  processCode(element, context, depth, siteType) {
+    const text = element.textContent?.trim() || '';
+    const html = `<code>${this.escapeHtml(text)}</code>`;
+    return html;
+  }
+
   /**
-   * 转换DeepSeek结构（已经是标准HTML）
-   * @param {HTMLElement} element - DeepSeek的DOM元素
-   * @returns {string} 优化后的HTML
+   * 兼容原有Kimi结构转换API
+   */
+  convertKimiStructure(element) {
+    return this.convertGenericStructure(element, 'kimi');
+  }
+
+  /**
+   * 兼容原有DeepSeek结构转换API
    */
   convertDeepSeekStructure(element) {
-    console.debug('[StructureConverter] Converting DeepSeek structure');
-    
-    // DeepSeek已经使用标准HTML结构，主要做清理和优化
-    let html = element.innerHTML;
-    
-    // 清理内联样式
-    html = this.cleanInlineStyles(html);
-    
-    // 优化HTML结构
-    html = this.optimizeHtmlStructure(html);
-    
-    console.debug('[StructureConverter] DeepSeek structure conversion completed');
-    return `<div>${html}</div>`;
+    return this.convertGenericStructure(element, 'deepseek');
   }
   
   /**

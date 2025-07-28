@@ -60,6 +60,8 @@ class HtmlFormatterManager {
    * @returns {Promise<string>} 格式化后的HTML字符串
    */
   async formatForWord(element, hostname = window.location.hostname) {
+    console.log('[HtmlFormatterManager] formatForWord收到element:', element?.tagName, element?.className, (element?.innerText || '').slice(0, 50));
+    console.log('[HtmlFormatterManager] hostname:', hostname);
     const startTime = performance.now();
     
     try {
@@ -78,9 +80,9 @@ class HtmlFormatterManager {
       console.log(`[HtmlFormatterManager] 初始化完成`);
       
       // 3. 选择合适的格式化器
-      console.log(`[HtmlFormatterManager] 选择格式化器...`);
+      console.log(`[HtmlFormatterManager] 选择格式化器... hostname=`, hostname);
       const formatter = this.getFormatter(hostname, element);
-      console.log(`[HtmlFormatterManager] 使用格式化器: ${formatter.getName()}`);
+      console.log(`[HtmlFormatterManager] 使用格式化器: ${formatter.getName()} for hostname: ${hostname}`);
       
       // 4. 克隆元素避免修改原DOM
       console.log(`[HtmlFormatterManager] 克隆DOM元素...`);
@@ -127,7 +129,9 @@ class HtmlFormatterManager {
     
     // 2. 尝试找到能处理该元素的其他格式化器
     for (const [site, formatter] of this.formatters) {
-      if (site !== hostname && formatter.canHandle(element)) {
+      const can = formatter.canHandle(element);
+      console.log(`[HtmlFormatterManager] 检查formatter: ${formatter.getName()} for site: ${site}, canHandle: ${can}, element.className: ${element.className}`);
+      if (site !== hostname && can) {
         console.debug(`[HtmlFormatterManager] Using cross-site formatter from ${site} for ${hostname}`);
         return formatter;
       }
@@ -261,7 +265,7 @@ class HtmlFormatterManager {
       
       // 注册DeepSeek网站格式化器
       this.registerFormatter('chat.deepseek.com', new DeepSeekHtmlFormatter());
-      console.debug('[HtmlFormatterManager] DeepSeek formatter registered');
+      console.log('[HtmlFormatterManager] DeepSeek formatter registered for chat.deepseek.com');
       
       // 标记初始化完成
       this.initialized = true;
