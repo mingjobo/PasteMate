@@ -616,9 +616,57 @@ class ButtonInjector {
             if (window.location.hostname === 'www.kimi.com') {
                 const actionContainers = document.querySelectorAll('.segment-assistant-actions-content');
                 debugLog(DEBUG_LEVEL.DEBUG, `🔍 Found ${actionContainers.length} action containers for Kimi`);
-                
                 for (const container of actionContainers) {
                     this.injectButtonToKimiActions(container);
+                }
+                return;
+            }
+
+            // DeepSeek特殊处理：按钮插入到所有ds-icon-button同级，且在其右侧
+            if (window.location.hostname === 'chat.deepseek.com') {
+                // 选择所有AI回复区块
+                const selectors = siteConfig.selectors || [];
+                let bubbles = [];
+                for (const selector of selectors) {
+                    const elements = document.querySelectorAll(selector);
+                    if (elements.length > 0) {
+                        bubbles = Array.from(elements);
+                        break;
+                    }
+                }
+                for (const bubble of bubbles) {
+                    // 1. 优先在bubble的下一个兄弟节点查找.ds-icon-button
+                    let opArea = bubble.nextElementSibling;
+                    let iconButtons = opArea ? opArea.querySelectorAll('.ds-icon-button') : [];
+                    if (!iconButtons || iconButtons.length === 0) {
+                        // 2. 如果找不到，再在父节点下查找
+                        opArea = bubble.parentElement;
+                        iconButtons = opArea ? opArea.querySelectorAll('.ds-icon-button') : [];
+                    }
+                    console.log('[PureText] bubble:', bubble);
+                    console.log('[PureText] opArea:', opArea);
+                    console.log('[PureText] iconButtons:', iconButtons);
+                    if (!iconButtons || iconButtons.length === 0) continue;
+                    const parent = iconButtons[0].parentNode;
+                    console.log('[PureText] parent:', parent);
+                    // 检查是否已插入
+                    if (parent.querySelector('.puretext-button-container')) continue;
+                    // 创建按钮
+                    const onCopy = async (buttonContainer) => {
+                        const aiContent = bubble;
+                        return window.ClipboardManager.copyHtmlToClipboard(aiContent);
+                    };
+                    const container = document.createElement('div');
+                    container.className = 'puretext-button-container';
+                    const button = document.createElement('button');
+                    button.className = 'puretext-copy-btn';
+                    button.type = 'button';
+                    button.textContent = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制到 Word';
+                    button.onclick = () => onCopy(container);
+                    container.appendChild(button);
+                    // 插入到最后一个ds-icon-button后面
+                    parent.insertBefore(container, iconButtons[iconButtons.length - 1].nextSibling);
+                    console.log('[PureText] 已插入puretext-button-container', container, '到', parent);
                 }
                 return;
             }
@@ -626,7 +674,6 @@ class ButtonInjector {
             // 其他网站使用原有逻辑
             const selectors = siteConfig.selectors || [];
             let bubbles = [];
-            
             for (const selector of selectors) {
                 const elements = document.querySelectorAll(selector);
                 if (elements.length > 0) {
@@ -634,13 +681,10 @@ class ButtonInjector {
                     break;
                 }
             }
-            
-            // 如果没有找到，尝试使用按钮容器选择器
             if (bubbles.length === 0 && siteConfig.buttonContainer) {
                 const buttonContainers = document.querySelectorAll(siteConfig.buttonContainer);
                 bubbles = Array.from(buttonContainers);
             }
-            
             for (const bubble of bubbles) {
                 this.injectButton(bubble);
             }
