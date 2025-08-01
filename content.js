@@ -547,7 +547,7 @@ class ButtonInjector {
     cleanup() {
         this.stopObserving();
         // 清理所有注入的按钮
-        document.querySelectorAll('.puretext-button-container').forEach(btn => btn.remove());
+        document.querySelectorAll('.puretext-button-container, .puretext-button-group').forEach(btn => btn.remove());
         this.injectedButtons = new WeakSet();
     }
 
@@ -657,23 +657,44 @@ class ButtonInjector {
                     const parent = iconButtons[0].parentNode;
                     console.log('[PureText] parent:', parent);
                     // 检查是否已插入
-                    if (parent.querySelector('.puretext-button-container')) continue;
-                    // 创建按钮
+                    if (parent.querySelector('.puretext-button-group')) continue;
+                    
+                    // 创建按钮组容器
+                    const buttonGroup = document.createElement('div');
+                    buttonGroup.className = 'puretext-button-group';
+                    buttonGroup.style.display = 'inline-flex';
+                    buttonGroup.style.alignItems = 'center';
+                    buttonGroup.style.gap = '4px';
+                    
+                    // 创建复制按钮
                     const onCopy = async (buttonContainer) => {
                         const aiContent = bubble;
                         return window.ClipboardManager.copyHtmlToClipboard(aiContent);
                     };
-                    const container = document.createElement('div');
-                    container.className = 'puretext-button-container';
-                    const button = document.createElement('button');
-                    button.className = 'puretext-copy-btn';
-                    button.type = 'button';
-                    button.textContent = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制到 Word';
-                    button.onclick = () => onCopy(container);
-                    container.appendChild(button);
+                    const copyBtn = CopyButton.create(bubble, onCopy);
+                    
+                    // 创建下载为 Word 按钮
+                    const onDownloadWord = async (buttonContainer) => {
+                        const aiContent = bubble;
+                        await exportToWord(aiContent, 'PureText.docx');
+                    };
+                    const wordBtn = DownloadWordButton.create(bubble, onDownloadWord);
+                    
+                    // 创建下载为 PDF 按钮
+                    const onDownloadPdf = async (buttonContainer) => {
+                        const aiContent = bubble;
+                        await exportToPdf(aiContent, 'PureText.pdf');
+                    };
+                    const pdfBtn = DownloadPdfButton.create(bubble, onDownloadPdf);
+                    
+                    // 将按钮添加到按钮组
+                    buttonGroup.appendChild(copyBtn);
+                    buttonGroup.appendChild(wordBtn);
+                    buttonGroup.appendChild(pdfBtn);
+                    
                     // 插入到最后一个ds-icon-button后面
-                    parent.insertBefore(container, iconButtons[iconButtons.length - 1].nextSibling);
-                    console.log('[PureText] 已插入puretext-button-container', container, '到', parent);
+                    parent.insertBefore(buttonGroup, iconButtons[iconButtons.length - 1].nextSibling);
+                    console.log('[PureText] 已插入puretext-button-group', buttonGroup, '到', parent);
                 }
                 return;
             }
@@ -711,7 +732,7 @@ class ButtonInjector {
             }
 
             // 检查是否已经存在我们的按钮
-            if (actionContainer.querySelector(`.${this.buttonClass}`)) {
+            if (actionContainer.querySelector(`.${this.buttonClass}, .puretext-button-container`)) {
                 return;
             }
 
@@ -743,7 +764,7 @@ class ButtonInjector {
                 return;
             }
 
-            if (bubble.querySelector(`.${this.buttonClass}`)) {
+            if (bubble.querySelector(`.${this.buttonClass}, .puretext-button-group`)) {
                 return;
             }
 
@@ -1143,7 +1164,7 @@ class PureTextExtension {
             isRunning: this.isRunning,
             currentSite: this.siteManager.getCurrentSiteConfig(),
             supportedSites: this.siteManager.getSupportedSites(),
-            injectedButtonsCount: document.querySelectorAll('.puretext-button-container').length
+            injectedButtonsCount: document.querySelectorAll('.puretext-button-container, .puretext-button-group').length
         };
     }
 }
