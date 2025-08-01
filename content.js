@@ -4,6 +4,9 @@ import { DownloadWordButton } from './src/DownloadWordButton.js';
 import { DownloadPdfButton } from './src/DownloadPdfButton.js';
 import { exportToWord } from './src/export-to-word.js';
 import { exportToPdf } from './src/export-to-pdf.js';
+// 静态导入 html2pdf.js 并设置为全局变量
+import html2pdf from 'html2pdf.js';
+window.html2pdf = html2pdf;
 // 将所有模块合并到一个文件中，避免ES模块导入问题
 
 // ==================== 调试日志系统 ====================
