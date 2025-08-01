@@ -11,5 +11,17 @@ module.exports = {
   devtool: false, // 禁止 source map 里的 eval
   optimization: {
     minimize: false
+  },
+  resolve: {
+    fallback: {
+      "fs": false,
+      "path": false,
+      "os": false,
+      "crypto": false,
+      "stream": false,
+      "util": false,
+      "buffer": false,
+      "process": false
+    }
   }
 }; 

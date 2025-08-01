@@ -1,5 +1,9 @@
 import './src/ClipboardManager.js';
 import { CopyButton } from './src/CopyButton.js';// 一键纯文扩展 - 统一内容脚本
+import { DownloadWordButton } from './src/DownloadWordButton.js';
+import { DownloadPdfButton } from './src/DownloadPdfButton.js';
+import { exportToWord } from './src/export-to-word.js';
+import { exportToPdf } from './src/export-to-pdf.js';
 // 将所有模块合并到一个文件中，避免ES模块导入问题
 
 // ==================== 调试日志系统 ====================
@@ -809,15 +813,16 @@ class ButtonInjector {
             padding: 0;
         `;
 
-        const button = document.createElement('button');
-        button.className = 'puretext-action-btn';
-        button.textContent = buttonText;
-        button.type = 'button';
-        button.setAttribute('aria-label', buttonText);
-        button.setAttribute('title', buttonText);
+        // 复制按钮
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'puretext-action-btn';
+        copyBtn.textContent = buttonText;
+        copyBtn.type = 'button';
+        copyBtn.setAttribute('aria-label', buttonText);
+        copyBtn.setAttribute('title', buttonText);
         
         // 应用Kimi actions按钮的特殊样式
-        button.style.cssText = `
+        copyBtn.style.cssText = `
             all: initial;
             font-family: inherit;
             display: inline-flex;
@@ -849,47 +854,47 @@ class ButtonInjector {
         `;
 
         // 添加交互效果
-        button.addEventListener('mouseenter', () => {
-            button.style.opacity = '1';
-            button.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
-            button.style.transform = 'translateY(-1px) translateZ(0)';
+        copyBtn.addEventListener('mouseenter', () => {
+            copyBtn.style.opacity = '1';
+            copyBtn.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
+            copyBtn.style.transform = 'translateY(-1px) translateZ(0)';
         });
-        button.addEventListener('mouseleave', () => {
-            button.style.opacity = '0.9';
-            button.style.background = 'transparent';
-            button.style.transform = 'translateY(0) translateZ(0)';
+        copyBtn.addEventListener('mouseleave', () => {
+            copyBtn.style.opacity = '0.9';
+            copyBtn.style.background = 'transparent';
+            copyBtn.style.transform = 'translateY(0) translateZ(0)';
         });
-        button.addEventListener('focus', () => {
-            button.style.outline = '2px solid #3b82f6';
-            button.style.outlineOffset = '2px';
-            button.style.opacity = '1';
+        copyBtn.addEventListener('focus', () => {
+            copyBtn.style.outline = '2px solid #3b82f6';
+            copyBtn.style.outlineOffset = '2px';
+            copyBtn.style.opacity = '1';
         });
-        button.addEventListener('blur', () => {
-            button.style.outline = 'none';
-            button.style.opacity = '0.9';
+        copyBtn.addEventListener('blur', () => {
+            copyBtn.style.outline = 'none';
+            copyBtn.style.opacity = '0.9';
         });
-        button.addEventListener('mousedown', () => {
-            button.style.transform = 'translateY(0) scale(0.98) translateZ(0)';
-            button.style.background = 'var(--color-fill-3, rgba(0, 0, 0, 0.08))';
+        copyBtn.addEventListener('mousedown', () => {
+            copyBtn.style.transform = 'translateY(0) scale(0.98) translateZ(0)';
+            copyBtn.style.background = 'var(--color-fill-3, rgba(0, 0, 0, 0.08))';
         });
-        button.addEventListener('mouseup', () => {
-            button.style.transform = 'translateY(-1px) translateZ(0)';
-            button.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
+        copyBtn.addEventListener('mouseup', () => {
+            copyBtn.style.transform = 'translateY(-1px) translateZ(0)';
+            copyBtn.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
         });
 
         // 添加点击事件
-        button.addEventListener('click', async (event) => {
+        copyBtn.addEventListener('click', async (event) => {
             event.preventDefault();
             event.stopPropagation();
             
             // 点击反馈
-            button.style.transform = 'scale(0.95) translateZ(0)';
+            copyBtn.style.transform = 'scale(0.95) translateZ(0)';
             setTimeout(() => {
-                button.style.transform = 'translateZ(0)';
+                copyBtn.style.transform = 'translateZ(0)';
             }, 150);
             
-            const originalText = button.textContent;
-            button.textContent = '处理中...';
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '处理中...';
             
             try {
                 await onCopy(actionContainer);
@@ -897,12 +902,34 @@ class ButtonInjector {
                 console.error('PureText: Kimi action failed:', error);
             } finally {
                 setTimeout(() => {
-                    button.textContent = originalText;
+                    copyBtn.textContent = originalText;
                 }, 500);
             }
         });
 
-        container.appendChild(button);
+        // 新增：下载为 Word 按钮
+        const onDownloadWord = async (buttonContainer) => {
+            const segmentAssistant = buttonContainer.closest('.segment-assistant');
+            if (!segmentAssistant) return;
+            const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+            if (!aiContent) return;
+            await exportToWord(aiContent, 'PureText.docx');
+        };
+        const wordBtn = DownloadWordButton.create(actionContainer, onDownloadWord);
+        // 新增：下载为 PDF 按钮
+        const onDownloadPdf = async (buttonContainer) => {
+            const segmentAssistant = buttonContainer.closest('.segment-assistant');
+            if (!segmentAssistant) return;
+            const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+            if (!aiContent) return;
+            await exportToPdf(aiContent, 'PureText.pdf');
+        };
+        const pdfBtn = DownloadPdfButton.create(actionContainer, onDownloadPdf);
+
+        container.appendChild(copyBtn);
+        // 直接添加整个按钮容器，而不是尝试提取按钮元素
+        container.appendChild(wordBtn);
+        container.appendChild(pdfBtn);
         return container;
     }
 
@@ -935,7 +962,30 @@ class ButtonInjector {
             }
         };
 
-        return CopyButton.create(targetBubble, onCopy);
+        // 复制按钮
+        const copyBtn = CopyButton.create(targetBubble, onCopy);
+        // 新增：下载为 Word 按钮
+        const onDownloadWord = async (buttonContainer) => {
+            const aiContent = this.findAIResponseContent(buttonContainer);
+            if (!aiContent) return;
+            await exportToWord(aiContent, 'PureText.docx');
+        };
+        const wordBtn = DownloadWordButton.create(targetBubble, onDownloadWord);
+        // 新增：下载为 PDF 按钮
+        const onDownloadPdf = async (buttonContainer) => {
+            const aiContent = this.findAIResponseContent(buttonContainer);
+            if (!aiContent) return;
+            await exportToPdf(aiContent, 'PureText.pdf');
+        };
+        const pdfBtn = DownloadPdfButton.create(targetBubble, onDownloadPdf);
+        // 创建按钮组容器
+        const group = document.createElement('div');
+        group.className = 'puretext-button-group';
+        group.style.display = 'inline-flex';
+        group.appendChild(copyBtn);
+        group.appendChild(wordBtn);
+        group.appendChild(pdfBtn);
+        return group;
     }
 
     /**
@@ -1140,5 +1190,9 @@ window.KimiMessageDetector = KimiMessageDetector;
 window.MessageType = MessageType;
 window.ClipboardManager = window.ClipboardManager;
 window.CopyButton = CopyButton;
+window.DownloadWordButton = DownloadWordButton;
+window.DownloadPdfButton = DownloadPdfButton;
+window.exportToWord = exportToWord;
+window.exportToPdf = exportToPdf;
 
 debugLog(DEBUG_LEVEL.INFO, '✅ PureText extension unified script loaded successfully');

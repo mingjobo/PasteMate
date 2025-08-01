@@ -21,5 +21,10 @@
     "webpack": "^5.100.2",
     "webpack-cli": "^6.0.1"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "docx": "^9.5.1",
+    "file-saver": "^2.0.5",
+    "html2pdf.js": "^0.10.3"
+  }
 }
