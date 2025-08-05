@@ -34,12 +34,12 @@ class BaseActionButton {
     if (isDeepSeek) {
       return {
         background: 'transparent',
-        text: 'rgba(255, 255, 255, 0.7)',
+        text: '#9CA3AF', // 浅灰色
         border: 'none',
         shadow: 'none',
-        hoverBackground: 'rgba(255, 255, 255, 0.1)',
+        hoverBackground: 'rgba(156, 163, 175, 0.1)', // 浅灰色悬停背景
         hoverShadow: 'none',
-        activeBackground: 'rgba(255, 255, 255, 0.15)',
+        activeBackground: 'rgba(156, 163, 175, 0.15)', // 浅灰色激活背景
         focus: '#3b82f6'
       };
     }
