@@ -2,9 +2,11 @@ const path = require('path');
 
 module.exports = {
   mode: 'development',
-  entry: './content.js',
+  entry: {
+    content: './content.js'
+  },
   output: {
-    filename: 'content.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
     devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     chunkFilename: '[name].chunk.js',
@@ -13,13 +15,10 @@ module.exports = {
   optimization: {
     minimize: false,
     splitChunks: {
-      chunks: 'all',
+      chunks: 'async',
       cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
-        },
+        default: false,
+        vendors: false,
       },
     },
   },

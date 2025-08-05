@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PureText 扩展测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .ai-response {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .ai-response[data-role="assistant"] {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+        .markdown {
+            line-height: 1.6;
+        }
+        .markdown h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .markdown p {
+            margin: 10px 0;
+        }
+        .markdown ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .markdown li {
+            margin: 5px 0;
+        }
+        .segment-content-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .segment-assistant-actions-content {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .segment-assistant-actions-content button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        .segment-assistant-actions-content button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>PureText 扩展测试页面</h1>
+    
+    <div class="test-container">
+        <h2>测试说明</h2>
+        <p>这个页面模拟了各种AI聊天网站的界面，用于测试PureText扩展的功能。</p>
+        <p>请确保已经安装了PureText扩展，然后刷新页面查看按钮是否正确显示。</p>
+    </div>
+
+    <!-- ChatGPT 风格测试 -->
+    <div class="test-container">
+        <h2>ChatGPT 风格测试</h2>
+        <div class="ai-response" data-message-author-role="assistant">
+            <div class="markdown prose">
+                <h3>这是一个测试回复</h3>
+                <p>这是ChatGPT风格的AI回复内容。PureText扩展应该能够识别这种格式并添加相应的按钮。</p>
+                <ul>
+                    <li>支持复制功能</li>
+                    <li>支持导出为Word文档</li>
+                    <li>支持导出为PDF文件</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- DeepSeek 风格测试 -->
+    <div class="test-container">
+        <h2>DeepSeek 风格测试</h2>
+        <div class="ai-response" data-role="assistant">
+            <div class="ds-markdown ds-markdown--block">
+                <h3>DeepSeek测试回复</h3>
+                <p>这是DeepSeek风格的AI回复内容。扩展应该能够识别ds-markdown类名。</p>
+                <p>这里包含一些<strong>格式化文本</strong>和<em>斜体文本</em>。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kimi 风格测试 -->
+    <div class="test-container">
+        <h2>Kimi 风格测试</h2>
+        <div class="ai-response" data-role="assistant">
+            <div class="segment-content-box">
+                <div class="markdown-container">
+                    <h3>Kimi测试回复</h3>
+                    <p>这是Kimi风格的AI回复内容。扩展应该能够识别segment-content-box类名。</p>
+                    <p>这里有一些代码示例：</p>
+                    <pre><code>console.log("Hello, World!");</code></pre>
+                </div>
+            </div>
+            <div class="segment-assistant-actions-content">
+                <button>原始操作按钮1</button>
+                <button>原始操作按钮2</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 豆包风格测试 -->
+    <div class="test-container">
+        <h2>豆包风格测试</h2>
+        <div class="ai-response">
+            <div class="dialogue-text assistant">
+                <h3>豆包测试回复</h3>
+                <p>这是豆包风格的AI回复内容。扩展应该能够识别dialogue-text assistant类名。</p>
+                <p>这里包含一些<strong>重要信息</strong>和<em>注意事项</em>。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟扩展加载
+        console.log('测试页面加载完成');
+        console.log('请检查浏览器控制台是否有PureText扩展的日志信息');
+        
+        // 检查扩展是否加载
+        setTimeout(() => {
+            if (window.html2pdf) {
+                console.log('✅ html2pdf 已加载');
+            } else {
+                console.log('❌ html2pdf 未加载');
+            }
+            
+            if (typeof SUPPORTED_SITES !== 'undefined') {
+                console.log('✅ SUPPORTED_SITES 已定义');
+                console.log('支持的站点:', Object.keys(SUPPORTED_SITES));
+            } else {
+                console.log('❌ SUPPORTED_SITES 未定义');
+            }
+        }, 1000);
+    </script>
+</body>
+</html> 

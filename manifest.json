@@ -17,7 +17,9 @@
         "file://*/*"
       ],
       "js": [
-        "dist/content.js"
+        "dist/content.js",
+        "dist/vendors-node_modules_canvg_lib_index_es_js.chunk.js",
+        "dist/vendors-node_modules_dompurify_dist_purify_es_mjs.chunk.js"
       ],
       "run_at": "document_idle"
     }

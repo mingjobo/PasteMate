@@ -1,9 +1,10 @@
 import './src/ClipboardManager.js';
-import { CopyButton } from './src/CopyButton.js';// 一键纯文扩展 - 统一内容脚本
+import { CopyButton } from './src/CopyButton.js';
 import { DownloadWordButton } from './src/DownloadWordButton.js';
 import { DownloadPdfButton } from './src/DownloadPdfButton.js';
 import { exportToWord } from './src/export-to-word.js';
 import { exportToPdf } from './src/export-to-pdf.js';
+import { SUPPORTED_SITES } from './sites.js';
 // 静态导入 html2pdf.js 并设置为全局变量
 import html2pdf from 'html2pdf.js';
 window.html2pdf = html2pdf;
@@ -144,77 +145,7 @@ class SiteManager {
     }
 }
 
-// ==================== 站点配置 ====================
-const SUPPORTED_SITES = {
-  "chat.openai.com": {
-    name: "ChatGPT",
-    selectors: [
-      "[data-message-author-role='assistant'] .markdown",
-      "[data-message-author-role='assistant']",
-      ".group.w-full.text-token-text-primary",
-      ".markdown.prose"
-    ],
-    features: {
-      textIndicators: ["I'm", "I can", "Here's", "Based on"],
-      roleAttributes: ["data-message-author-role=assistant"],
-      containerClasses: ["markdown", "prose"]
-    }
-  },
-  "chat.deepseek.com": {
-    name: "DeepSeek",
-    selectors: [
-      ".ds-markdown.ds-markdown--block",
-      ".message-content[data-role='assistant']",
-      "[data-role='assistant'] .markdown",
-      ".assistant-message .content"
-    ],
-    features: {
-      textIndicators: ["我是", "我可以", "根据", "基于"],
-      roleAttributes: ["data-role=assistant"],
-      containerClasses: ["ds-markdown", "message-content"]
-    }
-  },
-  "www.doubao.com": {
-    name: "豆包",
-    selectors: [
-      ".dialogue-text.assistant",
-      ".message.assistant .content",
-      "[data-role='assistant']",
-      ".ai-response"
-    ],
-    features: {
-      textIndicators: ["我是", "我可以", "根据", "建议"],
-      roleAttributes: ["data-role=assistant"],
-      containerClasses: ["dialogue-text", "assistant"]
-    }
-  },
-  "www.kimi.com": {
-    name: "Kimi",
-    selectors: [
-      "[data-role='assistant'] .segment-content-box",
-      "[data-author='assistant'] .segment-content-box",
-      ".ai-response .segment-content-box",
-      ".assistant-message .segment-content-box",
-      ".segment-content-box",
-      ".markdown-container",
-      ".markdown",
-      "div[class*=\"assistant\"]",
-      "div[class*=\"ai\"]",
-      ".response-bubble",
-      "[data-role='assistant']",
-      ".ai-message .content",
-      ".message-content.assistant",
-      ".chat-message.assistant",
-      ".kimi-response",
-      ".assistant-bubble"
-    ],
-    features: {
-      textIndicators: ["我是", "我可以", "根据", "建议", "Kimi", "收到", "您可以", "建议您", "以下是", "具体来说", "需要注意"],
-      roleAttributes: ["data-role=assistant", "data-author=assistant"],
-      containerClasses: ["segment-content-box", "markdown-container", "markdown", "assistant", "ai"]
-    }
-  }
-};
+
 
 // ==================== 消息类型枚举 ====================
 const MessageType = {
