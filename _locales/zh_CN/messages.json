@@ -8,7 +8,7 @@
     "description": "扩展描述"
   },
   "copyToWord": {
-    "message": "复制到 Word"
+    "message": "复制为Word格式"
   },
   "copySuccess": {
     "message": "复制成功",
@@ -19,9 +19,9 @@
     "description": "复制失败提示"
   },
   "downloadAsWord": {
-    "message": "下载为 Word"
+    "message": "下载为Word"
   },
   "downloadAsPdf": {
-    "message": "下载为 PDF"
+    "message": "下载为PDF"
   }
 }

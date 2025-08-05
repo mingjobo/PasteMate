@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件名生成测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .ai-response {
+            background-color: #e8f4fd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .filename-display {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>文件名生成功能测试</h1>
+    
+    <div class="test-section">
+        <h2>DeepSeek 对话测试</h2>
+        <div class="user-message">
+            <strong>用户问题：</strong>
+            如何学习品牌运营？
+        </div>
+        <div class="ai-response" id="deepseek-response">
+            <strong>AI回复：</strong>
+            品牌运营是一个综合性的营销活动，涉及品牌定位、传播策略、用户管理等多个方面...
+        </div>
+        <button onclick="testDeepSeek()">测试DeepSeek文件名生成</button>
+        <div id="deepseek-result" class="filename-display"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Kimi 对话测试</h2>
+        <div class="user-message">
+            <strong>用户问题：</strong>
+            请帮我分析一下这个代码的性能问题
+        </div>
+        <div class="ai-response" id="kimi-response">
+            <strong>AI回复：</strong>
+            我来帮您分析这段代码的性能问题。首先，我们需要考虑时间复杂度...
+        </div>
+        <button onclick="testKimi()">测试Kimi文件名生成</button>
+        <div id="kimi-result" class="filename-display"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>ChatGPT 对话测试</h2>
+        <div class="user-message">
+            <strong>用户问题：</strong>
+            什么是人工智能？
+        </div>
+        <div class="ai-response" id="chatgpt-response">
+            <strong>AI回复：</strong>
+            人工智能（Artificial Intelligence，AI）是计算机科学的一个分支...
+        </div>
+        <button onclick="testChatGPT()">测试ChatGPT文件名生成</button>
+        <div id="chatgpt-result" class="filename-display"></div>
+    </div>
+
+    <script type="module">
+        // 模拟不同网站的环境
+        function simulateSite(siteName) {
+            const originalHostname = window.location.hostname;
+            Object.defineProperty(window.location, 'hostname', {
+                value: siteName,
+                writable: true
+            });
+            return () => {
+                Object.defineProperty(window.location, 'hostname', {
+                    value: originalHostname,
+                    writable: true
+                });
+            };
+        }
+
+        // 测试DeepSeek
+        window.testDeepSeek = async function() {
+            const restoreHostname = simulateSite('chat.deepseek.com');
+            try {
+                const { UserQuestionExtractor } = await import('../src/UserQuestionExtractor.js');
+                const aiElement = document.getElementById('deepseek-response');
+                const userQuestion = UserQuestionExtractor.getUserQuestion(aiElement);
+                const filename = UserQuestionExtractor.generateFilename(userQuestion, 'pdf');
+                document.getElementById('deepseek-result').textContent = `生成的文件名: ${filename}`;
+            } catch (error) {
+                document.getElementById('deepseek-result').textContent = `错误: ${error.message}`;
+            } finally {
+                restoreHostname();
+            }
+        };
+
+        // 测试Kimi
+        window.testKimi = async function() {
+            const restoreHostname = simulateSite('www.kimi.com');
+            try {
+                const { UserQuestionExtractor } = await import('../src/UserQuestionExtractor.js');
+                const aiElement = document.getElementById('kimi-response');
+                const userQuestion = UserQuestionExtractor.getUserQuestion(aiElement);
+                const filename = UserQuestionExtractor.generateFilename(userQuestion, 'docx');
+                document.getElementById('kimi-result').textContent = `生成的文件名: ${filename}`;
+            } catch (error) {
+                document.getElementById('kimi-result').textContent = `错误: ${error.message}`;
+            } finally {
+                restoreHostname();
+            }
+        };
+
+        // 测试ChatGPT
+        window.testChatGPT = async function() {
+            const restoreHostname = simulateSite('chat.openai.com');
+            try {
+                const { UserQuestionExtractor } = await import('../src/UserQuestionExtractor.js');
+                const aiElement = document.getElementById('chatgpt-response');
+                const userQuestion = UserQuestionExtractor.getUserQuestion(aiElement);
+                const filename = UserQuestionExtractor.generateFilename(userQuestion, 'pdf');
+                document.getElementById('chatgpt-result').textContent = `生成的文件名: ${filename}`;
+            } catch (error) {
+                document.getElementById('chatgpt-result').textContent = `错误: ${error.message}`;
+            } finally {
+                restoreHostname();
+            }
+        };
+    </script>
+</body>
+</html> 

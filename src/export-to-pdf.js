@@ -1,12 +1,14 @@
 // 导出为 PDF 工具函数，使用打包的 html2pdf.js
 // 兼容 HTML/纯文本输入
+import { UserQuestionExtractor } from './UserQuestionExtractor.js';
 
 /**
  * 将 HTML/纯文本内容导出为 PDF 文件
  * @param {string|HTMLElement} content - HTML 字符串或 DOM 元素
  * @param {string} filename - 下载文件名，默认 PureText.pdf
+ * @param {HTMLElement} aiResponseElement - AI回复元素，用于获取用户问题
  */
-export async function exportToPdf(content, filename = 'PureText.pdf') {
+export async function exportToPdf(content, filename = 'PureText.pdf', aiResponseElement = null) {
   try {
     let element;
     if (typeof content === 'string') {
@@ -20,6 +22,18 @@ export async function exportToPdf(content, filename = 'PureText.pdf') {
     }
 
     console.log('PureText: 开始生成 PDF...');
+    
+    // 生成智能文件名
+    let finalFilename = filename;
+    if (aiResponseElement && filename === 'PureText.pdf') {
+      try {
+        const userQuestion = UserQuestionExtractor.getUserQuestion(aiResponseElement);
+        finalFilename = UserQuestionExtractor.generateFilename(userQuestion, 'pdf');
+        console.log('PureText: 生成智能文件名:', finalFilename);
+      } catch (error) {
+        console.error('PureText: 生成文件名失败:', error);
+      }
+    }
     
     // 为DeepSeek网站添加特殊的PDF样式处理
     const isDeepSeek = window.location.hostname === 'chat.deepseek.com';
@@ -37,7 +51,7 @@ export async function exportToPdf(content, filename = 'PureText.pdf') {
     
     await html2pdf().from(element).set({
       margin: 10,
-      filename,
+      filename: finalFilename,
       html2canvas: { 
         scale: 2,
         useCORS: true,
@@ -50,7 +64,7 @@ export async function exportToPdf(content, filename = 'PureText.pdf') {
       }
     }).save();
     
-    console.log(`PureText: PDF 导出成功 - ${filename}`);
+    console.log(`PureText: PDF 导出成功 - ${finalFilename}`);
     
   } catch (error) {
     console.error('PureText: PDF 导出失败:', error);

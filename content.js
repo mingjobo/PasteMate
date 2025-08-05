@@ -676,14 +676,14 @@ class ButtonInjector {
                     // 创建下载为 Word 按钮
                     const onDownloadWord = async (buttonContainer) => {
                         const aiContent = bubble;
-                        await exportToWord(aiContent, 'PureText.docx');
+                        await exportToWord(aiContent, 'PureText.docx', bubble);
                     };
                     const wordBtn = DownloadWordButton.create(bubble, onDownloadWord);
                     
                     // 创建下载为 PDF 按钮
                     const onDownloadPdf = async (buttonContainer) => {
                         const aiContent = bubble;
-                        await exportToPdf(aiContent, 'PureText.pdf');
+                        await exportToPdf(aiContent, 'PureText.pdf', bubble);
                     };
                     const pdfBtn = DownloadPdfButton.create(bubble, onDownloadPdf);
                     
@@ -822,7 +822,7 @@ class ButtonInjector {
         };
 
         // 为Kimi actions容器创建特殊样式的按钮
-        const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制到 Word';
+        const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制为Word格式';
         
         const container = document.createElement('div');
         container.className = 'puretext-button-container';
@@ -937,7 +937,7 @@ class ButtonInjector {
             if (!segmentAssistant) return;
             const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
             if (!aiContent) return;
-            await exportToWord(aiContent, 'PureText.docx');
+            await exportToWord(aiContent, 'PureText.docx', aiContent);
         };
         const wordBtn = DownloadWordButton.create(actionContainer, onDownloadWord);
         // 新增：下载为 PDF 按钮
@@ -946,7 +946,7 @@ class ButtonInjector {
             if (!segmentAssistant) return;
             const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
             if (!aiContent) return;
-            await exportToPdf(aiContent, 'PureText.pdf');
+            await exportToPdf(aiContent, 'PureText.pdf', aiContent);
         };
         const pdfBtn = DownloadPdfButton.create(actionContainer, onDownloadPdf);
 
@@ -992,14 +992,14 @@ class ButtonInjector {
         const onDownloadWord = async (buttonContainer) => {
             const aiContent = this.findAIResponseContent(buttonContainer);
             if (!aiContent) return;
-            await exportToWord(aiContent, 'PureText.docx');
+            await exportToWord(aiContent, 'PureText.docx', aiContent);
         };
         const wordBtn = DownloadWordButton.create(targetBubble, onDownloadWord);
         // 新增：下载为 PDF 按钮
         const onDownloadPdf = async (buttonContainer) => {
             const aiContent = this.findAIResponseContent(buttonContainer);
             if (!aiContent) return;
-            await exportToPdf(aiContent, 'PureText.pdf');
+            await exportToPdf(aiContent, 'PureText.pdf', aiContent);
         };
         const pdfBtn = DownloadPdfButton.create(targetBubble, onDownloadPdf);
         // 创建按钮组容器

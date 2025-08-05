@@ -72,7 +72,7 @@ class ClipboardManager {
       this.logPerformanceMetrics('copyUnifiedTextToClipboard', duration, true, hostname);
       
       console.log('[ClipboardManager] ========== 统一文本复制操作完成 ==========');
-      this.showSuccessMessage('已复制为统一格式，Word和WPS都能正常显示');
+      this.showSuccessMessage('复制成功');
       return true;
       
     } catch (error) {
@@ -842,8 +842,9 @@ class ClipboardManager {
     toast.textContent = message;
     toast.style.cssText = `
       position: fixed;
-      top: 20px;
-      right: 20px;
+      left: 50%;
+      top: 40px;
+      transform: translateX(-50%);
       background: ${type === 'success' ? '#4CAF50' : '#f44336'};
       color: white;
       padding: 12px 20px;
@@ -870,8 +871,8 @@ class ClipboardManager {
         if (toast.parentNode) {
           toast.parentNode.removeChild(toast);
         }
-      }, 300);
-    }, 2000);
+      }, 200);
+    }, 1000);
   }
 }
 

@@ -14,7 +14,7 @@ class CopyButton extends BaseActionButton {
    */
   static create(targetElement, onCopy) {
     // 国际化文本
-    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制到 Word';
+    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制为Word格式';
     // 判断是否是Kimi或DeepSeek
     const isKimi = window.location.hostname === 'www.kimi.com';
     const isDeepSeek = window.location.hostname === 'chat.deepseek.com';
