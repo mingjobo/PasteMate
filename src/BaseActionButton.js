@@ -155,11 +155,11 @@ class BaseActionButton {
     setTimeout(() => {
       button.style.transform = 'translateZ(0)';
     }, 150);
-    const originalText = button.textContent;
-    button.textContent = '处理中...';
-    setTimeout(() => {
-      button.textContent = originalText;
-    }, 500);
+    // const originalText = button.textContent;
+    // button.textContent = '处理中...';
+    // setTimeout(() => {
+    //   button.textContent = originalText;
+    // }, 500);
   }
 
   static hasButton(element) {

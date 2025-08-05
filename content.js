@@ -917,8 +917,8 @@ class ButtonInjector {
                 copyBtn.style.transform = 'translateZ(0)';
             }, 150);
             
-            const originalText = copyBtn.textContent;
-            copyBtn.textContent = '处理中...';
+            // const originalText = copyBtn.textContent;
+            // copyBtn.textContent = '处理中...';
             
             try {
                 await onCopy(actionContainer);
@@ -926,7 +926,7 @@ class ButtonInjector {
                 console.error('PureText: Kimi action failed:', error);
             } finally {
                 setTimeout(() => {
-                    copyBtn.textContent = originalText;
+                    // copyBtn.textContent = originalText;
                 }, 500);
             }
         });

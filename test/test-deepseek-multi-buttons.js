@@ -123,8 +123,8 @@ function testDeepSeekButtonInjection() {
                     event.preventDefault();
                     event.stopPropagation();
                     
-                    const originalText = button.textContent;
-                    button.textContent = '处理中...';
+                    // const originalText = button.textContent;
+                    // button.textContent = '处理中...';
                     
                     try {
                         await buttonActions[btnIndex]();
@@ -132,9 +132,9 @@ function testDeepSeekButtonInjection() {
                     } catch (error) {
                         console.error(`❌ ${text} 操作失败:`, error);
                     } finally {
-                        setTimeout(() => {
-                            button.textContent = originalText;
-                        }, 500);
+                        // setTimeout(() => {
+                        //     button.textContent = originalText;
+                        // }, 500);
                     }
                 });
                 
