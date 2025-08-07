@@ -607,7 +607,7 @@ class ButtonInjector {
                     // 创建下载为 Word 按钮
                     const onDownloadWord = async (buttonContainer) => {
                         const aiContent = bubble;
-                        await exportToWord(aiContent, 'PureText.docx', bubble);
+                        await exportToWord(aiContent, 'PureText.docx', bubble, 'deepseek');
                     };
                     const wordBtn = DownloadWordButton.create(bubble, onDownloadWord);
                     
@@ -868,7 +868,7 @@ class ButtonInjector {
             if (!segmentAssistant) return;
             const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
             if (!aiContent) return;
-            await exportToWord(aiContent, 'PureText.docx', aiContent);
+            await exportToWord(aiContent, 'PureText.docx', aiContent, 'kimi');
         };
         const wordBtn = DownloadWordButton.create(actionContainer, onDownloadWord);
         // 新增：下载为 PDF 按钮
@@ -923,7 +923,9 @@ class ButtonInjector {
         const onDownloadWord = async (buttonContainer) => {
             const aiContent = this.findAIResponseContent(buttonContainer);
             if (!aiContent) return;
-            await exportToWord(aiContent, 'PureText.docx', aiContent);
+            const hostname = window.location.hostname;
+            const source = hostname === 'www.kimi.com' ? 'kimi' : 'deepseek';
+            await exportToWord(aiContent, 'PureText.docx', aiContent, source);
         };
         const wordBtn = DownloadWordButton.create(targetBubble, onDownloadWord);
         // 新增：下载为 PDF 按钮
