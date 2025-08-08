@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek格式化测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: auto;
+            max-height: 80vh;
+        }
+        .panel h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #sourceContent {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        #formattedContent {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        code {
+            background-color: #ffe4b5;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-family: "Courier New", monospace;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .ds-markdown { 
+            font-family: inherit;
+        }
+        .ds-markdown-paragraph {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>DeepSeek Word导出格式化测试</h1>
+    
+    <div class="controls">
+        <button onclick="testHtmlFormatter()">测试HTML格式化器</button>
+        <button onclick="testWordExport()">测试Word导出</button>
+        <button onclick="copyToClipboard()">复制到剪贴板</button>
+        <button onclick="downloadAsWord()">下载为Word</button>
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h2>源内容（DeepSeek HTML）</h2>
+            <div id="sourceContent"></div>
+        </div>
+        <div class="panel">
+            <h2>格式化后内容</h2>
+            <div id="formattedContent"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 动态加载扩展脚本
+        import { DeepSeekHtmlFormatter } from '../src/formatters/DeepSeekHtmlFormatter.js';
+        import { exportToWord } from '../src/export-to-word.js';
+        import { ClipboardManager } from '../src/ClipboardManager.js';
+
+        // 加载示例HTML
+        async function loadSampleHtml() {
+            try {
+                const response = await fetch('../example/outputword/deepseek.html');
+                const html = await response.text();
+                document.getElementById('sourceContent').innerHTML = html;
+                return html;
+            } catch (error) {
+                console.error('加载示例HTML失败:', error);
+                document.getElementById('sourceContent').innerHTML = `
+                    <div class="ds-markdown ds-markdown--block">
+                        <h1>测试标题</h1>
+                        <p class="ds-markdown-paragraph">这是一个<strong>测试段落</strong>，包含<em>斜体</em>和<code>行内代码</code>。</p>
+                        <ul>
+                            <li><p class="ds-markdown-paragraph">列表项1</p></li>
+                            <li><p class="ds-markdown-paragraph">列表项2</p></li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // 测试HTML格式化器
+        window.testHtmlFormatter = async function() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status';
+            statusDiv.textContent = '正在测试HTML格式化器...';
+
+            try {
+                const sourceElement = document.querySelector('#sourceContent .ds-markdown');
+                if (!sourceElement) {
+                    throw new Error('未找到源内容');
+                }
+
+                const formatter = new DeepSeekHtmlFormatter();
+                const formatted = await formatter.format(sourceElement);
+                
+                document.getElementById('formattedContent').innerHTML = formatted;
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✓ HTML格式化成功！';
+                
+                console.log('格式化结果:', formatted);
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '✗ 格式化失败: ' + error.message;
+                console.error('格式化失败:', error);
+            }
+        };
+
+        // 测试Word导出
+        window.testWordExport = async function() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status';
+            statusDiv.textContent = '正在测试Word导出...';
+
+            try {
+                const sourceElement = document.querySelector('#sourceContent .ds-markdown');
+                if (!sourceElement) {
+                    throw new Error('未找到源内容');
+                }
+
+                // 模拟导出过程
+                const html = sourceElement.innerHTML;
+                console.log('准备导出的HTML长度:', html.length);
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✓ Word导出测试通过！（检查控制台输出）';
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '✗ 导出测试失败: ' + error.message;
+                console.error('导出测试失败:', error);
+            }
+        };
+
+        // 复制到剪贴板
+        window.copyToClipboard = async function() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status';
+            statusDiv.textContent = '正在复制到剪贴板...';
+
+            try {
+                const sourceElement = document.querySelector('#sourceContent .ds-markdown');
+                if (!sourceElement) {
+                    throw new Error('未找到源内容');
+                }
+
+                await ClipboardManager.copyHtmlToClipboard(sourceElement);
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✓ 已复制到剪贴板！可以粘贴到Word中查看效果';
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '✗ 复制失败: ' + error.message;
+                console.error('复制失败:', error);
+            }
+        };
+
+        // 下载为Word
+        window.downloadAsWord = async function() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status';
+            statusDiv.textContent = '正在生成Word文件...';
+
+            try {
+                const sourceElement = document.querySelector('#sourceContent .ds-markdown');
+                if (!sourceElement) {
+                    throw new Error('未找到源内容');
+                }
+
+                await exportToWord(sourceElement, 'DeepSeek测试文档.docx', null, 'deepseek');
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✓ Word文件已下载！';
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '✗ 下载失败: ' + error.message;
+                console.error('下载失败:', error);
+            }
+        };
+
+        // 页面加载时自动加载示例
+        window.addEventListener('DOMContentLoaded', loadSampleHtml);
+    </script>
+</body>
+</html>

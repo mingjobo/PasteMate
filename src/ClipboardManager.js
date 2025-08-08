@@ -52,8 +52,6 @@ class ClipboardManager {
       
       // 使用格式化管理器获取HTML格式
       console.log('[ClipboardManager] 🔥 开始HTML格式化！！！');
-      await this.initializeFormatterManager();
-      const hostname = this.detectWebsite();
       const formattedHtml = await this.formatterManager.formatForWord(element, hostname);
       console.log('[ClipboardManager] ✅ HTML格式化完成 html.length=', formattedHtml.length);
       

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证DeepSeek修复效果</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>DeepSeek Word导出修复验证</h1>
+    
+    <div class="test-section">
+        <h3>修复问题清单</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>问题</th>
+                    <th>修复内容</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1. 粗体/斜体文本丢失</td>
+                    <td>修复了parseInlineElements的样式继承逻辑</td>
+                    <td><span class="status success">✅ 已修复</span></td>
+                </tr>
+                <tr>
+                    <td>2. 列表标题丢失</td>
+                    <td>确保p标签内容被正确解析为段落</td>
+                    <td><span class="status success">✅ 已修复</span></td>
+                </tr>
+                <tr>
+                    <td>3. 编号列表显示为圆点</td>
+                    <td>添加orderedRef参数，使用LevelFormat.DECIMAL</td>
+                    <td><span class="status success">✅ 已修复</span></td>
+                </tr>
+                <tr>
+                    <td>4. 表格内容丢失</td>
+                    <td>完整实现Table API，解析thead/tbody</td>
+                    <td><span class="status success">✅ 已修复</span></td>
+                </tr>
+                <tr>
+                    <td>5. 行内公式重复</td>
+                    <td>只提取annotation中的LaTeX，跳过katex-html</td>
+                    <td><span class="status success">✅ 已修复</span></td>
+                </tr>
+                <tr>
+                    <td>6. 独立公式格式错误</td>
+                    <td>直接提取完整LaTeX，避免分割</td>
+                    <td><span class="status success">✅ 已修复</span></td>
+                </tr>
+                <tr>
+                    <td>7. 变量名不一致</td>
+                    <td>保持使用paragraphs</td>
+                    <td><span class="status success">✅ 已修复</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h3>关键代码改进</h3>
+        <h4>1. 样式继承（粗体/斜体）</h4>
+        <pre><code>// 修复前：样式没有正确传递
+parseInlineElements(child).map(run => 
+  new TextRun({ text: run.text, bold: true })
+)
+
+// 修复后：使用parentStyle参数继承样式
+const boldStyle = { ...parentStyle, bold: true };
+return Array.from(node.childNodes).flatMap(child => 
+  parseInlineElements(child, boldStyle)
+);</code></pre>
+
+        <h4>2. 列表样式区分</h4>
+        <pre><code>// 修复前：ol和ul都使用bulletRef
+numbering: { reference: bulletRef, level: listLevel }
+
+// 修复后：正确区分有序和无序列表
+const isOrdered = tag === 'ol';
+const listRef = isOrdered ? orderedRef : bulletRef;
+numbering: { reference: listRef, level: listLevel }</code></pre>
+
+        <h4>3. 表格完整解析</h4>
+        <pre><code>// 修复前：简单占位符
+const tableText = '[[表格内容]]';
+
+// 修复后：完整Table API
+new Table({
+  rows: rows,
+  width: { size: 100, type: WidthType.PERCENTAGE },
+})</code></pre>
+
+        <h4>4. 数学公式去重</h4>
+        <pre><code>// 修复后：只处理annotation，跳过katex-html
+if (className.includes('katex')) {
+  const annotation = node.querySelector('annotation[encoding="application/x-tex"]');
+  if (annotation) {
+    const latex = annotation.textContent || '';
+    // 返回LaTeX源码
+  }
+  if (className.includes('katex-html')) {
+    return []; // 跳过HTML渲染部分
+  }
+}</code></pre>
+    </div>
+
+    <div class="test-section">
+        <h3>测试建议</h3>
+        <ol>
+            <li>重新加载浏览器扩展（dist目录）</li>
+            <li>访问 DeepSeek 网站</li>
+            <li>找一个包含以下内容的AI回复：
+                <ul>
+                    <li>粗体和斜体文本</li>
+                    <li>项目符号列表和编号列表</li>
+                    <li>表格</li>
+                    <li>数学公式</li>
+                </ul>
+            </li>
+            <li>点击"下载为Word"按钮</li>
+            <li>用Word/WPS打开验证格式</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>预期效果</h3>
+        <ul>
+            <li>✅ <strong>粗体文本</strong>和<em>斜体文本</em>正确显示</li>
+            <li>✅ "项目符号列表"和"编号列表"标题保留</li>
+            <li>✅ 编号列表显示为1、2、3...</li>
+            <li>✅ 表格完整显示，包含所有单元格内容</li>
+            <li>✅ 行内公式如 E=mc² 不重复</li>
+            <li>✅ 独立公式如 ∫f(x)dx 完整显示</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('🎉 DeepSeek Word导出修复完成！');
+        console.log('📋 所有7个问题已修复');
+        console.log('🚀 扩展已重新构建');
+        console.log('✨ 请在浏览器中重新加载扩展并测试');
+    </script>
+</body>
+</html>
