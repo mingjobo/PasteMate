@@ -28,10 +28,10 @@ class KimiHtmlFormatter extends HtmlFormatter {
       let textNodeCount = 0;
       let elementNodeCount = 0;
       
-      // 使用TreeWalker遍历DOM节点，实现Kimi特殊DOM结构的遍历和解析逻辑
+      // 使用TreeWalker遍历DOM节点，只处理元素节点避免重复
       const walker = document.createTreeWalker(
         element,
-        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+        NodeFilter.SHOW_ELEMENT,  // 只遍历元素节点，避免文本节点重复处理
         null,
         false
       );
@@ -40,13 +40,20 @@ class KimiHtmlFormatter extends HtmlFormatter {
         inList: false,
         listItems: [],
         currentLevel: 0,
-        textBuffer: ''
+        textBuffer: '',
+        processedNodes: new WeakSet()  // 记录已处理的节点，避免重复
       };
       
       console.log('[KimiHtmlFormatter] TreeWalker创建完成，开始遍历节点...');
       
       let node;
       while (node = walker.nextNode()) {
+        // 跳过已处理的节点
+        if (context.processedNodes.has(node)) {
+          console.log(`[KimiHtmlFormatter] 跳过已处理节点:`, node.tagName);
+          continue;
+        }
+        
         nodeCount++;
         console.log(`[KimiHtmlFormatter] 处理节点 #${nodeCount}:`, {
           nodeType: node.nodeType,
@@ -54,23 +61,15 @@ class KimiHtmlFormatter extends HtmlFormatter {
           textContent: node.textContent?.substring(0, 50) + '...'
         });
         
-        if (node.nodeType === Node.TEXT_NODE) {
-          textNodeCount++;
-          const text = node.textContent?.trim();
-          if (text) {
-            console.log(`[KimiHtmlFormatter] 文本节点 #${textNodeCount}:`, text);
-            const processedHtml = this.processTextNode(text, context);
-            html += processedHtml;
-            console.log(`[KimiHtmlFormatter] 文本节点处理结果:`, processedHtml || '(空)');
-          } else {
-            console.log(`[KimiHtmlFormatter] 跳过空文本节点`);
-          }
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
           elementNodeCount++;
           console.log(`[KimiHtmlFormatter] 元素节点 #${elementNodeCount}:`, node.tagName, node.className);
           const processedHtml = this.processElementNode(node, context);
           html += processedHtml;
           console.log(`[KimiHtmlFormatter] 元素节点处理结果:`, processedHtml || '(空)');
+          
+          // 标记节点已处理
+          context.processedNodes.add(node);
         }
         
         // 输出当前上下文状态
@@ -267,6 +266,22 @@ class KimiHtmlFormatter extends HtmlFormatter {
       return this.processListItemElement(element, context);
     }
     
+    // 处理标题元素 (h1-h6)
+    if (/^H[1-6]$/.test(element.tagName)) {
+      console.log('[KimiHtmlFormatter] 处理标题元素:', element.tagName);
+      const text = element.textContent?.trim();
+      if (text) {
+        const level = element.tagName.toLowerCase();
+        console.log('[KimiHtmlFormatter] 标题文本:', text);
+        // 标记子节点已处理，避免重复
+        this.markChildrenAsProcessed(element, context);
+        const result = `<${level}>${this.escapeHtml(text)}</${level}>`;
+        console.log('[KimiHtmlFormatter] 标题元素结果:', result);
+        return result;
+      }
+      return '';
+    }
+    
     // 处理段落容器
     if (element.classList.contains('paragraph')) {
       console.log('[KimiHtmlFormatter] 处理段落容器');
@@ -285,12 +300,15 @@ class KimiHtmlFormatter extends HtmlFormatter {
       const text = element.textContent?.trim();
       if (text) {
         console.log('[KimiHtmlFormatter] 强调元素文本:', text);
+        // 标记子节点已处理，避免重复
+        this.markChildrenAsProcessed(element, context);
         const result = `<strong>${this.escapeHtml(text)}</strong>`;
         console.log('[KimiHtmlFormatter] 强调元素结果:', result);
         return result;
       } else {
         console.log('[KimiHtmlFormatter] 强调元素无文本内容');
       }
+      return '';
     }
     
     // 处理斜体元素
@@ -299,12 +317,15 @@ class KimiHtmlFormatter extends HtmlFormatter {
       const text = element.textContent?.trim();
       if (text) {
         console.log('[KimiHtmlFormatter] 斜体元素文本:', text);
+        // 标记子节点已处理，避免重复
+        this.markChildrenAsProcessed(element, context);
         const result = `<em>${this.escapeHtml(text)}</em>`;
         console.log('[KimiHtmlFormatter] 斜体元素结果:', result);
         return result;
       } else {
         console.log('[KimiHtmlFormatter] 斜体元素无文本内容');
       }
+      return '';
     }
     
     // 处理代码元素
@@ -313,12 +334,15 @@ class KimiHtmlFormatter extends HtmlFormatter {
       const text = element.textContent?.trim();
       if (text) {
         console.log('[KimiHtmlFormatter] 代码元素文本:', text);
+        // 标记子节点已处理，避免重复
+        this.markChildrenAsProcessed(element, context);
         const result = `<code>${this.escapeHtml(text)}</code>`;
         console.log('[KimiHtmlFormatter] 代码元素结果:', result);
         return result;
       } else {
         console.log('[KimiHtmlFormatter] 代码元素无文本内容');
       }
+      return '';
     }
     
     // 处理预格式化文本
@@ -519,9 +543,9 @@ class KimiHtmlFormatter extends HtmlFormatter {
       console.log(`[KimiHtmlFormatter] 处理列表项子元素: ${child.tagName}, 类名: ${child.className}`);
       
       if (child.classList.contains('paragraph')) {
-        // 直接提取段落内容，不包装在额外的标签中
-        console.log('[KimiHtmlFormatter] 处理段落容器');
-        const content = this.processParagraphContainer(child, context);
+        // 在列表项中，不需要额外的<p>标签
+        console.log('[KimiHtmlFormatter] 处理列表项中的段落容器');
+        const content = this.processParagraphContentForListItem(child, context);
         html += content;
         console.log('[KimiHtmlFormatter] 段落内容:', content.substring(0, 50) + '...');
       } else if (child.tagName === 'OL' || child.tagName === 'UL') {
@@ -552,6 +576,38 @@ class KimiHtmlFormatter extends HtmlFormatter {
   processParagraphContainer(element, context) {
     console.log('[KimiHtmlFormatter] 处理段落容器');
     
+    let html = '<p>';
+    
+    // 处理段落内的内容
+    for (const child of element.childNodes) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.textContent?.trim();
+        if (text) {
+          html += this.escapeHtml(text);
+        }
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        // 避免重复处理已处理的节点
+        if (!context.processedNodes.has(child)) {
+          html += this.processElementNode(child, context);
+          context.processedNodes.add(child);
+        }
+      }
+    }
+    
+    html += '</p>';
+    console.log('[KimiHtmlFormatter] 段落容器处理完成');
+    return html;
+  }
+  
+  /**
+   * 处理列表项中的段落内容（不添加<p>标签）
+   * @param {HTMLElement} element - 段落容器元素
+   * @param {Object} context - 上下文对象
+   * @returns {string} 处理后的HTML内容
+   */
+  processParagraphContentForListItem(element, context) {
+    console.log('[KimiHtmlFormatter] 处理列表项中的段落内容');
+    
     let html = '';
     
     // 处理段落内的内容
@@ -562,12 +618,36 @@ class KimiHtmlFormatter extends HtmlFormatter {
           html += this.escapeHtml(text);
         }
       } else if (child.nodeType === Node.ELEMENT_NODE) {
-        html += this.processElementNode(child, context);
+        // 避免重复处理已处理的节点
+        if (!context.processedNodes.has(child)) {
+          const processedHtml = this.processElementNode(child, context);
+          html += processedHtml;
+          context.processedNodes.add(child);
+        }
       }
     }
     
-    console.log('[KimiHtmlFormatter] 段落容器处理完成');
+    console.log('[KimiHtmlFormatter] 列表项段落内容处理完成');
     return html;
+  }
+
+  /**
+   * 标记元素的所有子节点为已处理
+   * @param {HTMLElement} element - 父元素
+   * @param {Object} context - 处理上下文
+   */
+  markChildrenAsProcessed(element, context) {
+    const walker = document.createTreeWalker(
+      element,
+      NodeFilter.SHOW_ELEMENT,
+      null,
+      false
+    );
+    
+    let node;
+    while (node = walker.nextNode()) {
+      context.processedNodes.add(node);
+    }
   }
 }
 

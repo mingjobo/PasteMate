@@ -50,16 +50,27 @@ class ClipboardManager {
       await this.initializeFormatterManager();
       console.log('[ClipboardManager] ✅ 格式化管理器已初始化');
       
-      // 使用统一文本格式化系统
-      console.log('[ClipboardManager] 🔥 开始统一文本格式化！！！');
-      const unifiedText = await this.formatUnifiedText(element);
-      console.log('[ClipboardManager] ✅ 统一文本格式化完成 unifiedText.length=', unifiedText.length, '内容片段：', unifiedText.substring(0, 200));
-      console.log('[ClipboardManager] 格式化结果长度:', unifiedText.length);
-      console.log('[ClipboardManager] 格式化结果预览:', unifiedText.substring(0, 500) + '...');
+      // 使用格式化管理器获取HTML格式
+      console.log('[ClipboardManager] 🔥 开始HTML格式化！！！');
+      await this.initializeFormatterManager();
+      const hostname = this.detectWebsite();
+      const formattedHtml = await this.formatterManager.formatForWord(element, hostname);
+      console.log('[ClipboardManager] ✅ HTML格式化完成 html.length=', formattedHtml.length);
+      
+      // 同时准备纯文本版本（作为降级方案）
+      const plainText = this.convertHtmlToPlainText(formattedHtml);
+      console.log('[ClipboardManager] 纯文本版本长度:', plainText.length);
 
       console.log('[ClipboardManager] 创建剪贴板数据...');
-      const blobText = new Blob([unifiedText], { type: 'text/plain' });
+      
+      // 创建HTML blob（Word可以识别）
+      const blobHtml = new Blob([formattedHtml], { type: 'text/html' });
+      // 创建纯文本blob（降级方案）
+      const blobText = new Blob([plainText], { type: 'text/plain' });
+      
+      // 同时提供HTML和纯文本格式
       const clipboardItem = new window.ClipboardItem({
+        'text/html': blobHtml,
         'text/plain': blobText
       });
       
@@ -148,9 +159,34 @@ class ClipboardManager {
   }
 
   /**
+   * 将HTML转换为纯文本（作为降级方案）
+   * @param {string} html - HTML字符串
+   * @returns {string} 纯文本格式
+   */
+  static convertHtmlToPlainText(html) {
+    console.log('[ClipboardManager] 开始HTML到纯文本转换...');
+    
+    // 创建临时DOM元素来解析HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // 使用innerText获取格式化的纯文本
+    let plainText = tempDiv.innerText || tempDiv.textContent || '';
+    
+    // 清理多余的空白
+    plainText = plainText
+      .replace(/\n\s*\n\s*\n/g, '\n\n')  // 最多保留两个连续换行
+      .trim();
+    
+    console.log('[ClipboardManager] HTML到纯文本转换完成');
+    return plainText;
+  }
+
+  /**
    * 将HTML转换为统一文本格式（Word和WPS兼容）
    * @param {string} html - HTML字符串
    * @returns {string} 统一文本格式
+   * @deprecated 已被convertHtmlToPlainText替代
    */
   static convertHtmlToUnifiedText(html) {
     console.log('[ClipboardManager] 开始HTML到统一文本转换...');
