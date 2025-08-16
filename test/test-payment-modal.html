@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>付费弹窗测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .test-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 10px 10px 0;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #1565c0;
+        }
+        .sample-content {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>付费弹窗测试页面</h1>
+    
+    <div class="test-section">
+        <h2>1. 基础功能测试</h2>
+        <p>点击下面的按钮测试付费弹窗的不同状态：</p>
+        <button class="test-button" onclick="testWordDownload()">测试 Word 下载弹窗</button>
+        <button class="test-button" onclick="testPdfDownload()">测试 PDF 下载弹窗</button>
+        <button class="test-button" onclick="testModalStates()">测试弹窗状态切换</button>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 样本内容</h2>
+        <p>这是一个模拟的AI回复内容，用于测试下载功能：</p>
+        <div class="sample-content" id="sampleContent">
+            <h3>如何学习JavaScript？</h3>
+            <p>JavaScript是一门非常实用的编程语言。以下是一些学习建议：</p>
+            <ol>
+                <li><strong>基础语法</strong>：先掌握变量、函数、循环等基本概念</li>
+                <li><strong>DOM操作</strong>：学习如何操作网页元素</li>
+                <li><strong>异步编程</strong>：理解Promise、async/await等概念</li>
+                <li><strong>实践项目</strong>：通过实际项目巩固知识</li>
+            </ol>
+            <pre><code>// 示例代码
+function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+</code></pre>
+            <p>记住，学习编程需要<em>持续练习</em>和<strong>耐心</strong>。</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 测试日志</h2>
+        <div class="log" id="testLog">测试日志将显示在这里...</div>
+        <button class="test-button" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <!-- 模拟chrome扩展环境 -->
+    <script>
+        // 模拟chrome.runtime.getURL
+        window.chrome = {
+            runtime: {
+                getURL: function(path) {
+                    // 返回相对路径，因为在测试环境中
+                    return '../assets/' + path.replace('assets/', '');
+                }
+            }
+        };
+
+        // 日志函数
+        function log(message) {
+            const logElement = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('testLog').textContent = '';
+        }
+
+        // 模拟下载函数
+        async function mockExportToWord(content, filename, element, source) {
+            log(`开始导出Word文档: ${filename} (来源: ${source})`);
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    log(`Word文档导出完成: ${filename}`);
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        async function mockExportToPdf(content, filename, element) {
+            log(`开始导出PDF文档: ${filename}`);
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    log(`PDF文档导出完成: ${filename}`);
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        // 测试函数
+        function testWordDownload() {
+            log('测试Word下载弹窗...');
+            const sampleContent = document.getElementById('sampleContent');
+            if (window.PaymentModal) {
+                window.PaymentModal.showPaymentModal('word', async () => {
+                    await mockExportToWord(sampleContent, 'test.docx', sampleContent, 'test');
+                });
+            } else {
+                log('错误: PaymentModal未加载');
+            }
+        }
+
+        function testPdfDownload() {
+            log('测试PDF下载弹窗...');
+            const sampleContent = document.getElementById('sampleContent');
+            if (window.PaymentModal) {
+                window.PaymentModal.showPaymentModal('pdf', async () => {
+                    await mockExportToPdf(sampleContent, 'test.pdf', sampleContent);
+                });
+            } else {
+                log('错误: PaymentModal未加载');
+            }
+        }
+
+        function testModalStates() {
+            log('测试弹窗状态切换...');
+            if (window.PaymentModal) {
+                // 显示付费弹窗但不触发下载
+                window.PaymentModal.showPaymentModal('word', async () => {
+                    log('下载回调被触发（测试模式，不实际下载）');
+                });
+                log('弹窗已显示，可以手动测试状态切换');
+            } else {
+                log('错误: PaymentModal未加载');
+            }
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('页面加载完成');
+            
+            // 尝试加载PaymentModal
+            if (typeof PaymentModal !== 'undefined') {
+                log('PaymentModal已加载');
+            } else {
+                log('PaymentModal未找到，尝试动态加载...');
+                
+                // 动态加载PaymentModal
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.textContent = `
+                    import { PaymentModal } from '../src/PaymentModal.js';
+                    window.PaymentModal = new PaymentModal();
+                    console.log('PaymentModal动态加载完成');
+                    document.dispatchEvent(new CustomEvent('paymentModalLoaded'));
+                `;
+                document.head.appendChild(script);
+            }
+        });
+
+        // 监听PaymentModal加载完成事件
+        document.addEventListener('paymentModalLoaded', function() {
+            log('PaymentModal动态加载完成');
+        });
+    </script>
+</body>
+</html>

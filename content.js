@@ -2,6 +2,7 @@ import './src/ClipboardManager.js';
 import { CopyButton } from './src/CopyButton.js';
 import { DownloadWordButton } from './src/DownloadWordButton.js';
 import { DownloadPdfButton } from './src/DownloadPdfButton.js';
+import { PaymentModal } from './src/PaymentModal.js';
 import { exportToWord } from './src/export-to-word.js';
 import { exportToPdf } from './src/export-to-pdf.js';
 import { SUPPORTED_SITES } from './sites.js';
@@ -607,14 +608,20 @@ class ButtonInjector {
                     // 创建下载为 Word 按钮
                     const onDownloadWord = async (buttonContainer) => {
                         const aiContent = bubble;
-                        await exportToWord(aiContent, 'PureText.docx', bubble, 'deepseek');
+                        const paymentModal = window.PaymentModal;
+                        paymentModal.showPaymentModal('word', async () => {
+                            await exportToWord(aiContent, 'PureText.docx', bubble, 'deepseek');
+                        });
                     };
                     const wordBtn = DownloadWordButton.create(bubble, onDownloadWord);
                     
                     // 创建下载为 PDF 按钮
                     const onDownloadPdf = async (buttonContainer) => {
                         const aiContent = bubble;
-                        await exportToPdf(aiContent, 'PureText.pdf', bubble);
+                        const paymentModal = window.PaymentModal;
+                        paymentModal.showPaymentModal('pdf', async () => {
+                            await exportToPdf(aiContent, 'PureText.pdf', bubble);
+                        });
                     };
                     const pdfBtn = DownloadPdfButton.create(bubble, onDownloadPdf);
                     
@@ -868,7 +875,10 @@ class ButtonInjector {
             if (!segmentAssistant) return;
             const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
             if (!aiContent) return;
-            await exportToWord(aiContent, 'PureText.docx', aiContent, 'kimi');
+            const paymentModal = window.PaymentModal;
+            paymentModal.showPaymentModal('word', async () => {
+                await exportToWord(aiContent, 'PureText.docx', aiContent, 'kimi');
+            });
         };
         const wordBtn = DownloadWordButton.create(actionContainer, onDownloadWord);
         // 新增：下载为 PDF 按钮
@@ -877,7 +887,10 @@ class ButtonInjector {
             if (!segmentAssistant) return;
             const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
             if (!aiContent) return;
-            await exportToPdf(aiContent, 'PureText.pdf', aiContent);
+            const paymentModal = window.PaymentModal;
+            paymentModal.showPaymentModal('pdf', async () => {
+                await exportToPdf(aiContent, 'PureText.pdf', aiContent);
+            });
         };
         const pdfBtn = DownloadPdfButton.create(actionContainer, onDownloadPdf);
 
@@ -925,14 +938,20 @@ class ButtonInjector {
             if (!aiContent) return;
             const hostname = window.location.hostname;
             const source = hostname === 'www.kimi.com' ? 'kimi' : 'deepseek';
-            await exportToWord(aiContent, 'PureText.docx', aiContent, source);
+            const paymentModal = window.PaymentModal;
+            paymentModal.showPaymentModal('word', async () => {
+                await exportToWord(aiContent, 'PureText.docx', aiContent, source);
+            });
         };
         const wordBtn = DownloadWordButton.create(targetBubble, onDownloadWord);
         // 新增：下载为 PDF 按钮
         const onDownloadPdf = async (buttonContainer) => {
             const aiContent = this.findAIResponseContent(buttonContainer);
             if (!aiContent) return;
-            await exportToPdf(aiContent, 'PureText.pdf', aiContent);
+            const paymentModal = window.PaymentModal;
+            paymentModal.showPaymentModal('pdf', async () => {
+                await exportToPdf(aiContent, 'PureText.pdf', aiContent);
+            });
         };
         const pdfBtn = DownloadPdfButton.create(targetBubble, onDownloadPdf);
         // 创建按钮组容器
@@ -1149,6 +1168,7 @@ window.ClipboardManager = window.ClipboardManager;
 window.CopyButton = CopyButton;
 window.DownloadWordButton = DownloadWordButton;
 window.DownloadPdfButton = DownloadPdfButton;
+window.PaymentModal = window.PaymentModal;
 window.exportToWord = exportToWord;
 window.exportToPdf = exportToPdf;
 

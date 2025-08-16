@@ -64,7 +64,8 @@ try {
     'sites.js',
     'src',
     '_locales',
-    'icons'
+    'icons',
+    'assets'
   ];
 
   filesToCopy.forEach(file => {
@@ -72,7 +73,7 @@ try {
     const destPath = join(distDir, file);
 
     if (existsSync(srcPath)) {
-      if (file === '_locales' || file === 'icons' || file === 'src') {
+      if (file === '_locales' || file === 'icons' || file === 'src' || file === 'assets') {
         // Copy directories recursively
         copyDirectory(srcPath, destPath);
       } else {

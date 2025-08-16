@@ -25,5 +25,19 @@
     "32": "icons/pastemate_cute_32.png",
     "48": "icons/pastemate_cute_48.png",
     "128": "icons/pastemate_cute_128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/wechat_qr.png",
+        "assets/alipay_qr.png",
+        "assets/xhs_qr.png"
+      ],
+      "matches": [
+        "https://chat.deepseek.com/*",
+        "https://www.kimi.com/*",
+        "file://*/*"
+      ]
+    }
+  ]
 }
