@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一键纯文 - AI聊天文本提取浏览器扩展</title>
+    <meta name="description" content="轻量级浏览器扩展，为ChatGPT、DeepSeek、Kimi等AI聊天网站提供一键复制纯文本功能">
+    <link rel="icon" href="assets/icons/icon-128.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="assets/icons/icon-48.png" alt="Logo" class="nav-logo">
+                <span>一键纯文</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#features" class="nav-link">功能特性</a>
+                <a href="#install" class="nav-link">安装使用</a>
+                <a href="#support" class="nav-link">支持网站</a>
+                <a href="privacy.html" class="nav-link">隐私政策</a>
+                <a href="https://github.com/your-username/PureTextOne-Click" class="nav-link" target="_blank">GitHub</a>
+            </div>
+            <div class="nav-lang">
+                <select id="langSwitch" onchange="toggleLanguage()">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主页横幅 -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="lang-zh">一键纯文 (PureText One-Click)</span>
+                    <span class="lang-en" style="display:none;">PureText One-Click</span>
+                </h1>
+                <p class="hero-subtitle">
+                    <span class="lang-zh">轻量级浏览器扩展，为 AI 聊天网站提供一键复制纯文本功能</span>
+                    <span class="lang-en" style="display:none;">A lightweight browser extension for one-click plain text copying from AI chat websites</span>
+                </p>
+                <div class="hero-buttons">
+                    <a href="#install" class="btn btn-primary">
+                        <span class="lang-zh">立即安装</span>
+                        <span class="lang-en" style="display:none;">Install Now</span>
+                    </a>
+                    <a href="https://github.com/your-username/PureTextOne-Click" class="btn btn-secondary" target="_blank">
+                        <span class="lang-zh">查看源码</span>
+                        <span class="lang-en" style="display:none;">View Source</span>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="assets/icons/icon-128.png" alt="Extension Icon">
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能特性 -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="lang-zh">🌟 功能特性</span>
+                <span class="lang-en" style="display:none;">🌟 Features</span>
+            </h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3 class="lang-zh">一键复制</h3>
+                    <h3 class="lang-en" style="display:none;">One-Click Copy</h3>
+                    <p class="lang-zh">在 AI 聊天回复中自动添加复制按钮，一键获取纯文本</p>
+                    <p class="lang-en" style="display:none;">Automatically adds copy buttons to AI chat responses</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✨</div>
+                    <h3 class="lang-zh">纯文本提取</h3>
+                    <h3 class="lang-en" style="display:none;">Plain Text Extraction</h3>
+                    <p class="lang-zh">自动去除 Markdown 格式和 HTML 标签，保留纯净文本</p>
+                    <p class="lang-en" style="display:none;">Removes Markdown and HTML tags automatically</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3 class="lang-zh">多网站支持</h3>
+                    <h3 class="lang-en" style="display:none;">Multi-Site Support</h3>
+                    <p class="lang-zh">支持 ChatGPT、DeepSeek、Kimi、豆包等主流 AI 平台</p>
+                    <p class="lang-en" style="display:none;">Works with ChatGPT, DeepSeek, Kimi, and more</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3 class="lang-zh">跨浏览器兼容</h3>
+                    <h3 class="lang-en" style="display:none;">Cross-Browser</h3>
+                    <p class="lang-zh">支持 Chrome、Edge、Firefox (Manifest V3)</p>
+                    <p class="lang-en" style="display:none;">Compatible with Chrome, Edge, Firefox</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3 class="lang-zh">国际化支持</h3>
+                    <h3 class="lang-en" style="display:none;">Internationalization</h3>
+                    <p class="lang-zh">支持中英文界面，自动适配系统语言</p>
+                    <p class="lang-en" style="display:none;">Supports Chinese and English interfaces</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="lang-zh">轻量高效</h3>
+                    <h3 class="lang-en" style="display:none;">Lightweight</h3>
+                    <p class="lang-zh">无外部依赖，性能优化，快速响应</p>
+                    <p class="lang-en" style="display:none;">No external dependencies, optimized performance</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 支持的网站 -->
+    <section id="support" class="support">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="lang-zh">🚀 支持的网站</span>
+                <span class="lang-en" style="display:none;">🚀 Supported Websites</span>
+            </h2>
+            <div class="table-wrapper">
+                <table class="support-table">
+                    <thead>
+                        <tr>
+                            <th class="lang-zh">网站</th>
+                            <th class="lang-en" style="display:none;">Website</th>
+                            <th class="lang-zh">域名</th>
+                            <th class="lang-en" style="display:none;">Domain</th>
+                            <th class="lang-zh">状态</th>
+                            <th class="lang-en" style="display:none;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ChatGPT</td>
+                            <td>chat.openai.com</td>
+                            <td><span class="status-badge status-active">✅</span></td>
+                        </tr>
+                        <tr>
+                            <td>DeepSeek</td>
+                            <td>chat.deepseek.com</td>
+                            <td><span class="status-badge status-active">✅</span></td>
+                        </tr>
+                        <tr>
+                            <td class="lang-zh">豆包</td>
+                            <td class="lang-en" style="display:none;">Doubao</td>
+                            <td>www.doubao.com</td>
+                            <td><span class="status-badge status-active">✅</span></td>
+                        </tr>
+                        <tr>
+                            <td>Kimi</td>
+                            <td>www.kimi.com</td>
+                            <td><span class="status-badge status-active">✅</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 安装方法 -->
+    <section id="install" class="install">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="lang-zh">📦 安装方法</span>
+                <span class="lang-en" style="display:none;">📦 Installation</span>
+            </h2>
+            
+            <div class="install-methods">
+                <div class="install-card">
+                    <h3>
+                        <span class="lang-zh">从源码安装</span>
+                        <span class="lang-en" style="display:none;">Install from Source</span>
+                    </h3>
+                    <ol class="install-steps">
+                        <li>
+                            <span class="lang-zh">克隆仓库</span>
+                            <span class="lang-en" style="display:none;">Clone Repository</span>
+                            <pre><code>git clone https://github.com/your-username/PureTextOne-Click.git
+cd PureTextOne-Click</code></pre>
+                        </li>
+                        <li>
+                            <span class="lang-zh">安装依赖</span>
+                            <span class="lang-en" style="display:none;">Install Dependencies</span>
+                            <pre><code>npm install</code></pre>
+                        </li>
+                        <li>
+                            <span class="lang-zh">构建扩展</span>
+                            <span class="lang-en" style="display:none;">Build Extension</span>
+                            <pre><code>npm run build</code></pre>
+                        </li>
+                        <li>
+                            <span class="lang-zh">加载到浏览器</span>
+                            <span class="lang-en" style="display:none;">Load in Browser</span>
+                            <div class="browser-instructions">
+                                <div class="browser-item">
+                                    <strong>Chrome/Edge:</strong>
+                                    <ul>
+                                        <li class="lang-zh">打开 chrome://extensions/ 或 edge://extensions/</li>
+                                        <li class="lang-en" style="display:none;">Open chrome://extensions/ or edge://extensions/</li>
+                                        <li class="lang-zh">启用"开发者模式"</li>
+                                        <li class="lang-en" style="display:none;">Enable "Developer mode"</li>
+                                        <li class="lang-zh">点击"加载已解压的扩展程序"</li>
+                                        <li class="lang-en" style="display:none;">Click "Load unpacked"</li>
+                                        <li class="lang-zh">选择 dist 文件夹</li>
+                                        <li class="lang-en" style="display:none;">Select dist folder</li>
+                                    </ul>
+                                </div>
+                                <div class="browser-item">
+                                    <strong>Firefox:</strong>
+                                    <ul>
+                                        <li class="lang-zh">打开 about:debugging</li>
+                                        <li class="lang-en" style="display:none;">Open about:debugging</li>
+                                        <li class="lang-zh">点击"此 Firefox"</li>
+                                        <li class="lang-en" style="display:none;">Click "This Firefox"</li>
+                                        <li class="lang-zh">点击"临时载入附加组件"</li>
+                                        <li class="lang-en" style="display:none;">Click "Load Temporary Add-on"</li>
+                                        <li class="lang-zh">选择 dist/manifest.json</li>
+                                        <li class="lang-en" style="display:none;">Select dist/manifest.json</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="install-card">
+                    <h3>
+                        <span class="lang-zh">从扩展商店安装</span>
+                        <span class="lang-en" style="display:none;">Install from Store</span>
+                    </h3>
+                    <p class="coming-soon">
+                        <span class="lang-zh">🔜 即将上线</span>
+                        <span class="lang-en" style="display:none;">🔜 Coming Soon</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 开发指南 -->
+    <section class="development">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="lang-zh">🛠️ 开发指南</span>
+                <span class="lang-en" style="display:none;">🛠️ Development Guide</span>
+            </h2>
+            
+            <div class="dev-content">
+                <div class="dev-section">
+                    <h3>
+                        <span class="lang-zh">开发命令</span>
+                        <span class="lang-en" style="display:none;">Development Commands</span>
+                    </h3>
+                    <pre><code># 运行测试 / Run tests
+npm test
+
+# 监听测试 / Watch tests
+npm run test:watch
+
+# 生成覆盖率报告 / Generate coverage report
+npm run test:coverage
+
+# 构建扩展 / Build extension
+npm run build
+
+# 打包发布 / Package for release
+npm run package</code></pre>
+                </div>
+
+                <div class="dev-section">
+                    <h3>
+                        <span class="lang-zh">技术栈</span>
+                        <span class="lang-en" style="display:none;">Tech Stack</span>
+                    </h3>
+                    <ul class="tech-list">
+                        <li>JavaScript (ES6+)</li>
+                        <li>esbuild & webpack</li>
+                        <li>Vitest + jsdom</li>
+                        <li>Manifest V3</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>
+                        <span class="lang-zh">项目</span>
+                        <span class="lang-en" style="display:none;">Project</span>
+                    </h4>
+                    <ul>
+                        <li><a href="https://github.com/your-username/PureTextOne-Click" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/your-username/PureTextOne-Click/issues" target="_blank">
+                            <span class="lang-zh">问题反馈</span>
+                            <span class="lang-en" style="display:none;">Issues</span>
+                        </a></li>
+                        <li><a href="privacy.html">
+                            <span class="lang-zh">隐私政策</span>
+                            <span class="lang-en" style="display:none;">Privacy Policy</span>
+                        </a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>
+                        <span class="lang-zh">支持</span>
+                        <span class="lang-en" style="display:none;">Support</span>
+                    </h4>
+                    <ul>
+                        <li><a href="#install">
+                            <span class="lang-zh">安装指南</span>
+                            <span class="lang-en" style="display:none;">Installation Guide</span>
+                        </a></li>
+                        <li><a href="https://github.com/your-username/PureTextOne-Click/blob/main/CLAUDE.md" target="_blank">
+                            <span class="lang-zh">开发文档</span>
+                            <span class="lang-en" style="display:none;">Documentation</span>
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 PureText One-Click. MIT License.</p>
+                <p>Made with ❤️ for the AI community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 语言切换功能
+        function toggleLanguage() {
+            const lang = document.getElementById('langSwitch').value;
+            const zhElements = document.querySelectorAll('.lang-zh');
+            const enElements = document.querySelectorAll('.lang-en');
+            
+            if (lang === 'en') {
+                zhElements.forEach(el => el.style.display = 'none');
+                enElements.forEach(el => el.style.display = 'block');
+            } else {
+                zhElements.forEach(el => el.style.display = 'block');
+                enElements.forEach(el => el.style.display = 'none');
+            }
+            
+            // 更新页面语言属性
+            document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+        }
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
