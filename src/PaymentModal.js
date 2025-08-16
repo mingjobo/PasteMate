@@ -174,14 +174,14 @@ class PaymentModal {
                     <div class="xhs-qr">
                         <img src="${chrome.runtime.getURL('assets/xhs_qr.png')}" alt="小红书二维码" width="160" height="160">
                         <p>用小红书扫码关注</p>
-                        <p>小红书：@你的账号</p>
-                        <button class="xhs-link-btn" type="button">去主页</button>
+                       
+                       
                     </div>
                 </div>
                 
                 <div class="contact-section">
                     <div class="email-section">
-                        <span class="email-text">support@example.com</span>
+                        <span class="email-text">support@evedo.run</span>
                         <button class="copy-email-btn" type="button">复制</button>
                     </div>
                     <p class="contact-tip">有问题随时找我～</p>
