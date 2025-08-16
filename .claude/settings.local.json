@@ -4,8 +4,27 @@
       "Bash(grep:*)",
       "Bash(npm run build:*)",
       "Bash(node:*)",
-      "Bash(npm run package:*)"
+      "Bash(npm run package:*)",
+      "Bash(npm install)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "Bash(unzip:*)",
+      "Bash(npm run webpack:*)",
+      "Bash(npx webpack:*)",
+      "Bash(npm install:*)",
+      "Bash(test:*)",
+      "WebFetch(domain:ds.rick216.cn)",
+      "Bash(touch:*)",
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run clean:*)",
+      "Bash(true)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

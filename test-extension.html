@@ -3,164 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PureText 扩展测试页面</title>
+    <title>PureText Extension Test</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 50px auto;
             padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .test-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .ai-response {
-            background: #f8f9fa;
-            border-left: 4px solid #007bff;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        .ai-response[data-role="assistant"] {
-            background: #e3f2fd;
-            border-left-color: #2196f3;
-        }
-        .markdown {
             line-height: 1.6;
         }
-        .markdown h3 {
-            color: #333;
-            margin-top: 0;
-        }
-        .markdown p {
-            margin: 10px 0;
-        }
-        .markdown ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        .markdown li {
-            margin: 5px 0;
-        }
-        .segment-content-box {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        .segment-assistant-actions-content {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-        .segment-assistant-actions-content button {
-            padding: 8px 16px;
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
             border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
             border-radius: 4px;
-            background: white;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
             cursor: pointer;
         }
-        .segment-assistant-actions-content button:hover {
-            background: #f0f0f0;
+        button:hover {
+            background: #0056b3;
         }
+        #console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 2px 0;
+        }
+        .log-error { color: #f48771; }
+        .log-warn { color: #dcdcaa; }
+        .log-info { color: #9cdcfe; }
+        .log-debug { color: #b5cea8; }
     </style>
 </head>
 <body>
-    <h1>PureText 扩展测试页面</h1>
+    <h1>🧪 PureText Extension 测试页面</h1>
     
-    <div class="test-container">
-        <h2>测试说明</h2>
-        <p>这个页面模拟了各种AI聊天网站的界面，用于测试PureText扩展的功能。</p>
-        <p>请确保已经安装了PureText扩展，然后刷新页面查看按钮是否正确显示。</p>
+    <div class="test-section">
+        <h2>浏览器信息</h2>
+        <div id="browser-info"></div>
     </div>
 
-    <!-- ChatGPT 风格测试 -->
-    <div class="test-container">
-        <h2>ChatGPT 风格测试</h2>
-        <div class="ai-response" data-message-author-role="assistant">
-            <div class="markdown prose">
-                <h3>这是一个测试回复</h3>
-                <p>这是ChatGPT风格的AI回复内容。PureText扩展应该能够识别这种格式并添加相应的按钮。</p>
+    <div class="test-section">
+        <h2>扩展加载测试</h2>
+        <button onclick="testExtensionLoad()">测试扩展加载</button>
+        <button onclick="checkContentScript()">检查Content Script</button>
+        <button onclick="simulateAIResponse()">模拟AI回复</button>
+        <div id="extension-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>功能测试</h2>
+        <button onclick="testClipboard()">测试剪贴板功能</button>
+        <button onclick="testButtonInjection()">测试按钮注入</button>
+        <div id="function-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>模拟AI回复内容</h2>
+        <div class="segment-content-box" style="padding: 15px; background: #f9f9f9; border-radius: 8px;">
+            <div class="markdown-container">
+                <h3>这是一个测试AI回复</h3>
+                <p>这是AI生成的内容，用于测试扩展功能。</p>
                 <ul>
-                    <li>支持复制功能</li>
-                    <li>支持导出为Word文档</li>
-                    <li>支持导出为PDF文件</li>
+                    <li>项目1</li>
+                    <li>项目2</li>
+                    <li>项目3</li>
                 </ul>
+                <pre><code>// 示例代码
+function test() {
+    console.log("Hello World");
+}</code></pre>
             </div>
         </div>
+        <div id="injection-target"></div>
     </div>
 
-    <!-- DeepSeek 风格测试 -->
-    <div class="test-container">
-        <h2>DeepSeek 风格测试</h2>
-        <div class="ai-response" data-role="assistant">
-            <div class="ds-markdown ds-markdown--block">
-                <h3>DeepSeek测试回复</h3>
-                <p>这是DeepSeek风格的AI回复内容。扩展应该能够识别ds-markdown类名。</p>
-                <p>这里包含一些<strong>格式化文本</strong>和<em>斜体文本</em>。</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Kimi 风格测试 -->
-    <div class="test-container">
-        <h2>Kimi 风格测试</h2>
-        <div class="ai-response" data-role="assistant">
-            <div class="segment-content-box">
-                <div class="markdown-container">
-                    <h3>Kimi测试回复</h3>
-                    <p>这是Kimi风格的AI回复内容。扩展应该能够识别segment-content-box类名。</p>
-                    <p>这里有一些代码示例：</p>
-                    <pre><code>console.log("Hello, World!");</code></pre>
-                </div>
-            </div>
-            <div class="segment-assistant-actions-content">
-                <button>原始操作按钮1</button>
-                <button>原始操作按钮2</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 豆包风格测试 -->
-    <div class="test-container">
-        <h2>豆包风格测试</h2>
-        <div class="ai-response">
-            <div class="dialogue-text assistant">
-                <h3>豆包测试回复</h3>
-                <p>这是豆包风格的AI回复内容。扩展应该能够识别dialogue-text assistant类名。</p>
-                <p>这里包含一些<strong>重要信息</strong>和<em>注意事项</em>。</p>
-            </div>
-        </div>
+    <div class="test-section">
+        <h2>控制台输出</h2>
+        <div id="console-output"></div>
     </div>
 
     <script>
-        // 模拟扩展加载
-        console.log('测试页面加载完成');
-        console.log('请检查浏览器控制台是否有PureText扩展的日志信息');
+        // 保存原始console方法
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info,
+            debug: console.debug
+        };
+
+        // 拦截console输出
+        const consoleOutput = document.getElementById('console-output');
         
-        // 检查扩展是否加载
-        setTimeout(() => {
-            if (window.html2pdf) {
-                console.log('✅ html2pdf 已加载');
-            } else {
-                console.log('❌ html2pdf 未加载');
+        function logToPage(type, ...args) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${args.join(' ')}`;
+            consoleOutput.appendChild(entry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            
+            // 同时输出到真实控制台
+            originalConsole[type](...args);
+        }
+
+        console.log = (...args) => logToPage('info', ...args);
+        console.error = (...args) => logToPage('error', ...args);
+        console.warn = (...args) => logToPage('warn', ...args);
+        console.info = (...args) => logToPage('info', ...args);
+        console.debug = (...args) => logToPage('debug', ...args);
+
+        // 显示浏览器信息
+        function showBrowserInfo() {
+            const info = document.getElementById('browser-info');
+            const userAgent = navigator.userAgent;
+            let browserName = 'Unknown';
+            let browserVersion = '';
+            
+            if (userAgent.includes('Edg/')) {
+                browserName = 'Microsoft Edge';
+                browserVersion = userAgent.match(/Edg\/([\d.]+)/)?.[1] || '';
+            } else if (userAgent.includes('Chrome/')) {
+                browserName = 'Google Chrome';
+                browserVersion = userAgent.match(/Chrome\/([\d.]+)/)?.[1] || '';
+            } else if (userAgent.includes('Firefox/')) {
+                browserName = 'Mozilla Firefox';
+                browserVersion = userAgent.match(/Firefox\/([\d.]+)/)?.[1] || '';
             }
             
-            if (typeof SUPPORTED_SITES !== 'undefined') {
-                console.log('✅ SUPPORTED_SITES 已定义');
-                console.log('支持的站点:', Object.keys(SUPPORTED_SITES));
-            } else {
-                console.log('❌ SUPPORTED_SITES 未定义');
+            info.innerHTML = `
+                <div class="status info">
+                    <strong>浏览器:</strong> ${browserName} ${browserVersion}<br>
+                    <strong>User Agent:</strong> ${userAgent}<br>
+                    <strong>平台:</strong> ${navigator.platform}<br>
+                    <strong>语言:</strong> ${navigator.language}
+                </div>
+            `;
+        }
+
+        // 测试扩展加载
+        function testExtensionLoad() {
+            const status = document.getElementById('extension-status');
+            console.log('开始测试扩展加载...');
+            
+            // 检查是否存在扩展注入的全局变量或类
+            const checks = [
+                { name: 'PURETEXT_DEBUG_LEVEL', exists: typeof window.PURETEXT_DEBUG_LEVEL !== 'undefined' },
+                { name: 'ClipboardManager', exists: typeof window.ClipboardManager !== 'undefined' },
+                { name: 'PureText按钮', exists: document.querySelector('.puretext-copy-btn') !== null }
+            ];
+            
+            let html = '<h3>扩展加载检查结果:</h3>';
+            checks.forEach(check => {
+                const statusClass = check.exists ? 'success' : 'error';
+                const statusText = check.exists ? '✅ 已加载' : '❌ 未检测到';
+                html += `<div class="status ${statusClass}">${check.name}: ${statusText}</div>`;
+                console.log(`${check.name}: ${statusText}`);
+            });
+            
+            status.innerHTML = html;
+        }
+
+        // 检查Content Script
+        function checkContentScript() {
+            const status = document.getElementById('extension-status');
+            console.log('检查Content Script...');
+            
+            // 尝试触发扩展的调试日志
+            if (typeof window.PURETEXT_DEBUG_LEVEL !== 'undefined') {
+                window.PURETEXT_DEBUG_LEVEL = 3; // 设置为DEBUG级别
+                console.log('已设置调试级别为DEBUG');
             }
-        }, 1000);
+            
+            // 检查是否有注入的元素
+            const injectedElements = document.querySelectorAll('[class*="puretext"]');
+            
+            status.innerHTML += `
+                <div class="status ${injectedElements.length > 0 ? 'success' : 'info'}">
+                    发现 ${injectedElements.length} 个扩展注入的元素
+                </div>
+            `;
+            
+            if (injectedElements.length > 0) {
+                console.log('找到注入元素:', injectedElements);
+            }
+        }
+
+        // 模拟AI回复
+        function simulateAIResponse() {
+            console.log('创建模拟AI回复...');
+            const target = document.getElementById('injection-target');
+            
+            // 模拟ChatGPT样式的回复
+            const mockResponse = document.createElement('div');
+            mockResponse.className = 'message-content';
+            mockResponse.innerHTML = `
+                <div style="padding: 20px; background: white; border: 1px solid #e5e5e5; border-radius: 8px; margin: 10px 0;">
+                    <p><strong>模拟的AI回复内容</strong></p>
+                    <p>这是一段模拟的AI回复文本，用于测试扩展的按钮注入功能。</p>
+                    <pre style="background: #f4f4f4; padding: 10px; border-radius: 4px;">
+function example() {
+    return "测试代码";
+}</pre>
+                </div>
+            `;
+            
+            target.appendChild(mockResponse);
+            console.log('已添加模拟AI回复，等待扩展注入按钮...');
+            
+            // 触发DOM变化，让扩展的MutationObserver检测到
+            setTimeout(() => {
+                const event = new Event('DOMNodeInserted', { bubbles: true });
+                mockResponse.dispatchEvent(event);
+            }, 100);
+        }
+
+        // 测试剪贴板功能
+        async function testClipboard() {
+            const status = document.getElementById('function-status');
+            console.log('测试剪贴板功能...');
+            
+            try {
+                // 测试剪贴板权限
+                const permission = await navigator.permissions.query({ name: 'clipboard-write' });
+                console.log('剪贴板权限状态:', permission.state);
+                
+                // 尝试写入剪贴板
+                const testText = '测试文本 - ' + new Date().toLocaleTimeString();
+                await navigator.clipboard.writeText(testText);
+                console.log('成功写入剪贴板:', testText);
+                
+                status.innerHTML = `
+                    <div class="status success">
+                        ✅ 剪贴板功能正常<br>
+                        权限状态: ${permission.state}<br>
+                        已写入: ${testText}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('剪贴板测试失败:', error);
+                status.innerHTML = `
+                    <div class="status error">
+                        ❌ 剪贴板测试失败: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 测试按钮注入
+        function testButtonInjection() {
+            const status = document.getElementById('function-status');
+            console.log('测试按钮注入功能...');
+            
+            // 查找所有注入的按钮
+            const buttons = document.querySelectorAll('.puretext-copy-btn, .puretext-button-container, .puretext-button-group');
+            
+            if (buttons.length > 0) {
+                console.log(`找到 ${buttons.length} 个注入的按钮`);
+                status.innerHTML = `
+                    <div class="status success">
+                        ✅ 找到 ${buttons.length} 个注入的按钮
+                    </div>
+                `;
+                
+                // 尝试点击第一个按钮
+                if (buttons[0]) {
+                    console.log('尝试触发按钮点击...');
+                    buttons[0].click();
+                }
+            } else {
+                console.log('未找到注入的按钮');
+                status.innerHTML = `
+                    <div class="status error">
+                        ❌ 未找到注入的按钮<br>
+                        请先运行"模拟AI回复"来创建测试内容
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时自动显示浏览器信息
+        window.addEventListener('DOMContentLoaded', () => {
+            showBrowserInfo();
+            console.log('测试页面已加载');
+            console.log('请点击各个测试按钮来检查扩展功能');
+            
+            // 延迟检查扩展是否加载
+            setTimeout(() => {
+                if (typeof window.PURETEXT_DEBUG_LEVEL === 'undefined') {
+                    console.warn('扩展可能未加载，请确保：');
+                    console.warn('1. 扩展已在浏览器中启用');
+                    console.warn('2. 在manifest.json中添加了 file://*/* 到content_scripts的matches');
+                    console.warn('3. 刷新页面重试');
+                }
+            }, 2000);
+        });
     </script>
 </body>
-</html> 
+</html>
