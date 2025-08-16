@@ -1,4 +1,4 @@
-# 一键纯文 (PureText One-Click)
+# 贴伴 (PasteMate)
 
 一个轻量级的浏览器扩展，为 AI 聊天网站提供一键复制纯文本功能。
 
@@ -37,8 +37,8 @@ A lightweight browser extension that provides one-click plain text copying for A
 
 1. **克隆仓库 / Clone Repository**
    ```bash
-   git clone https://github.com/your-username/puretext-copy-extension.git
-   cd puretext-copy-extension
+   git clone https://github.com/mingjobo/PureTextOne-Click.git
+   cd PureTextOne-Click
    ```
 
 2. **安装依赖 / Install Dependencies**
@@ -74,7 +74,7 @@ A lightweight browser extension that provides one-click plain text copying for A
 ### 项目结构 / Project Structure
 
 ```
-puretext-copy-extension/
+PureTextOne-Click/
 ├── src/                    # 源代码 / Source code
 │   └── ClipboardManager.js # 剪贴板管理 / Clipboard management
 ├── _locales/              # 国际化文件 / Localization files
@@ -173,7 +173,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 如果您遇到问题或有建议，请：
 
-- 提交 [GitHub Issue](https://github.com/your-username/puretext-copy-extension/issues)
+- 提交 [GitHub Issue](https://github.com/your-username/PureTextOne-Click/issues)
 - 查看 [FAQ](docs/FAQ.md)
 - 阅读 [故障排除指南](docs/TROUBLESHOOTING.md)
 
