@@ -263,9 +263,6 @@ class ContentCleaner {
             case 'chat.deepseek.com':
                 this.cleanDeepSeekRecommendedQuestions(element);
                 break;
-            case 'chat.openai.com':
-                this.cleanChatGPTRecommendedQuestions(element);
-                break;
             default:
                 // 通用清理已经在上面完成
                 break;
@@ -302,25 +299,6 @@ class ContentCleaner {
         // 通常DeepSeek的推荐问题较少，主要依赖通用清理
     }
 
-    /**
-     * 清理ChatGPT网站的推荐问题
-     * @param {HTMLElement} element - DOM元素
-     */
-    cleanChatGPTRecommendedQuestions(element) {
-        // ChatGPT特有的推荐问题容器
-        const chatgptQuestionSelectors = [
-            '[data-testid*="suggestion"]',
-            '.suggestion',
-            '[class*="follow-up"]'
-        ];
-
-        chatgptQuestionSelectors.forEach(selector => {
-            element.querySelectorAll(selector).forEach(el => {
-                console.debug('[ContentCleaner] Removing ChatGPT question container:', selector);
-                el.remove();
-            });
-        });
-    }
 
     /**
      * 移除导航和菜单元素
@@ -519,11 +497,6 @@ class ContentCleaner {
             element.querySelectorAll('[class*="action"], [class*="toolbar"]').forEach(el => el.remove());
         });
 
-        // ChatGPT网站特定规则
-        this.registerCleaningRule('chat.openai.com', (element) => {
-            // 移除ChatGPT特有的界面元素
-            element.querySelectorAll('[data-testid*="action"], .prose-controls').forEach(el => el.remove());
-        });
     }
 
     /**

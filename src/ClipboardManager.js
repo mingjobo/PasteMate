@@ -319,8 +319,6 @@ class ClipboardManager {
       'kimi.com': 'www.kimi.com',
       'chat.deepseek.com': 'chat.deepseek.com',
       'deepseek.com': 'chat.deepseek.com',
-      'chatgpt.com': 'chatgpt.com',
-      'chat.openai.com': 'chatgpt.com'
     };
     
     const mappedHostname = siteMapping[normalizedHostname] || normalizedHostname;

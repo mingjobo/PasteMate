@@ -17,10 +17,6 @@ export class UserQuestionExtractor {
           return this.getDeepSeekUserQuestion(aiResponseElement);
         case 'www.kimi.com':
           return this.getKimiUserQuestion(aiResponseElement);
-        case 'chat.openai.com':
-          return this.getChatGPTUserQuestion(aiResponseElement);
-        case 'www.doubao.com':
-          return this.getDoubaoUserQuestion(aiResponseElement);
         default:
           return this.getGenericUserQuestion(aiResponseElement);
       }
@@ -87,53 +83,6 @@ export class UserQuestionExtractor {
     return '';
   }
 
-  /**
-   * 获取ChatGPT用户问题
-   */
-  static getChatGPTUserQuestion(aiResponseElement) {
-    // 从AI回复元素向上查找对话容器
-    const conversationContainer = aiResponseElement.closest('[data-testid="conversation-turn"]') ||
-                                aiResponseElement.closest('.conversation-turn');
-    
-    if (!conversationContainer) {
-      return '';
-    }
-
-    // 查找用户消息元素
-    const userMessage = conversationContainer.querySelector('[data-testid="user-message"]') ||
-                       conversationContainer.querySelector('.user-message');
-    
-    if (userMessage) {
-      const questionText = userMessage.textContent?.trim() || '';
-      return this.cleanQuestionText(questionText);
-    }
-
-    return '';
-  }
-
-  /**
-   * 获取豆包用户问题
-   */
-  static getDoubaoUserQuestion(aiResponseElement) {
-    // 从AI回复元素向上查找对话容器
-    const conversationContainer = aiResponseElement.closest('.conversation-item') ||
-                                aiResponseElement.closest('.chat-item');
-    
-    if (!conversationContainer) {
-      return '';
-    }
-
-    // 查找用户消息元素
-    const userMessage = conversationContainer.querySelector('.user-message') ||
-                       conversationContainer.querySelector('[data-role="user"]');
-    
-    if (userMessage) {
-      const questionText = userMessage.textContent?.trim() || '';
-      return this.cleanQuestionText(questionText);
-    }
-
-    return '';
-  }
 
   /**
    * 通用用户问题获取方法
@@ -200,12 +149,6 @@ export class UserQuestionExtractor {
         break;
       case 'www.kimi.com':
         siteName = 'kimi';
-        break;
-      case 'chat.openai.com':
-        siteName = 'chatgpt';
-        break;
-      case 'www.doubao.com':
-        siteName = 'doubao';
         break;
       default:
         siteName = hostname.replace(/\./g, '_');

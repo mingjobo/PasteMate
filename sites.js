@@ -3,24 +3,6 @@
 // 每个网站都有特定的配置，告诉扩展如何找到AI助手的回复内容
 
 export const SUPPORTED_SITES = {
-  // ChatGPT 网站配置
-  "chat.openai.com": {
-    name: "ChatGPT", // 网站显示名称
-    // CSS选择器数组 - 告诉扩展在哪里找到AI回复的内容
-    // 按优先级排序，第一个最精确，后面的作为备选
-    selectors: [
-      "[data-message-author-role='assistant'] .markdown", // 最精确：找到助手角色的markdown内容
-      "[data-message-author-role='assistant']", // 备选：找到助手角色的整个消息
-      ".group.w-full.text-token-text-primary", // 备选：通过CSS类名找到
-      ".markdown.prose" // 最后备选：找到所有markdown内容
-    ],
-    // 特征配置 - 帮助扩展识别和优化内容
-    features: {
-      textIndicators: ["I'm", "I can", "Here's", "Based on"], // 英文AI回复的常见开头词
-      roleAttributes: ["data-message-author-role=assistant"], // 助手角色的HTML属性
-      containerClasses: ["markdown", "prose"] // 内容容器的CSS类名
-    }
-  },
 
   // DeepSeek 网站配置
   "chat.deepseek.com": {
@@ -38,21 +20,6 @@ export const SUPPORTED_SITES = {
     }
   },
 
-  // 豆包网站配置
-  "www.doubao.com": {
-    name: "豆包",
-    selectors: [
-      ".dialogue-text.assistant", // 豆包特有的助手对话文本
-      ".message.assistant .content", // 助手消息的内容
-      "[data-role='assistant']", // 助手角色的消息
-      ".ai-response" // AI回复的通用选择器
-    ],
-    features: {
-      textIndicators: ["我是", "我可以", "根据", "建议"], // 中文AI回复的常见开头词
-      roleAttributes: ["data-role=assistant"], // 助手角色的HTML属性
-      containerClasses: ["dialogue-text", "assistant"] // 豆包特有的CSS类名
-    }
-  },
 
   // Kimi 网站配置
   "www.kimi.com": {
