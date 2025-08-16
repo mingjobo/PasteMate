@@ -38,7 +38,7 @@ class PaymentModal {
         this.attachEventListeners();
         document.body.appendChild(this.overlay);
         
-        // 优雅的进入动画
+        // 像素风格进入动画
         requestAnimationFrame(() => {
             this.overlay.style.opacity = '1';
             this.modal.style.transform = 'scale(1) translateY(0)';
@@ -54,9 +54,9 @@ class PaymentModal {
             this.countdownTimer = null;
         }
 
-        // 优雅的退出动画
+        // 像素风格退出动画
         this.overlay.style.opacity = '0';
-        this.modal.style.transform = 'scale(0.9) translateY(20px)';
+        this.modal.style.transform = 'scale(0.95) translateY(10px)';
         
         setTimeout(() => {
             if (this.overlay && this.overlay.parentNode) {
@@ -76,12 +76,10 @@ class PaymentModal {
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.3);
             z-index: 10000;
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -91,22 +89,21 @@ class PaymentModal {
 
         // 创建弹窗
         this.modal = document.createElement('div');
-        this.modal.className = 'puretext-payment-modal';
+        this.modal.className = 'puretext-payment-modal pixel-modal';
         this.modal.style.cssText = `
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border-radius: 24px;
-            box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                0 0 0 1px rgba(255, 255, 255, 0.8),
-                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            background: #FFFFFF;
+            border: 3px solid #E5E7EB;
+            border-bottom: 4px solid #D1D5DB;
+            border-right: 4px solid #D1D5DB;
+            border-radius: 8px;
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
             max-height: 85vh;
             overflow: hidden;
-            transform: scale(0.9) translateY(20px);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.2s ease;
             position: relative;
-            width: 440px;
+            width: 400px;
             max-width: 90vw;
-            border: 1px solid rgba(226, 232, 240, 0.8);
         `;
 
         this.overlay.appendChild(this.modal);
@@ -167,11 +164,9 @@ class PaymentModal {
                             </svg>
                         </div>
                     </div>
-                    <h1 class="main-title">打赏一片锅巴吧～</h1>
-                    <div class="price-badge">
-                        <span class="price-symbol">¥</span>
-                        <span class="price-amount">0.2</span>
-                        <span class="price-unit">/次</span>
+                    <h1 class="main-title pixel-font">支持锅巴!</h1>
+                    <div class="price-badge pixel-badge">
+                        <span class="pixel-font">¥0.2/次</span>
                     </div>
                     
                 </div>
@@ -199,14 +194,9 @@ class PaymentModal {
                 </div>
 
                 <div class="action-section">
-                    <button class="payment-btn" type="button">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        已完成打赏
+                    <button class="payment-btn pixel-btn" type="button">
+                        <span class="pixel-font">确认打赏</span>
                     </button>
-                    
                 </div>
             </div>
         `;
@@ -224,7 +214,7 @@ class PaymentModal {
                     </svg>
                     返回
                 </button>
-                <h3 class="contact-title">联系客服</h3>
+                <h3 class="contact-title pixel-font">联系客服</h3>
                 <button class="close-btn" type="button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -251,44 +241,38 @@ class PaymentModal {
                 </div>
 
                 <div class="contact-methods">
-                    <div class="contact-method xhs-method">
-                        <div class="contact-method-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                                <rect x="2" y="2" width="20" height="20" rx="4" fill="#ff2442"/>
-                                <path d="M8 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="12" cy="8" r="2" fill="white"/>
-                            </svg>
-                        </div>
-                        <div class="contact-method-content">
-                            <h4 class="contact-method-title">小红书关注</h4>
-                          
-                            <div class="qr-container">
-                                <img src="${chrome.runtime.getURL('assets/xhs_qr.png')}" alt="小红书二维码" class="qr-image">
+                    <div class="contact-method xhs-method pixel-card-clean">
+                        <div class="contact-method-header">
+                            <div class="contact-method-icon pixel-icon-unified">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <rect x="2" y="2" width="20" height="20" rx="3" fill="white"/>
+                                    <path d="M8 12l2 2 4-4" stroke="#9B8CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="8" r="2" fill="#9B8CFF"/>
+                                </svg>
                             </div>
-                            <p class="qr-instruction">用小红书扫码关注</p>
+                            <h4 class="contact-method-title">小红书关注</h4>
                         </div>
+                        <div class="qr-container pixel-qr-clean">
+                            <img src="${chrome.runtime.getURL('assets/xhs_qr.png')}" alt="小红书二维码" class="qr-image-clean">
+                        </div>
+                        <p class="qr-instruction pixel-text">扫码关注</p>
                     </div>
 
-                    <div class="contact-method email-method">
-                        <div class="contact-method-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                                <rect x="2" y="4" width="20" height="16" rx="2" fill="#3b82f6"/>
-                                <path d="M2 6l10 7 10-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="contact-method-content">
-                            <h4 class="contact-method-title">邮箱联系</h4>
-                          
-                            <div class="email-container">
-                                <span class="email-address">support@evedo.run</span>
-                                <button class="copy-email-btn" type="button">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
-                                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2" fill="none"/>
-                                    </svg>
-                                    复制
-                                </button>
+                    <div class="contact-method email-method pixel-card-clean">
+                        <div class="contact-method-header">
+                            <div class="contact-method-icon pixel-icon-unified">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <rect x="2" y="4" width="20" height="16" rx="2" fill="white"/>
+                                    <path d="M2 6l10 7 10-7" stroke="#9B8CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
                             </div>
+                            <h4 class="contact-method-title">邮箱联系</h4>
+                        </div>
+                        <div class="email-row">
+                            <span class="email-address-clean">support@evedo.run</span>
+                            <button class="copy-email-btn pixel-btn-primary" type="button">
+                                <span>复制</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -337,8 +321,10 @@ class PaymentModal {
                         </div>
                     </div>
                     
-                    <h1 class="thanks-title">谢谢支持！</h1>
-                    <p class="thanks-subtitle">您的支持是我们前进的动力</p>
+                    <h1 class="thanks-title pixel-font">谢谢支持!</h1>
+                    <div class="pixel-status-badge success-badge">
+                        <span class="pixel-font">下载已启动</span>
+                    </div>
                     
                     <div class="download-status">
                         <div class="download-icon">
@@ -348,10 +334,10 @@ class PaymentModal {
                                 <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="download-text">正在准备下载...</span>
+                        <span class="download-text pixel-font">正在准备下载...</span>
                         <div class="countdown-container">
                             <span class="countdown-text">弹窗将在</span>
-                            <span class="countdown">3</span>
+                            <span class="countdown pixel-counter">3</span>
                             <span class="countdown-text">秒后自动关闭</span>
                         </div>
                     </div>
@@ -371,199 +357,158 @@ class PaymentModal {
     applyPaymentPageStyles() {
         const style = document.createElement('style');
         style.textContent = `
+            @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+            
+            .pixel-font {
+                font-family: 'Press Start 2P', 'PingFang SC', monospace;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+            
             .modal-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 20px 24px 0;
+                padding: 16px 20px 0;
                 position: relative;
             }
             
             .contact-btn {
                 display: inline-flex;
                 align-items: center;
-                gap: 8px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                gap: 6px;
+                background: #9B8CFF;
                 color: white;
-                border: none;
-                padding: 10px 16px;
-                border-radius: 12px;
-                font-size: 14px;
+                border: 2px solid #7B6CE8;
+                border-bottom: 3px solid #5B4CC8;
+                border-right: 3px solid #5B4CC8;
+                padding: 8px 12px;
+                border-radius: 2px;
+                font-size: 12px;
                 font-weight: 500;
                 cursor: pointer;
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                transition: all 0.1s ease;
+                font-family: 'PingFang SC', sans-serif;
             }
             
             .contact-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+                transform: translateY(-1px);
+                border-bottom: 4px solid #5B4CC8;
+                border-right: 4px solid #5B4CC8;
+            }
+            
+            .contact-btn:active {
+                transform: translateY(0);
+                border-bottom: 2px solid #5B4CC8;
+                border-right: 2px solid #5B4CC8;
             }
             
             .contact-btn svg {
-                width: 16px;
-                height: 16px;
+                width: 14px;
+                height: 14px;
             }
             
             .close-btn {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 36px;
-                height: 36px;
-                background: rgba(148, 163, 184, 0.1);
-                border: none;
-                border-radius: 12px;
+                width: 32px;
+                height: 32px;
+                background: #F8F9FA;
+                border: 2px solid #E5E7EB;
+                border-bottom: 3px solid #D1D5DB;
+                border-right: 3px solid #D1D5DB;
+                border-radius: 2px;
                 color: #64748b;
                 cursor: pointer;
-                transition: all 0.2s ease;
+                transition: all 0.1s ease;
             }
             
             .close-btn:hover {
-                background: rgba(239, 68, 68, 0.1);
-                color: #ef4444;
-                transform: scale(1.05);
+                background: #FFE5E5;
+                color: #FF4D4F;
+                transform: translateY(-1px);
+            }
+            
+            .close-btn:active {
+                transform: translateY(0);
+                border-bottom: 2px solid #D1D5DB;
+                border-right: 2px solid #D1D5DB;
             }
             
             .modal-content {
-                padding: 24px;
+                padding: 20px;
                 padding-top: 16px;
             }
             
             .hero-section {
                 text-align: center;
-                margin-bottom: 32px;
+                margin-bottom: 24px;
             }
             
             .logo-container {
-                margin-bottom: 20px;
+                margin-bottom: 16px;
             }
             
             .logo-animation {
                 display: inline-block;
-                animation: float 6s ease-in-out infinite;
+                animation: pixelFloat 2s ease-in-out infinite;
             }
             
-            @keyframes float {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-10px) rotate(2deg); }
+            @keyframes pixelFloat {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-4px); }
             }
             
             .main-title {
-                font-size: 28px;
-                font-weight: 700;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                margin: 0 0 16px 0;
-                line-height: 1.2;
+                font-size: 16px;
+                font-weight: 400;
+                color: #9B8CFF;
+                margin: 0 0 12px 0;
+                line-height: 1.4;
+                text-shadow: 2px 2px 0px rgba(155, 140, 255, 0.3);
             }
             
-            .price-badge {
-                display: inline-flex;
-                align-items: baseline;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            .pixel-badge {
+                display: inline-block;
+                background: #34C759;
                 color: white;
-                padding: 8px 20px;
-                border-radius: 20px;
-                margin-bottom: 12px;
-                box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-            }
-            
-            .price-symbol {
-                font-size: 16px;
-                font-weight: 600;
-            }
-            
-            .price-amount {
-                font-size: 24px;
-                font-weight: 700;
-                margin: 0 2px;
-            }
-            
-            .price-unit {
+                padding: 6px 12px;
+                border: 2px solid #28A745;
+                border-bottom: 3px solid #1E7E34;
+                border-right: 3px solid #1E7E34;
+                border-radius: 2px;
+                margin-bottom: 16px;
                 font-size: 14px;
-                opacity: 0.9;
-            }
-            
-            .subtitle {
-                font-size: 16px;
-                color: #64748b;
-                margin: 0;
-                line-height: 1.5;
+                font-weight: bold;
             }
             
             .payment-section {
-                margin-bottom: 32px;
+                margin-bottom: 24px;
             }
             
             .payment-methods {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 20px;
+                gap: 16px;
             }
             
             .payment-method {
-                background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-                border: 2px solid #e2e8f0;
-                border-radius: 16px;
-                padding: 20px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: #FFFFFF;
+                border: 2px solid #E5E7EB;
+                border-bottom: 3px solid #D1D5DB;
+                border-right: 3px solid #D1D5DB;
+                border-radius: 4px;
+                padding: 16px;
+                transition: all 0.1s ease;
                 position: relative;
-                overflow: hidden;
-            }
-            
-            .payment-method::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 3px;
-                background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
-                transform: translateX(-100%);
-                transition: transform 0.6s ease;
             }
             
             .payment-method:hover {
-                border-color: #6366f1;
-                transform: translateY(-4px);
-                box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
-            }
-            
-            .payment-method:hover::before {
-                transform: translateX(100%);
-            }
-            
-            .payment-method-header {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 16px;
-            }
-            
-            .payment-icon {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 32px;
-                height: 32px;
-                border-radius: 8px;
-            }
-            
-            .payment-icon.wechat {
-                background: linear-gradient(135deg, #07c160 0%, #05a84d 100%);
-            }
-            
-            .payment-icon.alipay {
-                background: linear-gradient(135deg, #1677ff 0%, #0d5bdd 100%);
-            }
-            
-            .payment-label {
-                font-size: 14px;
-                font-weight: 600;
-                color: #334155;
+                border-color: #9B8CFF;
+                border-bottom: 3px solid #7B6CE8;
+                border-right: 3px solid #7B6CE8;
+                transform: translateY(-1px);
             }
             
             .qr-container {
@@ -571,106 +516,93 @@ class PaymentModal {
                 justify-content: center;
                 align-items: center;
                 background: white;
-                border-radius: 12px;
+                border: 2px solid #E5E7EB;
+                border-radius: 4px;
                 padding: 12px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             }
             
             .qr-image {
-                width: 120px;
-                height: 120px;
+                width: 100px;
+                height: 100px;
                 object-fit: contain;
-                border-radius: 8px;
+                image-rendering: pixelated;
             }
             
             .action-section {
                 text-align: center;
             }
             
-            .payment-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
+            .pixel-btn {
+                display: inline-block;
                 width: 100%;
-                padding: 16px 24px;
-                background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+                padding: 12px 20px;
+                background: #9B8CFF;
                 color: white;
-                border: none;
-                border-radius: 16px;
-                font-size: 16px;
-                font-weight: 600;
+                border: 2px solid #7B6CE8;
+                border-bottom: 4px solid #5B4CC8;
+                border-right: 4px solid #5B4CC8;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: 500;
                 cursor: pointer;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
-                margin-bottom: 16px;
+                transition: all 0.1s ease;
                 position: relative;
-                overflow: hidden;
+                font-family: 'PingFang SC', sans-serif;
             }
             
-            .payment-btn::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-                transition: left 0.5s ease;
-            }
-            
-            .payment-btn:hover {
+            .pixel-btn:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 12px 28px rgba(139, 92, 246, 0.4);
+                border-bottom: 5px solid #5B4CC8;
+                border-right: 5px solid #5B4CC8;
+                animation: pixelBtnGlow 0.3s ease;
             }
             
-            .payment-btn:hover::before {
-                left: 100%;
-            }
-            
-            .payment-btn:active {
+            .pixel-btn:active {
                 transform: translateY(0);
+                border-bottom: 2px solid #5B4CC8;
+                border-right: 2px solid #5B4CC8;
+                animation: pixelBtnPress 0.1s ease;
             }
             
-            .trust-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 13px;
-                color: #64748b;
-                margin: 0;
-                background: rgba(148, 163, 184, 0.1);
-                padding: 8px 16px;
-                border-radius: 20px;
+            @keyframes pixelBtnGlow {
+                0% { box-shadow: none; }
+                50% { box-shadow: 0 0 8px rgba(155, 140, 255, 0.5); }
+                100% { box-shadow: none; }
             }
             
-            .trust-badge svg {
-                color: #10b981;
+            @keyframes pixelBtnPress {
+                0% { background: #9B8CFF; }
+                50% { background: #8B7CFF; }
+                100% { background: #9B8CFF; }
             }
             
             /* 移动端适配 */
             @media (max-width: 768px) {
                 .modal-content {
-                    padding: 20px;
+                    padding: 16px;
                 }
                 
                 .payment-methods {
                     grid-template-columns: 1fr;
-                    gap: 16px;
+                    gap: 12px;
                 }
                 
                 .qr-image {
-                    width: 100px;
-                    height: 100px;
+                    width: 80px;
+                    height: 80px;
                 }
                 
                 .main-title {
-                    font-size: 24px;
+                    font-size: 14px;
                 }
                 
                 .contact-btn {
-                    padding: 8px 12px;
-                    font-size: 13px;
+                    padding: 6px 10px;
+                    font-size: 11px;
+                }
+                
+                .pixel-font {
+                    font-size: 10px;
                 }
             }
         `;
@@ -683,162 +615,149 @@ class PaymentModal {
             .back-btn {
                 display: inline-flex;
                 align-items: center;
-                gap: 8px;
-                background: rgba(148, 163, 184, 0.1);
+                gap: 6px;
+                background: #F8F9FA;
                 color: #64748b;
-                border: none;
-                padding: 10px 16px;
-                border-radius: 12px;
-                font-size: 14px;
+                border: 2px solid #E5E7EB;
+                border-bottom: 3px solid #D1D5DB;
+                border-right: 3px solid #D1D5DB;
+                padding: 8px 12px;
+                border-radius: 2px;
+                font-size: 12px;
                 font-weight: 500;
                 cursor: pointer;
-                transition: all 0.2s ease;
+                transition: all 0.1s ease;
+                font-family: 'PingFang SC', sans-serif;
             }
             
             .back-btn:hover {
-                background: rgba(99, 102, 241, 0.1);
-                color: #6366f1;
-                transform: translateX(-2px);
+                background: rgba(155, 140, 255, 0.1);
+                color: #9B8CFF;
+                transform: translateY(-1px);
+                border-bottom: 4px solid #D1D5DB;
+                border-right: 4px solid #D1D5DB;
+            }
+            
+            .back-btn:active {
+                transform: translateY(0);
+                border-bottom: 2px solid #D1D5DB;
+                border-right: 2px solid #D1D5DB;
             }
             
             .contact-title {
                 flex: 1;
                 text-align: center;
                 margin: 0;
-                font-size: 18px;
-                font-weight: 600;
+                font-size: 14px;
                 color: #1e293b;
             }
             
             .contact-hero {
                 text-align: center;
-                margin-bottom: 32px;
+                margin-bottom: 24px;
             }
             
             .contact-avatar {
-                margin-bottom: 20px;
-            }
-            
-            .contact-main-title {
-                font-size: 26px;
-                font-weight: 700;
-                background: linear-gradient(135deg, #f472b6 0%, #be185d 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                margin: 0 0 12px 0;
-                line-height: 1.2;
-            }
-            
-            .contact-subtitle {
-                font-size: 16px;
-                color: #64748b;
-                margin: 0;
-                line-height: 1.5;
+                margin-bottom: 16px;
             }
             
             .contact-methods {
                 display: flex;
                 flex-direction: column;
-                gap: 24px;
-                margin-bottom: 32px;
+                gap: 20px;
+                margin-bottom: 24px;
             }
             
-            .contact-method {
-                background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-                border: 2px solid #e2e8f0;
-                border-radius: 20px;
-                padding: 24px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* 新的统一风格卡片 */
+            .pixel-card-clean {
+                background: #FFFFFF;
+                border: 2px solid #9B8CFF;
+                border-bottom: 3px solid #7B6CE8;
+                border-right: 3px solid #7B6CE8;
+                border-radius: 6px;
+                padding: 20px;
+                transition: all 0.1s ease;
                 position: relative;
-                overflow: hidden;
             }
             
-            .contact-method::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 4px;
-                background: linear-gradient(90deg, transparent, rgba(244, 114, 182, 0.6), transparent);
-                transform: translateX(-100%);
-                transition: transform 0.6s ease;
+            .pixel-card-clean:hover {
+                transform: translateY(-2px);
+                border-bottom: 4px solid #7B6CE8;
+                border-right: 4px solid #7B6CE8;
+                box-shadow: 2px 2px 0px rgba(155, 140, 255, 0.2);
             }
             
-            .contact-method:hover {
-                border-color: #f472b6;
-                transform: translateY(-6px);
-                box-shadow: 0 16px 32px rgba(244, 114, 182, 0.2);
-            }
-            
-            .contact-method:hover::before {
-                transform: translateX(100%);
-            }
-            
-            .contact-method-icon {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 56px;
-                height: 56px;
-                background: linear-gradient(135deg, #f472b6 0%, #be185d 100%);
-                border-radius: 16px;
-                margin-bottom: 16px;
-                box-shadow: 0 8px 20px rgba(244, 114, 182, 0.3);
-            }
-            
-            .contact-method-title {
-                font-size: 18px;
-                font-weight: 700;
-                color: #1e293b;
-                margin: 0 0 6px 0;
-            }
-            
-            .contact-method-desc {
-                font-size: 14px;
-                color: #64748b;
-                margin: 0 0 20px 0;
-            }
-            
-            .qr-container {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background: white;
-                border-radius: 16px;
-                padding: 16px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-                margin-bottom: 12px;
-                border: 1px solid #f1f5f9;
-            }
-            
-            .qr-image {
-                width: 140px;
-                height: 140px;
-                object-fit: contain;
-                border-radius: 12px;
-            }
-            
-            .qr-instruction {
-                font-size: 13px;
-                color: #64748b;
-                margin: 0;
-                text-align: center;
-            }
-            
-            .email-container {
+            /* 卡片头部：icon + 标题横向排列 */
+            .contact-method-header {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                background: white;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                padding: 16px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+                margin-bottom: 16px;
             }
             
-            .email-address {
+            /* 统一的icon样式 */
+            .pixel-icon-unified {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                background: #9B8CFF;
+                border: 2px solid #7B6CE8;
+                border-bottom: 3px solid #5B4CC8;
+                border-right: 3px solid #5B4CC8;
+                border-radius: 4px;
+                flex-shrink: 0;
+            }
+            
+            .contact-method-title {
+                font-size: 16px;
+                font-weight: 600;
+                color: #1e293b;
+                margin: 0;
+                font-family: 'PingFang SC', sans-serif;
+            }
+            
+            /* 小红书卡片 - 简化布局 */
+            .pixel-qr-clean {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: #F8F9FA;
+                border: 2px solid #E5E7EB;
+                border-radius: 4px;
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+            
+            .qr-image-clean {
+                width: 120px;
+                height: 120px;
+                object-fit: contain;
+                image-rendering: pixelated;
+            }
+            
+            .pixel-text {
+                text-align: center;
+                font-size: 13px;
+                color: #64748b;
+                margin: 0;
+                font-family: 'PingFang SC', sans-serif;
+            }
+            
+            /* 邮箱卡片 - 横向布局 */
+            .email-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                background: #F8F9FA;
+                border: 2px solid #E5E7EB;
+                border-radius: 4px;
+                padding: 16px;
+            }
+            
+            .email-address-clean {
                 flex: 1;
                 font-size: 15px;
                 font-weight: 500;
@@ -846,75 +765,110 @@ class PaymentModal {
                 font-family: 'Monaco', 'Menlo', monospace;
             }
             
-            .copy-email-btn {
+            /* 主要复制按钮 */
+            .pixel-btn-primary {
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
-                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                background: #9B8CFF;
                 color: white;
-                border: none;
-                padding: 8px 12px;
-                border-radius: 8px;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-            }
-            
-            .copy-email-btn:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            }
-            
-            .copy-email-btn:active {
-                transform: translateY(0);
-            }
-            
-            .contact-footer {
-                text-align: center;
-                padding: 20px;
-                background: rgba(16, 185, 129, 0.05);
-                border-radius: 16px;
-                border: 1px solid rgba(16, 185, 129, 0.1);
-            }
-            
-            .response-time {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
+                border: 2px solid #7B6CE8;
+                border-bottom: 4px solid #5B4CC8;
+                border-right: 4px solid #5B4CC8;
+                border-radius: 4px;
+                padding: 10px 20px;
                 font-size: 14px;
-                color: #059669;
-                font-weight: 500;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.1s ease;
+                font-family: 'PingFang SC', sans-serif;
+                flex-shrink: 0;
+            }
+            
+            .pixel-btn-primary:hover {
+                transform: translateY(-2px);
+                border-bottom: 5px solid #5B4CC8;
+                border-right: 5px solid #5B4CC8;
+                animation: pixelBtnGlow 0.3s ease;
+            }
+            
+            .pixel-btn-primary:active {
+                transform: translateY(0);
+                border-bottom: 2px solid #5B4CC8;
+                border-right: 2px solid #5B4CC8;
+                animation: pixelBtnPress 0.1s ease;
+            }
+            
+            @keyframes pixelBtnGlow {
+                0% { box-shadow: none; }
+                50% { box-shadow: 0 0 12px rgba(155, 140, 255, 0.6); }
+                100% { box-shadow: none; }
+            }
+            
+            @keyframes pixelBtnPress {
+                0% { background: #9B8CFF; }
+                50% { background: #8B7CFF; }
+                100% { background: #9B8CFF; }
             }
             
             /* 移动端适配 */
             @media (max-width: 768px) {
-                .contact-method {
-                    padding: 20px;
+                .pixel-card-clean {
+                    padding: 16px;
                 }
                 
-                .contact-method-icon {
-                    width: 48px;
-                    height: 48px;
+                .contact-method-header {
+                    gap: 10px;
+                    margin-bottom: 14px;
                 }
                 
-                .qr-image {
-                    width: 120px;
-                    height: 120px;
+                .pixel-icon-unified {
+                    width: 32px;
+                    height: 32px;
                 }
                 
-                .contact-main-title {
-                    font-size: 22px;
+                .qr-image-clean {
+                    width: 100px;
+                    height: 100px;
                 }
                 
-                .email-container {
+                .contact-method-title {
+                    font-size: 14px;
+                }
+                
+                .email-row {
                     flex-direction: column;
                     text-align: center;
+                    gap: 12px;
+                    padding: 14px;
                 }
                 
-                .email-address {
-                    font-size: 14px;
+                .email-address-clean {
+                    font-size: 13px;
+                }
+                
+                .pixel-btn-primary {
+                    padding: 8px 16px;
+                    font-size: 12px;
+                }
+                
+                .pixel-font {
+                    font-size: 9px;
+                }
+            }
+            
+            @keyframes pixelSuccessFlash {
+                0% { 
+                    background: #9B8CFF;
+                    transform: scale(1); 
+                }
+                50% { 
+                    background: #34C759;
+                    transform: scale(1.05);
+                    box-shadow: 0 0 16px rgba(52, 199, 89, 0.6);
+                }
+                100% { 
+                    background: #34C759;
+                    transform: scale(1); 
                 }
             }
         `;
@@ -930,17 +884,17 @@ class PaymentModal {
             
             .thanks-hero {
                 text-align: center;
-                padding: 40px 0;
+                padding: 24px 0;
             }
             
             .success-animation {
                 position: relative;
                 display: inline-block;
-                margin-bottom: 32px;
-                animation: successPulse 2s ease-in-out infinite;
+                margin-bottom: 20px;
+                animation: pixelSuccessPulse 1s ease-in-out infinite;
             }
             
-            @keyframes successPulse {
+            @keyframes pixelSuccessPulse {
                 0%, 100% {
                     transform: scale(1);
                 }
@@ -952,10 +906,10 @@ class PaymentModal {
             .checkmark {
                 stroke-dasharray: 50;
                 stroke-dashoffset: 50;
-                animation: drawCheck 1s ease-out 0.5s forwards;
+                animation: pixelDrawCheck 0.8s ease-out 0.2s forwards;
             }
             
-            @keyframes drawCheck {
+            @keyframes pixelDrawCheck {
                 to {
                     stroke-dashoffset: 0;
                 }
@@ -971,122 +925,107 @@ class PaymentModal {
             
             .sparkle {
                 position: absolute;
-                font-size: 20px;
-                animation: sparkleFloat 3s ease-in-out infinite;
+                font-size: 16px;
+                animation: pixelSparkle 2s ease-in-out infinite;
                 opacity: 0.8;
             }
             
             .sparkle-1 {
-                top: -60px;
-                left: -20px;
+                top: -40px;
+                left: -16px;
                 animation-delay: 0s;
             }
             
             .sparkle-2 {
-                top: -40px;
-                right: -30px;
-                animation-delay: 0.5s;
+                top: -30px;
+                right: -20px;
+                animation-delay: 0.3s;
             }
             
             .sparkle-3 {
-                bottom: -50px;
-                left: -25px;
-                animation-delay: 1s;
+                bottom: -35px;
+                left: -18px;
+                animation-delay: 0.6s;
             }
             
             .sparkle-4 {
-                bottom: -45px;
-                right: -20px;
-                animation-delay: 1.5s;
+                bottom: -30px;
+                right: -16px;
+                animation-delay: 0.9s;
             }
             
-            @keyframes sparkleFloat {
+            @keyframes pixelSparkle {
                 0%, 100% {
-                    transform: translateY(0px) rotate(0deg);
+                    transform: translateY(0px);
                     opacity: 0.8;
                 }
                 50% {
-                    transform: translateY(-15px) rotate(180deg);
+                    transform: translateY(-8px);
                     opacity: 1;
                 }
             }
             
             .thanks-title {
-                font-size: 32px;
-                font-weight: 800;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                margin: 0 0 12px 0;
-                line-height: 1.2;
+                font-size: 16px;
+                font-weight: 400;
+                color: #34C759;
+                margin: 0 0 16px 0;
+                line-height: 1.4;
+                text-shadow: 2px 2px 0px rgba(52, 199, 89, 0.3);
             }
             
-            .thanks-subtitle {
-                font-size: 16px;
-                color: #64748b;
-                margin: 0 0 32px 0;
-                line-height: 1.5;
+            .pixel-status-badge.success-badge {
+                background: #34C759;
+                color: white;
+                padding: 6px 12px;
+                border: 2px solid #28A745;
+                border-bottom: 3px solid #1E7E34;
+                border-right: 3px solid #1E7E34;
+                border-radius: 2px;
+                margin-bottom: 20px;
+                font-size: 10px;
             }
             
             .download-status {
-                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-                border: 2px solid #0ea5e9;
-                border-radius: 20px;
-                padding: 24px;
-                margin-bottom: 24px;
+                background: #FFFFFF;
+                border: 2px solid #9B8CFF;
+                border-bottom: 3px solid #7B6CE8;
+                border-right: 3px solid #7B6CE8;
+                border-radius: 4px;
+                padding: 16px;
+                margin-bottom: 16px;
                 position: relative;
-                overflow: hidden;
-            }
-            
-            .download-status::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.1), transparent);
-                animation: shimmer 2s ease-in-out infinite;
-            }
-            
-            @keyframes shimmer {
-                0% {
-                    left: -100%;
-                }
-                100% {
-                    left: 100%;
-                }
             }
             
             .download-icon {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 48px;
-                height: 48px;
-                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-                border-radius: 16px;
-                margin-bottom: 16px;
+                width: 40px;
+                height: 40px;
+                background: #9B8CFF;
+                border: 2px solid #7B6CE8;
+                border-bottom: 3px solid #5B4CC8;
+                border-right: 3px solid #5B4CC8;
+                border-radius: 4px;
+                margin-bottom: 12px;
                 color: white;
-                animation: downloadBounce 2s ease-in-out infinite;
-                box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+                animation: pixelDownloadBounce 1.5s ease-in-out infinite;
             }
             
-            @keyframes downloadBounce {
+            @keyframes pixelDownloadBounce {
                 0%, 100% {
                     transform: translateY(0px);
                 }
                 50% {
-                    transform: translateY(-8px);
+                    transform: translateY(-4px);
                 }
             }
             
             .download-text {
                 display: block;
-                font-size: 16px;
-                font-weight: 600;
-                color: #0f172a;
+                font-size: 12px;
+                color: #1e293b;
                 margin-bottom: 12px;
             }
             
@@ -1095,27 +1034,31 @@ class PaymentModal {
                 align-items: center;
                 justify-content: center;
                 gap: 4px;
-                font-size: 14px;
+                font-size: 12px;
                 color: #64748b;
+                font-family: 'PingFang SC', sans-serif;
             }
             
-            .countdown {
+            .pixel-counter {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 28px;
-                height: 28px;
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                width: 24px;
+                height: 24px;
+                background: #34C759;
                 color: white;
-                border-radius: 8px;
+                border: 2px solid #28A745;
+                border-bottom: 3px solid #1E7E34;
+                border-right: 3px solid #1E7E34;
+                border-radius: 2px;
                 font-weight: 700;
-                font-size: 16px;
+                font-size: 12px;
                 margin: 0 4px;
-                animation: countdownPulse 1s ease-in-out infinite;
-                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+                animation: pixelCountdownPulse 1s ease-in-out infinite;
+                font-family: 'PingFang SC', sans-serif;
             }
             
-            @keyframes countdownPulse {
+            @keyframes pixelCountdownPulse {
                 0%, 100% {
                     transform: scale(1);
                 }
@@ -1126,23 +1069,35 @@ class PaymentModal {
             
             .progress-bar {
                 width: 100%;
-                height: 6px;
-                background: rgba(148, 163, 184, 0.2);
-                border-radius: 3px;
+                height: 8px;
+                background: #E5E7EB;
+                border: 1px solid #D1D5DB;
+                border-radius: 2px;
                 overflow: hidden;
                 position: relative;
             }
             
             .progress-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #10b981, #059669, #10b981);
-                background-size: 200% 100%;
-                border-radius: 3px;
-                animation: progressFill 3s linear forwards, progressShimmer 1.5s ease-in-out infinite;
+                background: #34C759;
+                border-radius: 1px;
+                animation: pixelProgressFill 3s linear forwards;
                 width: 0%;
+                position: relative;
             }
             
-            @keyframes progressFill {
+            .progress-fill::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 4px;
+                height: 100%;
+                background: #28A745;
+                animation: pixelProgressGlow 0.5s ease-in-out infinite alternate;
+            }
+            
+            @keyframes pixelProgressFill {
                 0% {
                     width: 0%;
                 }
@@ -1151,40 +1106,49 @@ class PaymentModal {
                 }
             }
             
-            @keyframes progressShimmer {
+            @keyframes pixelProgressGlow {
                 0% {
-                    background-position: -200% 0;
+                    opacity: 0.5;
                 }
                 100% {
-                    background-position: 200% 0;
+                    opacity: 1;
                 }
             }
             
             /* 移动端适配 */
             @media (max-width: 768px) {
                 .thanks-hero {
-                    padding: 32px 0;
+                    padding: 20px 0;
                 }
                 
                 .thanks-title {
-                    font-size: 28px;
+                    font-size: 14px;
                 }
                 
                 .success-animation {
-                    margin-bottom: 24px;
+                    margin-bottom: 16px;
                 }
                 
                 .success-animation svg {
-                    width: 64px;
-                    height: 64px;
+                    width: 60px;
+                    height: 60px;
                 }
                 
                 .sparkle {
-                    font-size: 16px;
+                    font-size: 14px;
                 }
                 
                 .download-status {
-                    padding: 20px;
+                    padding: 14px;
+                }
+                
+                .download-icon {
+                    width: 32px;
+                    height: 32px;
+                }
+                
+                .pixel-font {
+                    font-size: 9px;
                 }
             }
         `;
@@ -1228,10 +1192,14 @@ class PaymentModal {
         });
 
         copyEmailBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText('support@example.com').then(() => {
-                copyEmailBtn.textContent = '已复制';
+            navigator.clipboard.writeText('support@evedo.run').then(() => {
+                // 像素风格反馈动效
+                copyEmailBtn.innerHTML = '<span>已复制 ✓</span>';
+                copyEmailBtn.style.animation = 'pixelSuccessFlash 0.3s ease';
+                
                 setTimeout(() => {
-                    copyEmailBtn.textContent = '复制';
+                    copyEmailBtn.innerHTML = '<span>复制</span>';
+                    copyEmailBtn.style.animation = '';
                 }, 2000);
             });
         });

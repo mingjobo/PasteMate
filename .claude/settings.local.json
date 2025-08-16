@@ -24,7 +24,11 @@
       "Bash(npm run clean:*)",
       "Bash(true)",
       "Bash(npm test)",
-      "Bash(open http://localhost:8081/test/test-payment-modal.html)"
+      "Bash(open http://localhost:8081/test/test-payment-modal.html)",
+      "Bash(python3:*)",
+      "Bash(lsof:*)",
+      "Bash(open http://localhost:3000/test/test-payment-modal.html)",
+      "Bash(open http://localhost:8888/test/test-payment-modal.html)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
