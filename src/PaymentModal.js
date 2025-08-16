@@ -89,20 +89,18 @@ class PaymentModal {
 
         // 创建弹窗
         this.modal = document.createElement('div');
-        this.modal.className = 'puretext-payment-modal pixel-modal';
+        this.modal.className = 'puretext-payment-modal card-modal';
         this.modal.style.cssText = `
             background: #FFFFFF;
-            border: 3px solid #E5E7EB;
-            border-bottom: 4px solid #D1D5DB;
-            border-right: 4px solid #D1D5DB;
-            border-radius: 8px;
-            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E5E7EB;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             max-height: 85vh;
             overflow: hidden;
             transform: scale(0.95) translateY(10px);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             position: relative;
-            width: 400px;
+            width: 420px;
             max-width: 90vw;
         `;
 
@@ -223,23 +221,6 @@ class PaymentModal {
             </div>
             
             <div class="modal-content">
-                <div class="contact-hero">
-                    <div class="contact-avatar">
-                        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="32" cy="32" r="30" fill="url(#contactGradient)"/>
-                            <path d="M32 20c6.627 0 12 5.373 12 12 0 4-2 7.5-5 10l-7 7-7-7c-3-2.5-5-6-5-10 0-6.627 5.373-12 12-12z" fill="white"/>
-                            <circle cx="32" cy="32" r="4" fill="url(#contactGradient)"/>
-                            <defs>
-                                <linearGradient id="contactGradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#f472b6"/>
-                                    <stop offset="100%" stop-color="#be185d"/>
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                    </div>
-                   
-                </div>
-
                 <div class="contact-methods">
                     <div class="contact-method xhs-method pixel-card-clean">
                         <div class="contact-method-header">
@@ -357,11 +338,12 @@ class PaymentModal {
     applyPaymentPageStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700&display=swap');
             
             .pixel-font {
-                font-family: 'Press Start 2P', 'PingFang SC', monospace;
-                font-size: 12px;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                font-weight: 200;
+                font-size: 14px;
                 line-height: 1.4;
             }
             
@@ -369,163 +351,156 @@ class PaymentModal {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 16px 20px 0;
+                padding: 20px 24px 0;
                 position: relative;
             }
             
             .contact-btn {
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
-                background: #9B8CFF;
+                gap: 8px;
+                background: #000000;
                 color: white;
-                border: 2px solid #7B6CE8;
-                border-bottom: 3px solid #5B4CC8;
-                border-right: 3px solid #5B4CC8;
-                padding: 8px 12px;
-                border-radius: 2px;
-                font-size: 12px;
-                font-weight: 500;
+                border: none;
+                padding: 10px 16px;
+                border-radius: 16px;
+                font-size: 14px;
+                font-weight: 300;
                 cursor: pointer;
-                transition: all 0.1s ease;
-                font-family: 'PingFang SC', sans-serif;
+                transition: all 0.2s ease;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
             
             .contact-btn:hover {
+                background: #333333;
                 transform: translateY(-1px);
-                border-bottom: 4px solid #5B4CC8;
-                border-right: 4px solid #5B4CC8;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             }
             
             .contact-btn:active {
                 transform: translateY(0);
-                border-bottom: 2px solid #5B4CC8;
-                border-right: 2px solid #5B4CC8;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
             
             .contact-btn svg {
-                width: 14px;
-                height: 14px;
+                width: 16px;
+                height: 16px;
             }
             
             .close-btn {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
                 background: #F8F9FA;
-                border: 2px solid #E5E7EB;
-                border-bottom: 3px solid #D1D5DB;
-                border-right: 3px solid #D1D5DB;
-                border-radius: 2px;
+                border: none;
+                border-radius: 18px;
                 color: #64748b;
                 cursor: pointer;
-                transition: all 0.1s ease;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             }
             
             .close-btn:hover {
                 background: #FFE5E5;
                 color: #FF4D4F;
                 transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
             
             .close-btn:active {
                 transform: translateY(0);
-                border-bottom: 2px solid #D1D5DB;
-                border-right: 2px solid #D1D5DB;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             }
             
             .modal-content {
-                padding: 20px;
-                padding-top: 16px;
+                padding: 24px;
+                padding-top: 20px;
             }
             
             .hero-section {
                 text-align: center;
-                margin-bottom: 24px;
+                margin-bottom: 32px;
             }
             
             .logo-container {
-                margin-bottom: 16px;
+                margin-bottom: 20px;
             }
             
             .logo-animation {
                 display: inline-block;
-                animation: pixelFloat 2s ease-in-out infinite;
+                animation: logoFloat 2s ease-in-out infinite;
             }
             
-            @keyframes pixelFloat {
+            @keyframes logoFloat {
                 0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-4px); }
+                50% { transform: translateY(-3px); }
             }
             
             .main-title {
-                font-size: 16px;
-                font-weight: 400;
-                color: #9B8CFF;
-                margin: 0 0 12px 0;
-                line-height: 1.4;
-                text-shadow: 2px 2px 0px rgba(155, 140, 255, 0.3);
+                font-size: 24px;
+                font-weight: 200;
+                color: #1a1a1a;
+                margin: 0 0 16px 0;
+                line-height: 1.3;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
             }
             
             .pixel-badge {
                 display: inline-block;
                 background: #34C759;
                 color: white;
-                padding: 6px 12px;
-                border: 2px solid #28A745;
-                border-bottom: 3px solid #1E7E34;
-                border-right: 3px solid #1E7E34;
-                border-radius: 2px;
-                margin-bottom: 16px;
+                padding: 8px 16px;
+                border-radius: 20px;
+                margin-bottom: 20px;
                 font-size: 14px;
-                font-weight: bold;
+                font-weight: 300;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
             }
             
             .payment-section {
-                margin-bottom: 24px;
+                margin-bottom: 32px;
             }
             
             .payment-methods {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 16px;
+                gap: 20px;
             }
             
             .payment-method {
                 background: #FFFFFF;
-                border: 2px solid #E5E7EB;
-                border-bottom: 3px solid #D1D5DB;
-                border-right: 3px solid #D1D5DB;
-                border-radius: 4px;
-                padding: 16px;
-                transition: all 0.1s ease;
+                border: 1px solid #E5E7EB;
+                border-radius: 20px;
+                padding: 20px;
+                transition: all 0.2s ease;
                 position: relative;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             }
             
             .payment-method:hover {
-                border-color: #9B8CFF;
-                border-bottom: 3px solid #7B6CE8;
-                border-right: 3px solid #7B6CE8;
-                transform: translateY(-1px);
+                border-color: #D1D5DB;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             }
             
             .qr-container {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                background: white;
-                border: 2px solid #E5E7EB;
-                border-radius: 4px;
-                padding: 12px;
+                background: #FAFAFA;
+                border-radius: 16px;
+                padding: 16px;
             }
             
             .qr-image {
                 width: 100px;
                 height: 100px;
                 object-fit: contain;
-                image-rendering: pixelated;
+                border-radius: 8px;
             }
             
             .action-section {
@@ -535,56 +510,40 @@ class PaymentModal {
             .pixel-btn {
                 display: inline-block;
                 width: 100%;
-                padding: 12px 20px;
-                background: #9B8CFF;
+                padding: 16px 24px;
+                background: #000000;
                 color: white;
-                border: 2px solid #7B6CE8;
-                border-bottom: 4px solid #5B4CC8;
-                border-right: 4px solid #5B4CC8;
-                border-radius: 4px;
-                font-size: 14px;
-                font-weight: 500;
+                border: none;
+                border-radius: 20px;
+                font-size: 16px;
+                font-weight: 300;
                 cursor: pointer;
-                transition: all 0.1s ease;
+                transition: all 0.2s ease;
                 position: relative;
-                font-family: 'PingFang SC', sans-serif;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
             
             .pixel-btn:hover {
+                background: #333333;
                 transform: translateY(-2px);
-                border-bottom: 5px solid #5B4CC8;
-                border-right: 5px solid #5B4CC8;
-                animation: pixelBtnGlow 0.3s ease;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
             }
             
             .pixel-btn:active {
                 transform: translateY(0);
-                border-bottom: 2px solid #5B4CC8;
-                border-right: 2px solid #5B4CC8;
-                animation: pixelBtnPress 0.1s ease;
-            }
-            
-            @keyframes pixelBtnGlow {
-                0% { box-shadow: none; }
-                50% { box-shadow: 0 0 8px rgba(155, 140, 255, 0.5); }
-                100% { box-shadow: none; }
-            }
-            
-            @keyframes pixelBtnPress {
-                0% { background: #9B8CFF; }
-                50% { background: #8B7CFF; }
-                100% { background: #9B8CFF; }
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
             
             /* 移动端适配 */
             @media (max-width: 768px) {
                 .modal-content {
-                    padding: 16px;
+                    padding: 20px;
                 }
                 
                 .payment-methods {
                     grid-template-columns: 1fr;
-                    gap: 12px;
+                    gap: 16px;
                 }
                 
                 .qr-image {
@@ -593,16 +552,21 @@ class PaymentModal {
                 }
                 
                 .main-title {
-                    font-size: 14px;
+                    font-size: 20px;
                 }
                 
                 .contact-btn {
-                    padding: 6px 10px;
-                    font-size: 11px;
+                    padding: 8px 12px;
+                    font-size: 12px;
                 }
                 
                 .pixel-font {
-                    font-size: 10px;
+                    font-size: 12px;
+                }
+                
+                .pixel-btn {
+                    padding: 14px 20px;
+                    font-size: 14px;
                 }
             }
         `;
@@ -615,84 +579,81 @@ class PaymentModal {
             .back-btn {
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
+                gap: 8px;
                 background: #F8F9FA;
                 color: #64748b;
-                border: 2px solid #E5E7EB;
-                border-bottom: 3px solid #D1D5DB;
-                border-right: 3px solid #D1D5DB;
-                padding: 8px 12px;
-                border-radius: 2px;
-                font-size: 12px;
-                font-weight: 500;
+                border: none;
+                padding: 10px 16px;
+                border-radius: 16px;
+                font-size: 14px;
+                font-weight: 300;
                 cursor: pointer;
-                transition: all 0.1s ease;
-                font-family: 'PingFang SC', sans-serif;
+                transition: all 0.2s ease;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             }
             
             .back-btn:hover {
-                background: rgba(155, 140, 255, 0.1);
-                color: #9B8CFF;
+                background: #E5E7EB;
+                color: #374151;
                 transform: translateY(-1px);
-                border-bottom: 4px solid #D1D5DB;
-                border-right: 4px solid #D1D5DB;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
             
             .back-btn:active {
                 transform: translateY(0);
-                border-bottom: 2px solid #D1D5DB;
-                border-right: 2px solid #D1D5DB;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             }
             
             .contact-title {
                 flex: 1;
                 text-align: center;
                 margin: 0;
-                font-size: 14px;
-                color: #1e293b;
+                font-size: 16px;
+                font-weight: 300;
+                color: #1a1a1a;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
             }
             
             .contact-hero {
                 text-align: center;
-                margin-bottom: 24px;
+                margin-bottom: 32px;
             }
             
             .contact-avatar {
-                margin-bottom: 16px;
+                margin-bottom: 20px;
             }
             
             .contact-methods {
                 display: flex;
                 flex-direction: column;
-                gap: 20px;
-                margin-bottom: 24px;
+                gap: 24px;
+                margin-bottom: 32px;
             }
             
             /* 新的统一风格卡片 */
             .pixel-card-clean {
                 background: #FFFFFF;
-                border: 2px solid #9B8CFF;
-                border-bottom: 3px solid #7B6CE8;
-                border-right: 3px solid #7B6CE8;
-                border-radius: 6px;
-                padding: 20px;
-                transition: all 0.1s ease;
+                border: 1px solid #E5E7EB;
+                border-radius: 20px;
+                padding: 24px;
+                transition: all 0.2s ease;
                 position: relative;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             }
             
             .pixel-card-clean:hover {
                 transform: translateY(-2px);
-                border-bottom: 4px solid #7B6CE8;
-                border-right: 4px solid #7B6CE8;
-                box-shadow: 2px 2px 0px rgba(155, 140, 255, 0.2);
+                border-color: #D1D5DB;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             }
             
             /* 卡片头部：icon + 标题横向排列 */
             .contact-method-header {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                margin-bottom: 16px;
+                gap: 16px;
+                margin-bottom: 20px;
             }
             
             /* 统一的icon样式 */
@@ -700,22 +661,20 @@ class PaymentModal {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 36px;
-                height: 36px;
-                background: #9B8CFF;
-                border: 2px solid #7B6CE8;
-                border-bottom: 3px solid #5B4CC8;
-                border-right: 3px solid #5B4CC8;
-                border-radius: 4px;
+                width: 40px;
+                height: 40px;
+                background: #000000;
+                border-radius: 20px;
                 flex-shrink: 0;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
             
             .contact-method-title {
-                font-size: 16px;
-                font-weight: 600;
-                color: #1e293b;
+                font-size: 18px;
+                font-weight: 300;
+                color: #1a1a1a;
                 margin: 0;
-                font-family: 'PingFang SC', sans-serif;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
             }
             
             /* 小红书卡片 - 简化布局 */
@@ -723,26 +682,26 @@ class PaymentModal {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                background: #F8F9FA;
-                border: 2px solid #E5E7EB;
-                border-radius: 4px;
-                padding: 16px;
-                margin-bottom: 12px;
+                background: #FAFAFA;
+                border-radius: 16px;
+                padding: 20px;
+                margin-bottom: 16px;
             }
             
             .qr-image-clean {
                 width: 120px;
                 height: 120px;
                 object-fit: contain;
-                image-rendering: pixelated;
+                border-radius: 8px;
             }
             
             .pixel-text {
                 text-align: center;
-                font-size: 13px;
+                font-size: 14px;
+                font-weight: 300;
                 color: #64748b;
                 margin: 0;
-                font-family: 'PingFang SC', sans-serif;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
             }
             
             /* 邮箱卡片 - 横向布局 */
@@ -750,80 +709,64 @@ class PaymentModal {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                gap: 16px;
-                background: #F8F9FA;
-                border: 2px solid #E5E7EB;
-                border-radius: 4px;
-                padding: 16px;
+                gap: 20px;
+                background: #FAFAFA;
+                border-radius: 16px;
+                padding: 20px;
             }
             
             .email-address-clean {
                 flex: 1;
-                font-size: 15px;
-                font-weight: 500;
-                color: #1e293b;
-                font-family: 'Monaco', 'Menlo', monospace;
+                font-size: 16px;
+                font-weight: 300;
+                color: #1a1a1a;
+                font-family: 'Inter', 'Monaco', monospace;
             }
             
             /* 主要复制按钮 */
             .pixel-btn-primary {
                 display: inline-flex;
                 align-items: center;
-                background: #9B8CFF;
+                background: #000000;
                 color: white;
-                border: 2px solid #7B6CE8;
-                border-bottom: 4px solid #5B4CC8;
-                border-right: 4px solid #5B4CC8;
-                border-radius: 4px;
-                padding: 10px 20px;
+                border: none;
+                border-radius: 16px;
+                padding: 12px 20px;
                 font-size: 14px;
-                font-weight: 600;
+                font-weight: 300;
                 cursor: pointer;
-                transition: all 0.1s ease;
-                font-family: 'PingFang SC', sans-serif;
+                transition: all 0.2s ease;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
                 flex-shrink: 0;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
             
             .pixel-btn-primary:hover {
-                transform: translateY(-2px);
-                border-bottom: 5px solid #5B4CC8;
-                border-right: 5px solid #5B4CC8;
-                animation: pixelBtnGlow 0.3s ease;
+                background: #333333;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             }
             
             .pixel-btn-primary:active {
                 transform: translateY(0);
-                border-bottom: 2px solid #5B4CC8;
-                border-right: 2px solid #5B4CC8;
-                animation: pixelBtnPress 0.1s ease;
-            }
-            
-            @keyframes pixelBtnGlow {
-                0% { box-shadow: none; }
-                50% { box-shadow: 0 0 12px rgba(155, 140, 255, 0.6); }
-                100% { box-shadow: none; }
-            }
-            
-            @keyframes pixelBtnPress {
-                0% { background: #9B8CFF; }
-                50% { background: #8B7CFF; }
-                100% { background: #9B8CFF; }
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
             
             /* 移动端适配 */
             @media (max-width: 768px) {
                 .pixel-card-clean {
-                    padding: 16px;
+                    padding: 20px;
                 }
                 
                 .contact-method-header {
-                    gap: 10px;
-                    margin-bottom: 14px;
+                    gap: 12px;
+                    margin-bottom: 16px;
                 }
                 
                 .pixel-icon-unified {
-                    width: 32px;
-                    height: 32px;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 18px;
                 }
                 
                 .qr-image-clean {
@@ -832,33 +775,33 @@ class PaymentModal {
                 }
                 
                 .contact-method-title {
-                    font-size: 14px;
+                    font-size: 16px;
                 }
                 
                 .email-row {
                     flex-direction: column;
                     text-align: center;
-                    gap: 12px;
-                    padding: 14px;
+                    gap: 16px;
+                    padding: 16px;
                 }
                 
                 .email-address-clean {
-                    font-size: 13px;
+                    font-size: 14px;
                 }
                 
                 .pixel-btn-primary {
-                    padding: 8px 16px;
+                    padding: 10px 16px;
                     font-size: 12px;
                 }
                 
                 .pixel-font {
-                    font-size: 9px;
+                    font-size: 12px;
                 }
             }
             
             @keyframes pixelSuccessFlash {
                 0% { 
-                    background: #9B8CFF;
+                    background: #000000;
                     transform: scale(1); 
                 }
                 50% { 
@@ -884,32 +827,32 @@ class PaymentModal {
             
             .thanks-hero {
                 text-align: center;
-                padding: 24px 0;
+                padding: 32px 0;
             }
             
             .success-animation {
                 position: relative;
                 display: inline-block;
-                margin-bottom: 20px;
-                animation: pixelSuccessPulse 1s ease-in-out infinite;
+                margin-bottom: 24px;
+                animation: successPulse 1s ease-in-out infinite;
             }
             
-            @keyframes pixelSuccessPulse {
+            @keyframes successPulse {
                 0%, 100% {
                     transform: scale(1);
                 }
                 50% {
-                    transform: scale(1.05);
+                    transform: scale(1.02);
                 }
             }
             
             .checkmark {
                 stroke-dasharray: 50;
                 stroke-dashoffset: 50;
-                animation: pixelDrawCheck 0.8s ease-out 0.2s forwards;
+                animation: drawCheck 0.8s ease-out 0.2s forwards;
             }
             
-            @keyframes pixelDrawCheck {
+            @keyframes drawCheck {
                 to {
                     stroke-dashoffset: 0;
                 }
@@ -926,8 +869,8 @@ class PaymentModal {
             .sparkle {
                 position: absolute;
                 font-size: 16px;
-                animation: pixelSparkle 2s ease-in-out infinite;
-                opacity: 0.8;
+                animation: sparkle 2s ease-in-out infinite;
+                opacity: 0.7;
             }
             
             .sparkle-1 {
@@ -954,125 +897,122 @@ class PaymentModal {
                 animation-delay: 0.9s;
             }
             
-            @keyframes pixelSparkle {
+            @keyframes sparkle {
                 0%, 100% {
                     transform: translateY(0px);
-                    opacity: 0.8;
+                    opacity: 0.7;
                 }
                 50% {
-                    transform: translateY(-8px);
+                    transform: translateY(-6px);
                     opacity: 1;
                 }
             }
             
             .thanks-title {
-                font-size: 16px;
-                font-weight: 400;
+                font-size: 24px;
+                font-weight: 200;
                 color: #34C759;
-                margin: 0 0 16px 0;
-                line-height: 1.4;
-                text-shadow: 2px 2px 0px rgba(52, 199, 89, 0.3);
+                margin: 0 0 20px 0;
+                line-height: 1.3;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
             }
             
             .pixel-status-badge.success-badge {
                 background: #34C759;
                 color: white;
-                padding: 6px 12px;
-                border: 2px solid #28A745;
-                border-bottom: 3px solid #1E7E34;
-                border-right: 3px solid #1E7E34;
-                border-radius: 2px;
-                margin-bottom: 20px;
-                font-size: 10px;
+                padding: 8px 16px;
+                border-radius: 20px;
+                margin-bottom: 24px;
+                font-size: 14px;
+                font-weight: 300;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
             }
             
             .download-status {
                 background: #FFFFFF;
-                border: 2px solid #9B8CFF;
-                border-bottom: 3px solid #7B6CE8;
-                border-right: 3px solid #7B6CE8;
-                border-radius: 4px;
-                padding: 16px;
-                margin-bottom: 16px;
+                border: 1px solid #E5E7EB;
+                border-radius: 20px;
+                padding: 24px;
+                margin-bottom: 20px;
                 position: relative;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             }
             
             .download-icon {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 40px;
-                height: 40px;
-                background: #9B8CFF;
-                border: 2px solid #7B6CE8;
-                border-bottom: 3px solid #5B4CC8;
-                border-right: 3px solid #5B4CC8;
-                border-radius: 4px;
-                margin-bottom: 12px;
+                width: 48px;
+                height: 48px;
+                background: #000000;
+                border-radius: 24px;
+                margin-bottom: 16px;
                 color: white;
-                animation: pixelDownloadBounce 1.5s ease-in-out infinite;
+                animation: downloadBounce 1.5s ease-in-out infinite;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
             
-            @keyframes pixelDownloadBounce {
+            @keyframes downloadBounce {
                 0%, 100% {
                     transform: translateY(0px);
                 }
                 50% {
-                    transform: translateY(-4px);
+                    transform: translateY(-3px);
                 }
             }
             
             .download-text {
                 display: block;
-                font-size: 12px;
-                color: #1e293b;
-                margin-bottom: 12px;
+                font-size: 16px;
+                font-weight: 300;
+                color: #1a1a1a;
+                margin-bottom: 16px;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
             }
             
             .countdown-container {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 4px;
-                font-size: 12px;
+                gap: 6px;
+                font-size: 14px;
                 color: #64748b;
-                font-family: 'PingFang SC', sans-serif;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                font-weight: 300;
             }
             
             .pixel-counter {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 24px;
-                height: 24px;
+                width: 28px;
+                height: 28px;
                 background: #34C759;
                 color: white;
-                border: 2px solid #28A745;
-                border-bottom: 3px solid #1E7E34;
-                border-right: 3px solid #1E7E34;
-                border-radius: 2px;
-                font-weight: 700;
-                font-size: 12px;
+                border-radius: 14px;
+                font-weight: 500;
+                font-size: 14px;
                 margin: 0 4px;
-                animation: pixelCountdownPulse 1s ease-in-out infinite;
-                font-family: 'PingFang SC', sans-serif;
+                animation: countdownPulse 1s ease-in-out infinite;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
             }
             
-            @keyframes pixelCountdownPulse {
+            @keyframes countdownPulse {
                 0%, 100% {
                     transform: scale(1);
                 }
                 50% {
-                    transform: scale(1.1);
+                    transform: scale(1.05);
                 }
             }
             
             .progress-bar {
                 width: 100%;
-                height: 8px;
-                background: #E5E7EB;
-                border: 1px solid #D1D5DB;
-                border-radius: 2px;
+                height: 6px;
+                background: #F1F5F9;
+                border-radius: 3px;
                 overflow: hidden;
                 position: relative;
             }
@@ -1080,8 +1020,8 @@ class PaymentModal {
             .progress-fill {
                 height: 100%;
                 background: #34C759;
-                border-radius: 1px;
-                animation: pixelProgressFill 3s linear forwards;
+                border-radius: 3px;
+                animation: progressFill 3s linear forwards;
                 width: 0%;
                 position: relative;
             }
@@ -1091,13 +1031,13 @@ class PaymentModal {
                 position: absolute;
                 top: 0;
                 right: 0;
-                width: 4px;
+                width: 3px;
                 height: 100%;
                 background: #28A745;
-                animation: pixelProgressGlow 0.5s ease-in-out infinite alternate;
+                animation: progressGlow 0.5s ease-in-out infinite alternate;
             }
             
-            @keyframes pixelProgressFill {
+            @keyframes progressFill {
                 0% {
                     width: 0%;
                 }
@@ -1106,9 +1046,9 @@ class PaymentModal {
                 }
             }
             
-            @keyframes pixelProgressGlow {
+            @keyframes progressGlow {
                 0% {
-                    opacity: 0.5;
+                    opacity: 0.7;
                 }
                 100% {
                     opacity: 1;
@@ -1118,15 +1058,15 @@ class PaymentModal {
             /* 移动端适配 */
             @media (max-width: 768px) {
                 .thanks-hero {
-                    padding: 20px 0;
+                    padding: 24px 0;
                 }
                 
                 .thanks-title {
-                    font-size: 14px;
+                    font-size: 20px;
                 }
                 
                 .success-animation {
-                    margin-bottom: 16px;
+                    margin-bottom: 20px;
                 }
                 
                 .success-animation svg {
@@ -1139,16 +1079,32 @@ class PaymentModal {
                 }
                 
                 .download-status {
-                    padding: 14px;
+                    padding: 20px;
                 }
                 
                 .download-icon {
-                    width: 32px;
-                    height: 32px;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 20px;
+                }
+                
+                .download-text {
+                    font-size: 14px;
+                }
+                
+                .countdown-container {
+                    font-size: 12px;
+                }
+                
+                .pixel-counter {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 12px;
+                    font-size: 12px;
                 }
                 
                 .pixel-font {
-                    font-size: 9px;
+                    font-size: 12px;
                 }
             }
         `;
