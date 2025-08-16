@@ -167,21 +167,20 @@ class PaymentModal {
                             </svg>
                         </div>
                     </div>
-                    <h1 class="main-title">解锁下载，0.2元/次</h1>
-                    <p class="subtitle">轻松一下，立刻保存你的高质量文件～</p>
+                    <h1 class="main-title">打赏一片锅巴吧～</h1>
+                    <div class="price-badge">
+                        <span class="price-symbol">¥</span>
+                        <span class="price-amount">0.2</span>
+                        <span class="price-unit">/次</span>
+                    </div>
+                    
                 </div>
 
                 <div class="payment-section">
                     <div class="payment-methods">
                         <div class="payment-method">
                             <div class="payment-method-header">
-                                <div class="payment-icon wechat">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <path d="M8.5 6c-3.31 0-6 2.42-6 5.39 0 1.74.84 3.29 2.17 4.34L4 17.5l2.06-.54c.67.15 1.38.23 2.11.23.35 0 .69-.02 1.02-.07-.1-.33-.15-.67-.15-1.02 0-2.76 2.46-5 5.5-5 .34 0 .68.03 1 .09C15.03 8.51 12.1 6 8.5 6z" fill="#07C160"/>
-                                        <path d="M19 12.5c0-2.48-2.24-4.5-5-4.5s-5 2.02-5 4.5 2.24 4.5 5 4.5c.58 0 1.14-.08 1.65-.23L17.5 18l-.92-1.84C17.66 15.29 19 14.02 19 12.5z" fill="#07C160"/>
-                                    </svg>
-                                </div>
-                                <span class="payment-label">微信支付</span>
+                                
                             </div>
                             <div class="qr-container">
                                 <img src="${chrome.runtime.getURL('assets/wechat_qr.png')}" alt="微信收款码" class="qr-image">
@@ -190,22 +189,13 @@ class PaymentModal {
                         
                         <div class="payment-method">
                             <div class="payment-method-header">
-                                <div class="payment-icon alipay">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="10" fill="#1677FF"/>
-                                        <path d="M8 14.5c2.5-1 5.5-1 8 0-2.5-2-5.5-2-8 0z" fill="white"/>
-                                        <circle cx="10" cy="10" r="1.5" fill="white"/>
-                                        <circle cx="14" cy="10" r="1.5" fill="white"/>
-                                    </svg>
-                                </div>
-                                <span class="payment-label">支付宝</span>
+                               
                             </div>
                             <div class="qr-container">
                                 <img src="${chrome.runtime.getURL('assets/alipay_qr.png')}" alt="支付宝收款码" class="qr-image">
                             </div>
                         </div>
                     </div>
-                    <p class="qr-tip">请使用对应 App 扫码支付</p>
                 </div>
 
                 <div class="action-section">
@@ -214,15 +204,9 @@ class PaymentModal {
                             <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                         </svg>
-                        已付款
+                        已完成打赏
                     </button>
-                    <p class="trust-badge">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1 1v6c0 .552.448 1 1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        无需登录 · 无广告 · 无后台留存订单
-                    </p>
+                    
                 </div>
             </div>
         `;
@@ -240,7 +224,7 @@ class PaymentModal {
                     </svg>
                     返回
                 </button>
-                <h3 class="contact-title">联系我</h3>
+                <h3 class="contact-title">联系客服</h3>
                 <button class="close-btn" type="button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -249,6 +233,22 @@ class PaymentModal {
             </div>
             
             <div class="modal-content">
+                <div class="contact-hero">
+                    <div class="contact-avatar">
+                        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="32" cy="32" r="30" fill="url(#contactGradient)"/>
+                            <path d="M32 20c6.627 0 12 5.373 12 12 0 4-2 7.5-5 10l-7 7-7-7c-3-2.5-5-6-5-10 0-6.627 5.373-12 12-12z" fill="white"/>
+                            <circle cx="32" cy="32" r="4" fill="url(#contactGradient)"/>
+                            <defs>
+                                <linearGradient id="contactGradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#f472b6"/>
+                                    <stop offset="100%" stop-color="#be185d"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                   
+                </div>
 
                 <div class="contact-methods">
                     <div class="contact-method xhs-method">
@@ -260,6 +260,8 @@ class PaymentModal {
                             </svg>
                         </div>
                         <div class="contact-method-content">
+                            <h4 class="contact-method-title">小红书关注</h4>
+                          
                             <div class="qr-container">
                                 <img src="${chrome.runtime.getURL('assets/xhs_qr.png')}" alt="小红书二维码" class="qr-image">
                             </div>
@@ -275,8 +277,10 @@ class PaymentModal {
                             </svg>
                         </div>
                         <div class="contact-method-content">
+                            <h4 class="contact-method-title">邮箱联系</h4>
+                          
                             <div class="email-container">
-                                <span class="email-address">support@example.com</span>
+                                <span class="email-address">support@evedo.run</span>
                                 <button class="copy-email-btn" type="button">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
@@ -285,11 +289,11 @@ class PaymentModal {
                                     复制
                                 </button>
                             </div>
-                            <p class="contact-tip">有问题随时找我～</p>
                         </div>
                     </div>
                 </div>
 
+                
             </div>
         `;
 
@@ -334,6 +338,7 @@ class PaymentModal {
                     </div>
                     
                     <h1 class="thanks-title">谢谢支持！</h1>
+                    <p class="thanks-subtitle">您的支持是我们前进的动力</p>
                     
                     <div class="download-status">
                         <div class="download-icon">
@@ -343,7 +348,12 @@ class PaymentModal {
                                 <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="download-text">正在准备下载（<span class="countdown">3</span>s）…</span>
+                        <span class="download-text">正在准备下载...</span>
+                        <div class="countdown-container">
+                            <span class="countdown-text">弹窗将在</span>
+                            <span class="countdown">3</span>
+                            <span class="countdown-text">秒后自动关闭</span>
+                        </div>
                     </div>
                     
                     <div class="progress-bar">
@@ -440,15 +450,14 @@ class PaymentModal {
             }
             
             .main-title {
-                font-size: 24px;
+                font-size: 28px;
                 font-weight: 700;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
-                margin: 0 0 12px 0;
-                line-height: 1.3;
-                letter-spacing: -0.02em;
+                margin: 0 0 16px 0;
+                line-height: 1.2;
             }
             
             .price-badge {
@@ -480,11 +489,9 @@ class PaymentModal {
             
             .subtitle {
                 font-size: 16px;
-                font-weight: 400;
                 color: #64748b;
-                margin: 0 0 32px 0;
+                margin: 0;
                 line-height: 1.5;
-                letter-spacing: -0.01em;
             }
             
             .payment-section {
@@ -557,7 +564,6 @@ class PaymentModal {
                 font-size: 14px;
                 font-weight: 600;
                 color: #334155;
-                letter-spacing: -0.005em;
             }
             
             .qr-container {
@@ -600,7 +606,6 @@ class PaymentModal {
                 margin-bottom: 16px;
                 position: relative;
                 overflow: hidden;
-                letter-spacing: -0.01em;
             }
             
             .payment-btn::before {
@@ -632,27 +637,15 @@ class PaymentModal {
                 align-items: center;
                 gap: 8px;
                 font-size: 13px;
-                font-weight: 400;
                 color: #64748b;
                 margin: 0;
                 background: rgba(148, 163, 184, 0.1);
                 padding: 8px 16px;
                 border-radius: 20px;
-                letter-spacing: -0.005em;
             }
             
             .trust-badge svg {
                 color: #10b981;
-            }
-            
-            .qr-tip {
-                text-align: center;
-                margin-top: 16px;
-                font-size: 14px;
-                font-weight: 400;
-                color: #64748b;
-                margin-bottom: 0;
-                letter-spacing: -0.005em;
             }
             
             /* 移动端适配 */
@@ -672,7 +665,7 @@ class PaymentModal {
                 }
                 
                 .main-title {
-                    font-size: 22px;
+                    font-size: 24px;
                 }
                 
                 .contact-btn {
@@ -715,7 +708,33 @@ class PaymentModal {
                 font-size: 18px;
                 font-weight: 600;
                 color: #1e293b;
-                letter-spacing: -0.01em;
+            }
+            
+            .contact-hero {
+                text-align: center;
+                margin-bottom: 32px;
+            }
+            
+            .contact-avatar {
+                margin-bottom: 20px;
+            }
+            
+            .contact-main-title {
+                font-size: 26px;
+                font-weight: 700;
+                background: linear-gradient(135deg, #f472b6 0%, #be185d 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin: 0 0 12px 0;
+                line-height: 1.2;
+            }
+            
+            .contact-subtitle {
+                font-size: 16px;
+                color: #64748b;
+                margin: 0;
+                line-height: 1.5;
             }
             
             .contact-methods {
@@ -769,6 +788,19 @@ class PaymentModal {
                 box-shadow: 0 8px 20px rgba(244, 114, 182, 0.3);
             }
             
+            .contact-method-title {
+                font-size: 18px;
+                font-weight: 700;
+                color: #1e293b;
+                margin: 0 0 6px 0;
+            }
+            
+            .contact-method-desc {
+                font-size: 14px;
+                color: #64748b;
+                margin: 0 0 20px 0;
+            }
+            
             .qr-container {
                 display: flex;
                 justify-content: center;
@@ -789,12 +821,10 @@ class PaymentModal {
             }
             
             .qr-instruction {
-                font-size: 14px;
-                font-weight: 400;
+                font-size: 13px;
                 color: #64748b;
                 margin: 0;
                 text-align: center;
-                letter-spacing: -0.005em;
             }
             
             .email-container {
@@ -813,8 +843,7 @@ class PaymentModal {
                 font-size: 15px;
                 font-weight: 500;
                 color: #1e293b;
-                font-family: 'Monaco', 'Menlo', 'SF Mono', 'Consolas', monospace;
-                letter-spacing: -0.01em;
+                font-family: 'Monaco', 'Menlo', monospace;
             }
             
             .copy-email-btn {
@@ -842,13 +871,21 @@ class PaymentModal {
                 transform: translateY(0);
             }
             
-            .contact-tip {
-                font-size: 14px;
-                font-weight: 400;
-                color: #64748b;
-                margin: 12px 0 0 0;
+            .contact-footer {
                 text-align: center;
-                letter-spacing: -0.005em;
+                padding: 20px;
+                background: rgba(16, 185, 129, 0.05);
+                border-radius: 16px;
+                border: 1px solid rgba(16, 185, 129, 0.1);
+            }
+            
+            .response-time {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+                color: #059669;
+                font-weight: 500;
             }
             
             /* 移动端适配 */
@@ -865,6 +902,10 @@ class PaymentModal {
                 .qr-image {
                     width: 120px;
                     height: 120px;
+                }
+                
+                .contact-main-title {
+                    font-size: 22px;
                 }
                 
                 .email-container {
@@ -971,15 +1012,14 @@ class PaymentModal {
             }
             
             .thanks-title {
-                font-size: 28px;
-                font-weight: 700;
+                font-size: 32px;
+                font-weight: 800;
                 background: linear-gradient(135deg, #10b981 0%, #059669 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
-                margin: 0 0 32px 0;
-                line-height: 1.3;
-                letter-spacing: -0.02em;
+                margin: 0 0 12px 0;
+                line-height: 1.2;
             }
             
             .thanks-subtitle {
@@ -1045,10 +1085,9 @@ class PaymentModal {
             .download-text {
                 display: block;
                 font-size: 16px;
-                font-weight: 500;
+                font-weight: 600;
                 color: #0f172a;
                 margin-bottom: 12px;
-                letter-spacing: -0.01em;
             }
             
             .countdown-container {
