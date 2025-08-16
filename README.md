@@ -8,7 +8,7 @@ A lightweight browser extension that provides one-click plain text copying for A
 
 - **一键复制**: 在 AI 聊天回复中自动添加复制按钮
 - **纯文本提取**: 自动去除 Markdown 格式和 HTML 标签
-- **多网站支持**: 支持 ChatGPT、DeepSeek、豆包、Kimi 等主流 AI 聊天平台
+- **多网站支持**: 支持 DeepSeek、Kimi 等 AI 聊天平台
 - **多浏览器兼容**: 支持 Chrome、Edge、Firefox (Manifest V3)
 - **国际化**: 支持中英文界面
 - **轻量级**: 无外部依赖，性能优化
@@ -17,7 +17,7 @@ A lightweight browser extension that provides one-click plain text copying for A
 
 - **One-Click Copy**: Automatically adds copy buttons to AI chat responses
 - **Plain Text Extraction**: Removes Markdown formatting and HTML tags automatically
-- **Multi-Site Support**: Works with ChatGPT, DeepSeek, Doubao, Kimi, and other AI chat platforms
+- **Multi-Site Support**: Works with DeepSeek, Kimi, and other AI chat platforms
 - **Cross-Browser**: Compatible with Chrome, Edge, Firefox (Manifest V3)
 - **Internationalization**: Supports Chinese and English interfaces
 - **Lightweight**: No external dependencies, performance optimized
@@ -26,9 +26,7 @@ A lightweight browser extension that provides one-click plain text copying for A
 
 | 网站 / Website | 域名 / Domain | 状态 / Status |
 |---|---|---|
-| ChatGPT | chat.openai.com | ✅ |
 | DeepSeek | chat.deepseek.com | ✅ |
-| 豆包 / Doubao | www.doubao.com | ✅ |
 | Kimi | www.kimi.com | ✅ |
 
 ## 📦 安装方法 / Installation
