@@ -10,16 +10,12 @@
   "content_scripts": [
     {
       "matches": [
-        "https://chat.openai.com/*",
         "https://chat.deepseek.com/*",
-        "https://www.doubao.com/*",
         "https://www.kimi.com/*",
         "file://*/*"
       ],
       "js": [
-        "dist/content.js",
-        "dist/vendors-node_modules_canvg_lib_index_es_js.chunk.js",
-        "dist/vendors-node_modules_dompurify_dist_purify_es_mjs.chunk.js"
+        "content.js"
       ],
       "run_at": "document_idle"
     }
@@ -29,5 +25,20 @@
     "32": "icons/pastemate_cute_32.png",
     "48": "icons/pastemate_cute_48.png",
     "128": "icons/pastemate_cute_128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/wechat_qr.png",
+        "assets/alipay_qr.png",
+        "assets/xhs_qr.png",
+        "assets/logo.gif"
+      ],
+      "matches": [
+        "https://chat.deepseek.com/*",
+        "https://www.kimi.com/*",
+        "file://*/*"
+      ]
+    }
+  ]
 }

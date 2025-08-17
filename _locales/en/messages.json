@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "PureText One-Click",
+    "message": "PasteMate",
     "description": "Extension name"
   },
   "extensionDescription": {
@@ -23,5 +23,69 @@
   },
   "downloadAsPdf": {
     "message": "Download as PDF"
+  },
+  "paymentModalTitle": {
+    "message": "Support Us",
+    "description": "Payment modal title"
+  },
+  "paymentPrice": {
+    "message": "¥0.2/download",
+    "description": "Payment price"
+  },
+  "paymentConfirm": {
+    "message": "Paid",
+    "description": "Payment confirmation button"
+  },
+  "contactService": {
+    "message": "Feedback",
+    "description": "Feedback button"
+  },
+  "contactTitle": {
+    "message": "Feedback",
+    "description": "Feedback page title"
+  },
+  "backButton": {
+    "message": "Back",
+    "description": "Back button"
+  },
+  "xiaohongshuFollow": {
+    "message": "Feedback through Xiaohongshu",
+    "description": "Xiaohongshu follow title"
+  },
+  "emailContact": {
+    "message": "Email Contact",
+    "description": "Email contact title"
+  },
+  "scanToFollow": {
+    "message": "Scan to follow",
+    "description": "Scan to follow prompt"
+  },
+  "copyEmailButton": {
+    "message": "Copy",
+    "description": "Copy email button"
+  },
+  "emailCopied": {
+    "message": "Copied ✓",
+    "description": "Email copied message"
+  },
+  "downloadSuccess": {
+    "message": "Download Success",
+    "description": "Download success message"
+  },
+  "thanksDonation": {
+    "message": "Thank You",
+    "description": "Thanks for donation message"
+  },
+  "downloadFailed": {
+    "message": "Download failed, please retry",
+    "description": "Download failed message"
+  },
+  "retryDownload": {
+    "message": "Retry Download",
+    "description": "Retry download button"
+  },
+  "feedbackButton": {
+    "message": "Feedback",
+    "description": "Feedback button"
   }
 }

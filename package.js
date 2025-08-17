@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 
 const distDir = join(__dirname, 'dist');
 const packageJson = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8'));
-const zipName = `puretext-one-click-v${packageJson.version}.zip`;
+const zipName = `pastemate-v${packageJson.version}.zip`;
 
 console.log('📦 Creating extension package...');
 

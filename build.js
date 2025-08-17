@@ -15,7 +15,7 @@ if (existsSync(distDir)) {
 }
 mkdirSync(distDir, { recursive: true });
 
-console.log('🚀 Building PureText One-Click Extension...');
+console.log('🚀 Building PasteMate Extension...');
 
 // Build configuration - 将所有模块打包到content.js中
 const buildConfig = {
@@ -23,14 +23,34 @@ const buildConfig = {
   bundle: true,
   minify: false, // 暂时关闭压缩以便调试
   format: 'iife',
-  target: 'es2020',
+  target: ['chrome91', 'edge91', 'firefox91', 'safari14'], // 明确指定浏览器兼容性
   outfile: join(distDir, 'content.js'),
   platform: 'browser',
   define: {
-    'process.env.NODE_ENV': '"production"'
+    'process.env.NODE_ENV': '"production"',
+    'global': 'window' // 确保global指向window
+  },
+  // 处理Node.js polyfills
+  alias: {
+    'process': 'process/browser',
+    'buffer': 'buffer',
+    'util': 'util'
   },
   // 确保所有依赖都被打包
-  external: []
+  external: [],
+  // 添加额外的加载器配置
+  loader: {
+    '.js': 'js',
+    '.mjs': 'js',
+    '.json': 'json'
+  },
+  // 注入polyfills
+  inject: [],
+  // 保持函数名称（用于调试）
+  keepNames: true,
+  // 输出格式优化
+  legalComments: 'none',
+  charset: 'utf8'
 };
 
 try {
@@ -44,7 +64,8 @@ try {
     'sites.js',
     'src',
     '_locales',
-    'icons'
+    'icons',
+    'assets'
   ];
 
   filesToCopy.forEach(file => {
@@ -52,7 +73,7 @@ try {
     const destPath = join(distDir, file);
 
     if (existsSync(srcPath)) {
-      if (file === '_locales' || file === 'icons' || file === 'src') {
+      if (file === '_locales' || file === 'icons' || file === 'src' || file === 'assets') {
         // Copy directories recursively
         copyDirectory(srcPath, destPath);
       } else {
