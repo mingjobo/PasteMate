@@ -162,22 +162,12 @@ class PaymentModal {
 
                 <div class="payment-section">
                     <div class="payment-methods">
-                        <div class="payment-method">
-                            <div class="payment-method-header">
-                                
-                            </div>
-                            <div class="qr-container">
-                                <img src="${chrome.runtime.getURL('assets/wechat_qr.png')}" alt="微信收款码" class="qr-image">
-                            </div>
+                        <div class="qr-container">
+                            <img src="${chrome.runtime.getURL('assets/wechat_qr.png')}" alt="微信收款码" class="qr-image">
                         </div>
                         
-                        <div class="payment-method">
-                            <div class="payment-method-header">
-                               
-                            </div>
-                            <div class="qr-container">
-                                <img src="${chrome.runtime.getURL('assets/alipay_qr.png')}" alt="支付宝收款码" class="qr-image">
-                            </div>
+                        <div class="qr-container">
+                            <img src="${chrome.runtime.getURL('assets/alipay_qr.png')}" alt="支付宝收款码" class="qr-image">
                         </div>
                     </div>
                 </div>
@@ -226,7 +216,7 @@ class PaymentModal {
                         <div class="qr-container pixel-qr-clean">
                             <img src="${chrome.runtime.getURL('assets/xhs_qr.png')}" alt="小红书二维码" class="qr-image-clean">
                         </div>
-                        <p class="qr-instruction pixel-text">${chrome.i18n.getMessage('scanToFollow')}</p>
+                        
                     </div>
 
                     <div class="contact-method email-method pixel-card-clean">
@@ -240,7 +230,7 @@ class PaymentModal {
                             <h4 class="contact-method-title">${chrome.i18n.getMessage('emailContact')}</h4>
                         </div>
                         <div class="email-row">
-                            <span class="email-address-clean">support@evedo.run</span>
+                            <span class="email-address-clean">support@vedo.run</span>
                             <button class="copy-email-btn pixel-btn-primary" type="button">
                                 <span>${chrome.i18n.getMessage('copyEmailButton')}</span>
                             </button>
@@ -452,7 +442,10 @@ class PaymentModal {
                 gap: 20px;
             }
             
-            .payment-method {
+            .qr-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 background: #FFFFFF;
                 border: 1px solid #E5E7EB;
                 border-radius: 20px;
@@ -462,25 +455,16 @@ class PaymentModal {
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             }
             
-            .payment-method:hover {
+            .qr-container:hover {
                 border-color: #D1D5DB;
                 transform: translateY(-2px);
                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             }
             
-            .qr-container {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background: #FAFAFA;
-                border-radius: 16px;
-                padding: 16px;
-            }
-            
             .qr-image {
-                width: 100px;
-                height: 100px;
-                object-fit: contain;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
                 border-radius: 8px;
             }
             
@@ -528,8 +512,8 @@ class PaymentModal {
                 }
                 
                 .qr-image {
-                    width: 80px;
-                    height: 80px;
+                    width: 100%;
+                    height: 100%;
                 }
                 
                 .main-title {
@@ -668,9 +652,9 @@ class PaymentModal {
             }
             
             .qr-image-clean {
-                width: 120px;
-                height: 120px;
-                object-fit: contain;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
                 border-radius: 8px;
             }
             
@@ -749,8 +733,8 @@ class PaymentModal {
                 }
                 
                 .qr-image-clean {
-                    width: 100px;
-                    height: 100px;
+                    width: 100%;
+                    height: 100%;
                 }
                 
                 .contact-method-title {
@@ -1081,7 +1065,7 @@ class PaymentModal {
         });
 
         copyEmailBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText('support@evedo.run').then(() => {
+            navigator.clipboard.writeText('support@vedo.run').then(() => {
                 // 像素风格反馈动效
                 copyEmailBtn.innerHTML = `<span>${chrome.i18n.getMessage('emailCopied')}</span>`;
                 copyEmailBtn.style.animation = 'pixelSuccessFlash 0.3s ease';
