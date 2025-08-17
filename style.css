@@ -69,6 +69,8 @@ body {
 .nav-logo {
     width: 32px;
     height: 32px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav-menu {
@@ -205,6 +207,7 @@ body {
 .hero-image img {
     width: 256px;
     height: 256px;
+    border-radius: 24px;
     filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
 }
 
@@ -307,6 +310,11 @@ body {
 .status-active {
     background: #dcfce7;
     color: var(--success-color);
+}
+
+.status-dev {
+    background: #fef3c7;
+    color: #d97706;
 }
 
 /* Install Section */

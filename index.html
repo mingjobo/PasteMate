@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>贴伴 - AI聊天文本提取浏览器扩展</title>
-    <meta name="description" content="轻量级浏览器扩展，为DeepSeek、Kimi等AI聊天网站提供一键复制纯文本功能">
-    <link rel="icon" href="assets/icons/pastemate_cute_128.png" type="image/png">
+    <title>贴伴 (PasteMate) - AI对话完美保存为Word文档</title>
+    <meta name="description" content="轻量级浏览器扩展，将AI聊天对话导出为格式完美的Word文档，支持DeepSeek、Kimi等平台">
+    <link rel="icon" href="assets/logo.gif" type="image/gif">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <img src="assets/icons/pastemate_cute_48.png" alt="Logo" class="nav-logo">
+                <img src="assets/logo.gif" alt="Logo" class="nav-logo">
                 <span>贴伴</span>
             </div>
             <div class="nav-menu">
@@ -41,8 +41,8 @@
                     <span class="lang-en" style="display:none;">PasteMate</span>
                 </h1>
                 <p class="hero-subtitle">
-                    <span class="lang-zh">轻量级浏览器扩展，为 AI 聊天网站提供一键复制纯文本功能</span>
-                    <span class="lang-en" style="display:none;">A lightweight browser extension for one-click plain text copying from AI chat websites</span>
+                    <span class="lang-zh">轻量级浏览器扩展，将 AI 聊天对话导出为格式完美的Word文档</span>
+                    <span class="lang-en" style="display:none;">A lightweight browser extension that exports AI chat conversations to perfectly formatted Word documents</span>
                 </p>
                 <div class="hero-buttons">
                     <a href="#install" class="btn btn-primary">
@@ -56,7 +56,7 @@
                 </div>
             </div>
             <div class="hero-image">
-                <img src="assets/icons/pastemate_cute_128.png" alt="Extension Icon">
+                <img src="assets/logo.gif" alt="Extension Icon">
             </div>
         </div>
     </section>
@@ -70,18 +70,18 @@
             </h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">📋</div>
-                    <h3 class="lang-zh">一键复制</h3>
-                    <h3 class="lang-en" style="display:none;">One-Click Copy</h3>
-                    <p class="lang-zh">在 AI 聊天回复中自动添加复制按钮，一键获取纯文本</p>
-                    <p class="lang-en" style="display:none;">Automatically adds copy buttons to AI chat responses</p>
+                    <div class="feature-icon">📄</div>
+                    <h3 class="lang-zh">智能Word导出</h3>
+                    <h3 class="lang-en" style="display:none;">Smart Word Export</h3>
+                    <p class="lang-zh">一键将 AI 对话导出为格式完美的Word文档，保留表格、公式、代码块</p>
+                    <p class="lang-en" style="display:none;">Export AI conversations to perfectly formatted Word documents</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">✨</div>
-                    <h3 class="lang-zh">纯文本提取</h3>
-                    <h3 class="lang-en" style="display:none;">Plain Text Extraction</h3>
-                    <p class="lang-zh">自动去除 Markdown 格式和 HTML 标签，保留纯净文本</p>
-                    <p class="lang-en" style="display:none;">Removes Markdown and HTML tags automatically</p>
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="lang-zh">专业排版</h3>
+                    <h3 class="lang-en" style="display:none;">Professional Layout</h3>
+                    <p class="lang-zh">自动应用合适的字体、间距、标题层级，生成专业文档</p>
+                    <p class="lang-en" style="display:none;">Automatic formatting with proper fonts, spacing and headings</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🌐</div>
@@ -126,10 +126,12 @@
                 <table class="support-table">
                     <thead>
                         <tr>
-                            <th class="lang-zh">网站</th>
-                            <th class="lang-en" style="display:none;">Website</th>
+                            <th class="lang-zh">AI平台</th>
+                            <th class="lang-en" style="display:none;">Platform</th>
                             <th class="lang-zh">域名</th>
                             <th class="lang-en" style="display:none;">Domain</th>
+                            <th class="lang-zh">Word导出</th>
+                            <th class="lang-en" style="display:none;">Word Export</th>
                             <th class="lang-zh">状态</th>
                             <th class="lang-en" style="display:none;">Status</th>
                         </tr>
@@ -139,11 +141,25 @@
                             <td>DeepSeek</td>
                             <td>chat.deepseek.com</td>
                             <td><span class="status-badge status-active">✅</span></td>
+                            <td><span class="status-badge status-active">完整支持</span></td>
                         </tr>
                         <tr>
                             <td>Kimi</td>
-                            <td>www.kimi.com</td>
+                            <td>kimi.moonshot.cn</td>
                             <td><span class="status-badge status-active">✅</span></td>
+                            <td><span class="status-badge status-active">完整支持</span></td>
+                        </tr>
+                        <tr>
+                            <td>ChatGPT</td>
+                            <td>chat.openai.com</td>
+                            <td><span class="status-badge status-dev">🚧</span></td>
+                            <td><span class="status-badge status-dev">开发中</span></td>
+                        </tr>
+                        <tr>
+                            <td>豆包</td>
+                            <td>doubao.com</td>
+                            <td><span class="status-badge status-dev">🚧</span></td>
+                            <td><span class="status-badge status-dev">开发中</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -169,7 +185,7 @@
                         <li>
                             <span class="lang-zh">克隆仓库</span>
                             <span class="lang-en" style="display:none;">Clone Repository</span>
-                            <pre><code>git clone https://github.com/your-username/PureTextOne-Click.git
+                            <pre><code>git clone https://github.com/mingjobo/PureTextOne-Click.git
 cd PureTextOne-Click</code></pre>
                         </li>
                         <li>
