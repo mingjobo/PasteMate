@@ -267,11 +267,6 @@ class PaymentModal {
     }
 
     renderThanksPage() {
-        // 获取文件类型和大小信息
-        const fileType = this.downloadType === 'word' ? 'docx' : 'pdf';
-        const fileName = `纯文本复制_${new Date().toLocaleDateString().replace(/\//g, '')}.${fileType}`;
-        const estimatedSize = this.downloadType === 'word' ? '2.3' : '1.8';
-
         this.modal.innerHTML = `
             <div class="modal-header">
                 <div class="header-spacer"></div>
@@ -314,11 +309,6 @@ class PaymentModal {
                         <h1 class="main-message">下载成功</h1>
                         <p class="sub-message">谢谢打赏</p>
                     </div>
-                    
-                    <div class="file-info-minimal">
-                        <span class="file-name">${fileName}</span>
-                        <span class="file-size">${estimatedSize} MB</span>
-                    </div>
                 </div>
             </div>
         `;
@@ -326,6 +316,7 @@ class PaymentModal {
         this.applyThanksPageStyles();
         this.attachThanksPageEvents();
         this.triggerDownload();
+        this.startAutoCloseTimer();
     }
 
     applyPaymentPageStyles() {
@@ -872,7 +863,7 @@ class PaymentModal {
             .download-arrow {
                 stroke-dasharray: 20;
                 stroke-dashoffset: 20;
-                animation: downloadArrow 1.5s ease-out 0.5s forwards;
+                animation: downloadArrow 0.6s ease-out 0.2s forwards;
             }
             
             @keyframes downloadArrow {
@@ -888,7 +879,7 @@ class PaymentModal {
                 right: -5px;
                 opacity: 0;
                 transform: scale(0);
-                animation: successAppear 0.6s ease-out 2s forwards;
+                animation: successAppear 0.3s ease-out 0.9s forwards;
             }
             
             @keyframes successAppear {
@@ -909,7 +900,7 @@ class PaymentModal {
             .checkmark-path {
                 stroke-dasharray: 12;
                 stroke-dashoffset: 12;
-                animation: drawCheckmark 0.4s ease-out 2.3s forwards;
+                animation: drawCheckmark 0.25s ease-out 1.05s forwards;
             }
             
             @keyframes drawCheckmark {
@@ -931,31 +922,31 @@ class PaymentModal {
                 position: absolute;
                 font-size: 16px;
                 opacity: 0;
-                animation: particleFloat 3s ease-out 2.5s infinite;
+                animation: particleFloat 1.2s ease-out infinite;
             }
             
             .particle-1 {
                 top: -30px;
                 left: -20px;
-                animation-delay: 2.5s;
+                animation-delay: 1.4s;
             }
             
             .particle-2 {
                 top: -25px;
                 right: -25px;
-                animation-delay: 2.8s;
+                animation-delay: 1.55s;
             }
             
             .particle-3 {
                 bottom: -30px;
                 left: -15px;
-                animation-delay: 3.1s;
+                animation-delay: 1.7s;
             }
             
             .particle-4 {
                 bottom: -25px;
                 right: -20px;
-                animation-delay: 3.4s;
+                animation-delay: 1.85s;
             }
             
             @keyframes particleFloat {
@@ -963,17 +954,17 @@ class PaymentModal {
                     opacity: 0;
                     transform: translateY(0px) scale(0.8);
                 }
-                20% {
+                30% {
                     opacity: 1;
-                    transform: translateY(-10px) scale(1);
+                    transform: translateY(-8px) scale(1);
                 }
-                80% {
+                70% {
                     opacity: 1;
-                    transform: translateY(-20px) scale(1);
+                    transform: translateY(-15px) scale(1);
                 }
                 100% {
                     opacity: 0;
-                    transform: translateY(-30px) scale(0.8);
+                    transform: translateY(-25px) scale(0.8);
                 }
             }
             
@@ -990,7 +981,7 @@ class PaymentModal {
                 line-height: 1.2;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
                 opacity: 0;
-                animation: textSlideUp 0.6s ease-out 1s forwards;
+                animation: textSlideUp 0.4s ease-out 0.6s forwards;
             }
             
             .sub-message {
@@ -1000,7 +991,7 @@ class PaymentModal {
                 margin: 0;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
                 opacity: 0;
-                animation: textSlideUp 0.6s ease-out 1.3s forwards;
+                animation: textSlideUp 0.4s ease-out 0.2s forwards;
             }
             
             @keyframes textSlideUp {
@@ -1014,30 +1005,7 @@ class PaymentModal {
                 }
             }
             
-            /* 文件信息 */
-            .file-info-minimal {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 4px;
-                opacity: 0;
-                animation: textSlideUp 0.6s ease-out 1.6s forwards;
-            }
-            
-            .file-name {
-                font-size: 14px;
-                font-weight: 500;
-                color: #374151;
-                font-family: 'Inter', 'SF Mono', monospace;
-                word-break: break-all;
-            }
-            
-            .file-size {
-                font-size: 13px;
-                font-weight: 400;
-                color: #9CA3AF;
-                font-family: 'Inter', 'PingFang SC', sans-serif;
-            }
+            /* 移除文件信息相关样式 */
             
             /* 移动端适配 */
             @media (max-width: 768px) {
@@ -1075,14 +1043,6 @@ class PaymentModal {
                 
                 .particle {
                     font-size: 14px;
-                }
-                
-                .file-name {
-                    font-size: 13px;
-                }
-                
-                .file-size {
-                    font-size: 12px;
                 }
             }
         `;
@@ -1146,8 +1106,13 @@ class PaymentModal {
         });
     }
 
-    // 移除倒计时功能，只触发下载
-    // startDownloadAndCountdown 方法已被移除
+    startAutoCloseTimer() {
+        // 动画完成后自动关闭弹窗
+        // 优化后的动画序列：2.5秒内完成所有动画
+        this.countdownTimer = setTimeout(() => {
+            this.hideModal();
+        }, 2500);
+    }
 
     async triggerDownload() {
         if (this.isDownloadTriggered || !this.downloadCallback) return;
