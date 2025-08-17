@@ -31,7 +31,8 @@
       "resources": [
         "assets/wechat_qr.png",
         "assets/alipay_qr.png",
-        "assets/xhs_qr.png"
+        "assets/xhs_qr.png",
+        "assets/logo.gif"
       ],
       "matches": [
         "https://chat.deepseek.com/*",

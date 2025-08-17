@@ -150,16 +150,7 @@ class PaymentModal {
                 <div class="hero-section">
                     <div class="logo-container">
                         <div class="logo-animation">
-                            <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="64" height="64" rx="16" fill="url(#logoGradient)"/>
-                                <path d="M20 24h24M20 32h16M20 40h20" stroke="white" stroke-width="3" stroke-linecap="round"/>
-                                <defs>
-                                    <linearGradient id="logoGradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-                                        <stop offset="0%" stop-color="#6366f1"/>
-                                        <stop offset="100%" stop-color="#8b5cf6"/>
-                                    </linearGradient>
-                                </defs>
-                            </svg>
+                            <img src="${chrome.runtime.getURL('assets/logo.gif')}" alt="PureText Logo" class="logo-gif">
                         </div>
                     </div>
                     <h1 class="main-title pixel-font">${chrome.i18n.getMessage('paymentModalTitle')}</h1>
@@ -342,7 +333,7 @@ class PaymentModal {
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
-                background: #000000;
+                background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
                 color: white;
                 border: none;
                 padding: 10px 16px;
@@ -352,18 +343,18 @@ class PaymentModal {
                 cursor: pointer;
                 transition: all 0.2s ease;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
             }
             
             .contact-btn:hover {
-                background: #333333;
+                background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
                 transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
             }
             
             .contact-btn:active {
                 transform: translateY(0);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
             }
             
             .contact-btn svg {
@@ -415,6 +406,13 @@ class PaymentModal {
             .logo-animation {
                 display: inline-block;
                 animation: logoFloat 2s ease-in-out infinite;
+            }
+            
+            .logo-gif {
+                width: 64px;
+                height: 64px;
+                border-radius: 16px;
+                object-fit: contain;
             }
             
             @keyframes logoFloat {
@@ -494,7 +492,7 @@ class PaymentModal {
                 display: inline-block;
                 width: 100%;
                 padding: 16px 24px;
-                background: #000000;
+                background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
                 color: white;
                 border: none;
                 border-radius: 20px;
@@ -504,18 +502,18 @@ class PaymentModal {
                 transition: all 0.2s ease;
                 position: relative;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
             }
             
             .pixel-btn:hover {
-                background: #333333;
+                background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
                 transform: translateY(-2px);
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 8px 24px rgba(52, 152, 219, 0.4);
             }
             
             .pixel-btn:active {
                 transform: translateY(0);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
             }
             
             /* 移动端适配 */
@@ -644,10 +642,10 @@ class PaymentModal {
                 justify-content: center;
                 width: 40px;
                 height: 40px;
-                background: #000000;
+                background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
                 border-radius: 20px;
                 flex-shrink: 0;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
             }
             
             .contact-method-title {
@@ -708,7 +706,7 @@ class PaymentModal {
             .pixel-btn-primary {
                 display: inline-flex;
                 align-items: center;
-                background: #000000;
+                background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
                 color: white;
                 border: none;
                 border-radius: 16px;
@@ -719,18 +717,18 @@ class PaymentModal {
                 transition: all 0.2s ease;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
                 flex-shrink: 0;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
             }
             
             .pixel-btn-primary:hover {
-                background: #333333;
+                background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
                 transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
             }
             
             .pixel-btn-primary:active {
                 transform: translateY(0);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
             }
             
             /* 移动端适配 */

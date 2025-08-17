@@ -1,67 +1,92 @@
-# 贴伴 (PasteMate)
+# 贴伴 (PasteMate) - AI对话完美保存为Word文档
 
-一个轻量级的浏览器扩展，为 AI 聊天网站提供一键复制纯文本功能。
+A lightweight browser extension that exports AI chat conversations to perfectly formatted Word documents.
 
-A lightweight browser extension that provides one-click plain text copying for AI chat websites.
+## ❌ 你是否遇到这些问题？
 
-## 🌟 功能特性 / Features
+从AI聊天网站保存内容时：
+- **复制粘贴格式全乱**：代码块、表格、公式在Word中显示混乱
+- **手动整理费时费力**：需要重新调整格式、缩进、字体样式
+- **分享不便**：无法优雅地将AI分析结果制作成正式文档
 
-- **一键复制**: 在 AI 聊天回复中自动添加复制按钮
-- **纯文本提取**: 自动去除 Markdown 格式和 HTML 标签
-- **多网站支持**: 支持 DeepSeek、Kimi 等 AI 聊天平台
+## ✅ 一键生成Word文档
+
+贴伴让你**一键将AI对话导出为格式正常的Word文档**：
+- 📄 **格式保留**：段落工整、表格结构、数学公式完美呈现
+- 🎨 **专业排版**：自动应用合适的字体、间距、标题层级
+- 📤 **即时导出**：点击按钮立即下载，无需等待和转换
+
+## 🌟 核心功能 / Core Features
+
+### 📄 智能Word文档生成
+- **完美格式保留**：内容格式保持正常显示
+- **表格精准还原**：复杂表格在Word中正常显示
+- **数学公式支持**：LaTeX公式转换为Word原生公式
+
+
+### 🎯 典型使用场景
+- **学术研究**：导出包含公式和数据的研究资料
+- **工作报告**：制作包含AI分析结果的正式报告
+- **学习笔记**：保存AI讲解的知识点，制作学习资料
+- **项目规划**：导出AI协助制定的项目方案和时间表
+
+### 💻 技术特性
 - **多浏览器兼容**: 支持 Chrome、Edge、Firefox (Manifest V3)
 - **国际化**: 支持中英文界面
-- **轻量级**: 无外部依赖，性能优化
+- **轻量级**: 优化性能，快速响应
 
----
+## 🔄 导出效果展示 / Export Effect Comparison
 
-- **One-Click Copy**: Automatically adds copy buttons to AI chat responses
-- **Plain Text Extraction**: Removes Markdown formatting and HTML tags automatically
-- **Multi-Site Support**: Works with DeepSeek, Kimi, and other AI chat platforms
-- **Cross-Browser**: Compatible with Chrome, Edge, Firefox (Manifest V3)
-- **Internationalization**: Supports Chinese and English interfaces
-- **Lightweight**: No external dependencies, performance optimized
+### ❌ 传统复制粘贴到Word
+- 代码块失去语法高亮，缩进混乱
+- 表格边框消失，数据排列错乱  
+- 数学公式显示为纯文本代码
+- 需要花费大量时间手动调整格式
 
-## 🚀 支持的网站 / Supported Websites
+### ✅ 使用贴伴一键导出
+- 代码块保持完美缩进和语法高亮
+- 表格结构清晰，边框和样式完整
+- 数学公式自动转换为Word原生格式
+- 标题层级自动设置，段落间距合理
+- 立即获得可直接使用的专业文档
 
-| 网站 / Website | 域名 / Domain | 状态 / Status |
-|---|---|---|
-| DeepSeek | chat.deepseek.com | ✅ |
-| Kimi | www.kimi.com | ✅ |
+## 🌐 当前支持平台 / Supported Platforms
 
-## 📦 安装方法 / Installation
+| AI平台 / Platform | 网址 / Domain | Word导出 / Word Export | 状态 / Status |
+|---|---|---|---|
+| DeepSeek | chat.deepseek.com | ✅ | 完整支持 |
+| Kimi | kimi.moonshot.cn | ✅ | 完整支持 |
+| ChatGPT | chat.openai.com | 🚧 | 开发中 |
+| 豆包 | doubao.com | 🚧 | 开发中 |
 
-### 从源码安装 / Install from Source
+> 我们正在努力扩展更多平台支持
 
-1. **克隆仓库 / Clone Repository**
+## 🚀 快速开始 / Quick Start
+
+### 安装使用 / Installation & Usage
+1. **克隆项目 / Clone Project**：
    ```bash
    git clone https://github.com/mingjobo/PureTextOne-Click.git
    cd PureTextOne-Click
    ```
 
-2. **安装依赖 / Install Dependencies**
+2. **构建扩展 / Build Extension**：
    ```bash
-   npm install
+   npm install && npm run build
    ```
 
-3. **构建扩展 / Build Extension**
-   ```bash
-   npm run build
-   ```
+3. **加载扩展 / Load Extension**：
+   - **Chrome/Edge**: 打开 `chrome://extensions/`，启用开发者模式，加载 `dist` 文件夹
+   - **Firefox**: 打开 `about:debugging`，临时载入 `dist/manifest.json`
 
-4. **加载到浏览器 / Load in Browser**
-   
-   **Chrome/Edge:**
-   - 打开 `chrome://extensions/` 或 `edge://extensions/`
-   - 启用"开发者模式"
-   - 点击"加载已解压的扩展程序"
-   - 选择 `dist` 文件夹
-   
-   **Firefox:**
-   - 打开 `about:debugging`
-   - 点击"此 Firefox"
-   - 点击"临时载入附加组件"
-   - 选择 `dist/manifest.json`
+4. **访问AI网站 / Visit AI Sites**：打开 DeepSeek 或 Kimi
+5. **开始对话 / Start Chat**：与AI正常对话
+6. **导出文档 / Export Document**：点击回复旁的📄按钮，立即下载Word文档
+
+### 💡 使用技巧 / Tips
+- 长对话建议分段导出，便于文档管理
+- 导出前可预览格式效果
+- 支持自定义文档标题和作者信息
 
 ### 从扩展商店安装 / Install from Extension Store
 
@@ -155,7 +180,16 @@ npm run test:coverage
 
 ## 📄 许可证 / License
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+**学习许可，禁止商用 / Educational License, Commercial Use Prohibited**
+
+本项目仅供学习和研究使用，禁止任何形式的商业用途。
+
+This project is for educational and research purposes only. Commercial use is strictly prohibited.
+
+- ✅ **允许 / Allowed**: 学习、研究、个人使用
+- ❌ **禁止 / Prohibited**: 商业用途、销售、商业分发
+
+详见 [LICENSE](LICENSE) 文件
 
 ## 🤝 贡献 / Contributing
 
@@ -171,16 +205,13 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 如果您遇到问题或有建议，请：
 
-- 提交 [GitHub Issue](https://github.com/your-username/PureTextOne-Click/issues)
+- 提交 [GitHub Issue](https://github.com/mingjobo/PasteMate/issues)
 - 查看 [FAQ](docs/FAQ.md)
 - 阅读 [故障排除指南](docs/TROUBLESHOOTING.md)
 
 ## 🎯 路线图 / Roadmap
 
 - [ ] 更多 AI 聊天网站支持
-- [ ] 自定义按钮样式
-- [ ] 快捷键支持
-- [ ] 复制历史记录
 - [ ] 批量复制功能
 
 ---
