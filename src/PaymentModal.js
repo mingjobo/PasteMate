@@ -137,7 +137,7 @@ class PaymentModal {
                         <path d="M8 12h8m-4-4v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    联系客服
+                    ${chrome.i18n.getMessage('contactService')}
                 </button>
                 <button class="close-btn" type="button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -162,9 +162,9 @@ class PaymentModal {
                             </svg>
                         </div>
                     </div>
-                    <h1 class="main-title pixel-font">打赏一下吧</h1>
+                    <h1 class="main-title pixel-font">${chrome.i18n.getMessage('paymentModalTitle')}</h1>
                     <div class="price-badge pixel-badge">
-                        <span class="pixel-font">¥0.2/次</span>
+                        <span class="pixel-font">${chrome.i18n.getMessage('paymentPrice')}</span>
                     </div>
                     
                 </div>
@@ -193,7 +193,7 @@ class PaymentModal {
 
                 <div class="action-section">
                     <button class="payment-btn pixel-btn" type="button">
-                        <span class="pixel-font">已打赏</span>
+                        <span class="pixel-font">${chrome.i18n.getMessage('paymentConfirm')}</span>
                     </button>
                 </div>
             </div>
@@ -210,9 +210,8 @@ class PaymentModal {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19 12H5m7-7l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    返回
                 </button>
-                <h3 class="contact-title pixel-font">联系客服</h3>
+                <h3 class="contact-title pixel-font">${chrome.i18n.getMessage('contactTitle')}</h3>
                 <button class="close-btn" type="button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -231,12 +230,12 @@ class PaymentModal {
                                     <circle cx="12" cy="8" r="2" fill="#9B8CFF"/>
                                 </svg>
                             </div>
-                            <h4 class="contact-method-title">小红书关注</h4>
+                            <h4 class="contact-method-title">${chrome.i18n.getMessage('xiaohongshuFollow')}</h4>
                         </div>
                         <div class="qr-container pixel-qr-clean">
                             <img src="${chrome.runtime.getURL('assets/xhs_qr.png')}" alt="小红书二维码" class="qr-image-clean">
                         </div>
-                        <p class="qr-instruction pixel-text">扫码关注</p>
+                        <p class="qr-instruction pixel-text">${chrome.i18n.getMessage('scanToFollow')}</p>
                     </div>
 
                     <div class="contact-method email-method pixel-card-clean">
@@ -247,12 +246,12 @@ class PaymentModal {
                                     <path d="M2 6l10 7 10-7" stroke="#9B8CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
-                            <h4 class="contact-method-title">邮箱联系</h4>
+                            <h4 class="contact-method-title">${chrome.i18n.getMessage('emailContact')}</h4>
                         </div>
                         <div class="email-row">
                             <span class="email-address-clean">support@evedo.run</span>
                             <button class="copy-email-btn pixel-btn-primary" type="button">
-                                <span>复制</span>
+                                <span>${chrome.i18n.getMessage('copyEmailButton')}</span>
                             </button>
                         </div>
                     </div>
@@ -306,8 +305,8 @@ class PaymentModal {
                     </div>
                     
                     <div class="success-text">
-                        <h1 class="main-message">下载成功</h1>
-                        <p class="sub-message">谢谢打赏</p>
+                        <h1 class="main-message">${chrome.i18n.getMessage('downloadSuccess')}</h1>
+                        <p class="sub-message">${chrome.i18n.getMessage('thanksDonation')}</p>
                     </div>
                 </div>
             </div>
@@ -326,7 +325,7 @@ class PaymentModal {
             
             .pixel-font {
                 font-family: 'Inter', 'PingFang SC', sans-serif;
-                font-weight: 200;
+                font-weight: 600;
                 font-size: 14px;
                 line-height: 1.4;
             }
@@ -349,7 +348,7 @@ class PaymentModal {
                 padding: 10px 16px;
                 border-radius: 16px;
                 font-size: 14px;
-                font-weight: 300;
+                font-weight: 600;
                 cursor: pointer;
                 transition: all 0.2s ease;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
@@ -425,7 +424,7 @@ class PaymentModal {
             
             .main-title {
                 font-size: 24px;
-                font-weight: 200;
+                font-weight: 700;
                 color: #1a1a1a;
                 margin: 0 0 16px 0;
                 line-height: 1.3;
@@ -440,7 +439,7 @@ class PaymentModal {
                 border-radius: 20px;
                 margin-bottom: 20px;
                 font-size: 14px;
-                font-weight: 300;
+                font-weight: 600;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
                 box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
             }
@@ -500,7 +499,7 @@ class PaymentModal {
                 border: none;
                 border-radius: 20px;
                 font-size: 16px;
-                font-weight: 300;
+                font-weight: 600;
                 cursor: pointer;
                 transition: all 0.2s ease;
                 position: relative;
@@ -561,19 +560,17 @@ class PaymentModal {
         const style = document.createElement('style');
         style.textContent = `
             .back-btn {
-                display: inline-flex;
+                display: flex;
                 align-items: center;
-                gap: 8px;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
                 background: #F8F9FA;
                 color: #64748b;
                 border: none;
-                padding: 10px 16px;
-                border-radius: 16px;
-                font-size: 14px;
-                font-weight: 300;
+                border-radius: 18px;
                 cursor: pointer;
                 transition: all 0.2s ease;
-                font-family: 'Inter', 'PingFang SC', sans-serif;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             }
             
@@ -593,8 +590,8 @@ class PaymentModal {
                 flex: 1;
                 text-align: center;
                 margin: 0;
-                font-size: 16px;
-                font-weight: 300;
+                font-size: 18px;
+                font-weight: 600;
                 color: #1a1a1a;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
             }
@@ -655,7 +652,7 @@ class PaymentModal {
             
             .contact-method-title {
                 font-size: 18px;
-                font-weight: 300;
+                font-weight: 600;
                 color: #1a1a1a;
                 margin: 0;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
@@ -682,7 +679,7 @@ class PaymentModal {
             .pixel-text {
                 text-align: center;
                 font-size: 14px;
-                font-weight: 300;
+                font-weight: 600;
                 color: #64748b;
                 margin: 0;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
@@ -702,7 +699,7 @@ class PaymentModal {
             .email-address-clean {
                 flex: 1;
                 font-size: 16px;
-                font-weight: 300;
+                font-weight: 600;
                 color: #1a1a1a;
                 font-family: 'Inter', 'Monaco', monospace;
             }
@@ -717,7 +714,7 @@ class PaymentModal {
                 border-radius: 16px;
                 padding: 12px 20px;
                 font-size: 14px;
-                font-weight: 300;
+                font-weight: 600;
                 cursor: pointer;
                 transition: all 0.2s ease;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
@@ -975,7 +972,7 @@ class PaymentModal {
             
             .main-message {
                 font-size: 32px;
-                font-weight: 300;
+                font-weight: 600;
                 color: #1a1a1a;
                 margin: 0 0 8px 0;
                 line-height: 1.2;
@@ -1088,11 +1085,11 @@ class PaymentModal {
         copyEmailBtn.addEventListener('click', () => {
             navigator.clipboard.writeText('support@evedo.run').then(() => {
                 // 像素风格反馈动效
-                copyEmailBtn.innerHTML = '<span>已复制 ✓</span>';
+                copyEmailBtn.innerHTML = `<span>${chrome.i18n.getMessage('emailCopied')}</span>`;
                 copyEmailBtn.style.animation = 'pixelSuccessFlash 0.3s ease';
                 
                 setTimeout(() => {
-                    copyEmailBtn.innerHTML = '<span>复制</span>';
+                    copyEmailBtn.innerHTML = `<span>${chrome.i18n.getMessage('copyEmailButton')}</span>`;
                     copyEmailBtn.style.animation = '';
                 }, 2000);
             });
@@ -1141,10 +1138,10 @@ class PaymentModal {
             </div>
             <div class="thanks-content">
                 <div class="thanks-logo" style="color: #f44336;">⚠️</div>
-                <h2 class="thanks-title">下载失败，请重试</h2>
+                <h2 class="thanks-title">${chrome.i18n.getMessage('downloadFailed')}</h2>
                 <div class="error-actions">
-                    <button class="retry-btn" type="button">重新下载</button>
-                    <button class="contact-support-btn" type="button">意见反馈</button>
+                    <button class="retry-btn" type="button">${chrome.i18n.getMessage('retryDownload')}</button>
+                    <button class="contact-support-btn" type="button">${chrome.i18n.getMessage('feedbackButton')}</button>
                 </div>
             </div>
         `;

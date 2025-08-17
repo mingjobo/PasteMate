@@ -23,5 +23,69 @@
   },
   "downloadAsPdf": {
     "message": "下载为PDF"
+  },
+  "paymentModalTitle": {
+    "message": "打赏一下吧",
+    "description": "付费弹窗标题"
+  },
+  "paymentPrice": {
+    "message": "¥0.2/次",
+    "description": "付费价格"
+  },
+  "paymentConfirm": {
+    "message": "已打赏",
+    "description": "确认打赏按钮"
+  },
+  "contactService": {
+    "message": "建议反馈",
+    "description": "建议反馈按钮"
+  },
+  "contactTitle": {
+    "message": "建议反馈",
+    "description": "建议反馈页面标题"
+  },
+  "backButton": {
+    "message": "返回",
+    "description": "返回按钮"
+  },
+  "xiaohongshuFollow": {
+    "message": "小红书关注",
+    "description": "小红书关注标题"
+  },
+  "emailContact": {
+    "message": "邮箱联系",
+    "description": "邮箱联系标题"
+  },
+  "scanToFollow": {
+    "message": "扫码关注",
+    "description": "扫码关注提示"
+  },
+  "copyEmailButton": {
+    "message": "复制",
+    "description": "复制邮箱按钮"
+  },
+  "emailCopied": {
+    "message": "已复制 ✓",
+    "description": "邮箱已复制提示"
+  },
+  "downloadSuccess": {
+    "message": "下载成功",
+    "description": "下载成功提示"
+  },
+  "thanksDonation": {
+    "message": "谢谢打赏",
+    "description": "感谢打赏提示"
+  },
+  "downloadFailed": {
+    "message": "下载失败，请重试",
+    "description": "下载失败提示"
+  },
+  "retryDownload": {
+    "message": "重新下载",
+    "description": "重新下载按钮"
+  },
+  "feedbackButton": {
+    "message": "意见反馈",
+    "description": "意见反馈按钮"
   }
 }
