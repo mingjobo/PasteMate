@@ -87,5 +87,9 @@
   "feedbackButton": {
     "message": "Feedback",
     "description": "Feedback button"
+  },
+  "autoCloseNotice": {
+    "message": "Will close automatically",
+    "description": "Auto close notice"
   }
 }

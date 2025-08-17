@@ -248,6 +248,10 @@ class PaymentModal {
 
     renderThanksPage() {
         this.modal.innerHTML = `
+            <div class="auto-close-toast">
+                <span class="toast-text">${chrome.i18n.getMessage('autoCloseNotice')}</span>
+            </div>
+            
             <div class="modal-header">
                 <div class="header-spacer"></div>
                 <button class="close-btn" type="button">
@@ -784,6 +788,62 @@ class PaymentModal {
     applyThanksPageStyles() {
         const style = document.createElement('style');
         style.textContent = `
+            /* 自动关闭提示 - 统一设计风格 */
+            .auto-close-toast {
+                position: absolute;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(255, 255, 255, 0.95);
+                border: 1px solid rgba(229, 231, 235, 0.8);
+                color: #64748b;
+                padding: 8px 16px;
+                border-radius: 12px;
+                font-size: 11px;
+                font-weight: 400;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
+                z-index: 10;
+                opacity: 0;
+                animation: subtleToastFadeInOut 4s ease-in-out;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+                letter-spacing: 0.2px;
+            }
+            
+            .toast-text {
+                display: inline-block;
+                animation: gentleTextPulse 3s ease-in-out infinite 0.8s;
+            }
+            
+            @keyframes subtleToastFadeInOut {
+                0% {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-8px) scale(0.98);
+                }
+                20% {
+                    opacity: 0.9;
+                    transform: translateX(-50%) translateY(0px) scale(1);
+                }
+                80% {
+                    opacity: 0.9;
+                    transform: translateX(-50%) translateY(0px) scale(1);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-8px) scale(0.98);
+                }
+            }
+            
+            @keyframes gentleTextPulse {
+                0%, 100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.7;
+                }
+            }
+            
             .header-spacer {
                 flex: 1;
             }
@@ -988,6 +1048,14 @@ class PaymentModal {
             
             /* 移动端适配 */
             @media (max-width: 768px) {
+                .auto-close-toast {
+                    top: 16px;
+                    padding: 6px 14px;
+                    font-size: 10px;
+                    border-radius: 10px;
+                    max-width: calc(100vw - 80px);
+                }
+                
                 .thanks-hero {
                     padding: 40px 0;
                 }
