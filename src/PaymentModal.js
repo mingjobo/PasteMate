@@ -162,7 +162,7 @@ class PaymentModal {
                             </svg>
                         </div>
                     </div>
-                    <h1 class="main-title pixel-font">支持锅巴!</h1>
+                    <h1 class="main-title pixel-font">打赏一下吧</h1>
                     <div class="price-badge pixel-badge">
                         <span class="pixel-font">¥0.2/次</span>
                     </div>
@@ -193,7 +193,7 @@ class PaymentModal {
 
                 <div class="action-section">
                     <button class="payment-btn pixel-btn" type="button">
-                        <span class="pixel-font">确认打赏</span>
+                        <span class="pixel-font">已打赏</span>
                     </button>
                 </div>
             </div>
@@ -267,6 +267,11 @@ class PaymentModal {
     }
 
     renderThanksPage() {
+        // 获取文件类型和大小信息
+        const fileType = this.downloadType === 'word' ? 'docx' : 'pdf';
+        const fileName = `纯文本复制_${new Date().toLocaleDateString().replace(/\//g, '')}.${fileType}`;
+        const estimatedSize = this.downloadType === 'word' ? '2.3' : '1.8';
+
         this.modal.innerHTML = `
             <div class="modal-header">
                 <div class="header-spacer"></div>
@@ -279,52 +284,40 @@ class PaymentModal {
             
             <div class="modal-content">
                 <div class="thanks-hero">
-                    <div class="success-animation">
-                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="40" cy="40" r="38" fill="url(#successGradient)" stroke="url(#successStroke)" stroke-width="4"/>
-                            <path d="M25 40l10 10 20-20" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="checkmark"/>
-                            <defs>
-                                <linearGradient id="successGradient" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#10b981"/>
-                                    <stop offset="100%" stop-color="#059669"/>
-                                </linearGradient>
-                                <linearGradient id="successStroke" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#34d399"/>
-                                    <stop offset="100%" stop-color="#10b981"/>
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                        <div class="success-sparkles">
-                            <div class="sparkle sparkle-1">✨</div>
-                            <div class="sparkle sparkle-2">🎉</div>
-                            <div class="sparkle sparkle-3">⭐</div>
-                            <div class="sparkle sparkle-4">💫</div>
+                    <div class="download-success-animation">
+                        <div class="download-icon-container">
+                            <div class="download-background-circle"></div>
+                            <div class="download-icon-main">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M7 10l5 5 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="download-arrow"/>
+                                    <path d="M12 15V3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="success-checkmark">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10" fill="#34C759"/>
+                                    <path d="M8 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="checkmark-path"/>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="floating-particles">
+                            <div class="particle particle-1">✨</div>
+                            <div class="particle particle-2">⭐</div>
+                            <div class="particle particle-3">💫</div>
+                            <div class="particle particle-4">✨</div>
                         </div>
                     </div>
                     
-                    <h1 class="thanks-title pixel-font">谢谢支持!</h1>
-                    <div class="pixel-status-badge success-badge">
-                        <span class="pixel-font">下载已启动</span>
+                    <div class="success-text">
+                        <h1 class="main-message">下载成功</h1>
+                        <p class="sub-message">谢谢打赏</p>
                     </div>
                     
-                    <div class="download-status">
-                        <div class="download-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <span class="download-text pixel-font">正在准备下载...</span>
-                        <div class="countdown-container">
-                            <span class="countdown-text">弹窗将在</span>
-                            <span class="countdown pixel-counter">3</span>
-                            <span class="countdown-text">秒后自动关闭</span>
-                        </div>
-                    </div>
-                    
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
+                    <div class="file-info-minimal">
+                        <span class="file-name">${fileName}</span>
+                        <span class="file-size">${estimatedSize} MB</span>
                     </div>
                 </div>
             </div>
@@ -332,7 +325,7 @@ class PaymentModal {
 
         this.applyThanksPageStyles();
         this.attachThanksPageEvents();
-        this.startDownloadAndCountdown();
+        this.triggerDownload();
     }
 
     applyPaymentPageStyles() {
@@ -827,38 +820,106 @@ class PaymentModal {
             
             .thanks-hero {
                 text-align: center;
-                padding: 32px 0;
+                padding: 48px 0;
             }
             
-            .success-animation {
+            /* 下载成功动画容器 */
+            .download-success-animation {
                 position: relative;
                 display: inline-block;
-                margin-bottom: 24px;
-                animation: successPulse 1s ease-in-out infinite;
+                margin-bottom: 32px;
             }
             
-            @keyframes successPulse {
+            .download-icon-container {
+                position: relative;
+                display: inline-block;
+                width: 80px;
+                height: 80px;
+            }
+            
+            /* 背景圆圈 */
+            .download-background-circle {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 80px;
+                height: 80px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 50%;
+                animation: downloadPulse 2s ease-in-out infinite;
+            }
+            
+            @keyframes downloadPulse {
                 0%, 100% {
                     transform: scale(1);
+                    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
                 }
                 50% {
-                    transform: scale(1.02);
+                    transform: scale(1.05);
+                    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
                 }
             }
             
-            .checkmark {
-                stroke-dasharray: 50;
-                stroke-dashoffset: 50;
-                animation: drawCheck 0.8s ease-out 0.2s forwards;
+            /* 下载图标 */
+            .download-icon-main {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 2;
             }
             
-            @keyframes drawCheck {
+            .download-arrow {
+                stroke-dasharray: 20;
+                stroke-dashoffset: 20;
+                animation: downloadArrow 1.5s ease-out 0.5s forwards;
+            }
+            
+            @keyframes downloadArrow {
                 to {
                     stroke-dashoffset: 0;
                 }
             }
             
-            .success-sparkles {
+            /* 成功标记 */
+            .success-checkmark {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                opacity: 0;
+                transform: scale(0);
+                animation: successAppear 0.6s ease-out 2s forwards;
+            }
+            
+            @keyframes successAppear {
+                0% {
+                    opacity: 0;
+                    transform: scale(0) rotate(180deg);
+                }
+                50% {
+                    opacity: 1;
+                    transform: scale(1.2) rotate(0deg);
+                }
+                100% {
+                    opacity: 1;
+                    transform: scale(1) rotate(0deg);
+                }
+            }
+            
+            .checkmark-path {
+                stroke-dasharray: 12;
+                stroke-dashoffset: 12;
+                animation: drawCheckmark 0.4s ease-out 2.3s forwards;
+            }
+            
+            @keyframes drawCheckmark {
+                to {
+                    stroke-dashoffset: 0;
+                }
+            }
+            
+            /* 浮动粒子 */
+            .floating-particles {
                 position: absolute;
                 top: 50%;
                 left: 50%;
@@ -866,244 +927,161 @@ class PaymentModal {
                 pointer-events: none;
             }
             
-            .sparkle {
+            .particle {
                 position: absolute;
                 font-size: 16px;
-                animation: sparkle 2s ease-in-out infinite;
-                opacity: 0.7;
+                opacity: 0;
+                animation: particleFloat 3s ease-out 2.5s infinite;
             }
             
-            .sparkle-1 {
-                top: -40px;
-                left: -16px;
-                animation-delay: 0s;
-            }
-            
-            .sparkle-2 {
+            .particle-1 {
                 top: -30px;
-                right: -20px;
-                animation-delay: 0.3s;
+                left: -20px;
+                animation-delay: 2.5s;
             }
             
-            .sparkle-3 {
-                bottom: -35px;
-                left: -18px;
-                animation-delay: 0.6s;
+            .particle-2 {
+                top: -25px;
+                right: -25px;
+                animation-delay: 2.8s;
             }
             
-            .sparkle-4 {
+            .particle-3 {
                 bottom: -30px;
-                right: -16px;
-                animation-delay: 0.9s;
+                left: -15px;
+                animation-delay: 3.1s;
             }
             
-            @keyframes sparkle {
-                0%, 100% {
-                    transform: translateY(0px);
-                    opacity: 0.7;
+            .particle-4 {
+                bottom: -25px;
+                right: -20px;
+                animation-delay: 3.4s;
+            }
+            
+            @keyframes particleFloat {
+                0% {
+                    opacity: 0;
+                    transform: translateY(0px) scale(0.8);
                 }
-                50% {
-                    transform: translateY(-6px);
+                20% {
                     opacity: 1;
+                    transform: translateY(-10px) scale(1);
+                }
+                80% {
+                    opacity: 1;
+                    transform: translateY(-20px) scale(1);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateY(-30px) scale(0.8);
                 }
             }
             
-            .thanks-title {
-                font-size: 24px;
-                font-weight: 200;
-                color: #34C759;
-                margin: 0 0 20px 0;
-                line-height: 1.3;
-                font-family: 'Inter', 'PingFang SC', sans-serif;
-            }
-            
-            .pixel-status-badge.success-badge {
-                background: #34C759;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 20px;
+            /* 文本区域 */
+            .success-text {
                 margin-bottom: 24px;
-                font-size: 14px;
-                font-weight: 300;
-                font-family: 'Inter', 'PingFang SC', sans-serif;
-                box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
             }
             
-            .download-status {
-                background: #FFFFFF;
-                border: 1px solid #E5E7EB;
-                border-radius: 20px;
-                padding: 24px;
-                margin-bottom: 20px;
-                position: relative;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            }
-            
-            .download-icon {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 48px;
-                height: 48px;
-                background: #000000;
-                border-radius: 24px;
-                margin-bottom: 16px;
-                color: white;
-                animation: downloadBounce 1.5s ease-in-out infinite;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-            
-            @keyframes downloadBounce {
-                0%, 100% {
-                    transform: translateY(0px);
-                }
-                50% {
-                    transform: translateY(-3px);
-                }
-            }
-            
-            .download-text {
-                display: block;
-                font-size: 16px;
+            .main-message {
+                font-size: 32px;
                 font-weight: 300;
                 color: #1a1a1a;
-                margin-bottom: 16px;
+                margin: 0 0 8px 0;
+                line-height: 1.2;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
+                opacity: 0;
+                animation: textSlideUp 0.6s ease-out 1s forwards;
             }
             
-            .countdown-container {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                font-size: 14px;
+            .sub-message {
+                font-size: 16px;
+                font-weight: 400;
                 color: #64748b;
+                margin: 0;
                 font-family: 'Inter', 'PingFang SC', sans-serif;
-                font-weight: 300;
+                opacity: 0;
+                animation: textSlideUp 0.6s ease-out 1.3s forwards;
             }
             
-            .pixel-counter {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 28px;
-                height: 28px;
-                background: #34C759;
-                color: white;
-                border-radius: 14px;
-                font-weight: 500;
-                font-size: 14px;
-                margin: 0 4px;
-                animation: countdownPulse 1s ease-in-out infinite;
-                font-family: 'Inter', 'PingFang SC', sans-serif;
-                box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
-            }
-            
-            @keyframes countdownPulse {
-                0%, 100% {
-                    transform: scale(1);
-                }
-                50% {
-                    transform: scale(1.05);
-                }
-            }
-            
-            .progress-bar {
-                width: 100%;
-                height: 6px;
-                background: #F1F5F9;
-                border-radius: 3px;
-                overflow: hidden;
-                position: relative;
-            }
-            
-            .progress-fill {
-                height: 100%;
-                background: #34C759;
-                border-radius: 3px;
-                animation: progressFill 3s linear forwards;
-                width: 0%;
-                position: relative;
-            }
-            
-            .progress-fill::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 3px;
-                height: 100%;
-                background: #28A745;
-                animation: progressGlow 0.5s ease-in-out infinite alternate;
-            }
-            
-            @keyframes progressFill {
+            @keyframes textSlideUp {
                 0% {
-                    width: 0%;
-                }
-                100% {
-                    width: 100%;
-                }
-            }
-            
-            @keyframes progressGlow {
-                0% {
-                    opacity: 0.7;
+                    opacity: 0;
+                    transform: translateY(20px);
                 }
                 100% {
                     opacity: 1;
+                    transform: translateY(0);
                 }
+            }
+            
+            /* 文件信息 */
+            .file-info-minimal {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                opacity: 0;
+                animation: textSlideUp 0.6s ease-out 1.6s forwards;
+            }
+            
+            .file-name {
+                font-size: 14px;
+                font-weight: 500;
+                color: #374151;
+                font-family: 'Inter', 'SF Mono', monospace;
+                word-break: break-all;
+            }
+            
+            .file-size {
+                font-size: 13px;
+                font-weight: 400;
+                color: #9CA3AF;
+                font-family: 'Inter', 'PingFang SC', sans-serif;
             }
             
             /* 移动端适配 */
             @media (max-width: 768px) {
                 .thanks-hero {
-                    padding: 24px 0;
+                    padding: 40px 0;
                 }
                 
-                .thanks-title {
-                    font-size: 20px;
+                .download-icon-container {
+                    width: 70px;
+                    height: 70px;
                 }
                 
-                .success-animation {
-                    margin-bottom: 20px;
+                .download-background-circle {
+                    width: 70px;
+                    height: 70px;
                 }
                 
-                .success-animation svg {
-                    width: 60px;
-                    height: 60px;
+                .download-icon-main svg {
+                    width: 28px;
+                    height: 28px;
                 }
                 
-                .sparkle {
+                .success-checkmark svg {
+                    width: 20px;
+                    height: 20px;
+                }
+                
+                .main-message {
+                    font-size: 28px;
+                }
+                
+                .sub-message {
                     font-size: 14px;
                 }
                 
-                .download-status {
-                    padding: 20px;
-                }
-                
-                .download-icon {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 20px;
-                }
-                
-                .download-text {
+                .particle {
                     font-size: 14px;
                 }
                 
-                .countdown-container {
-                    font-size: 12px;
+                .file-name {
+                    font-size: 13px;
                 }
                 
-                .pixel-counter {
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 12px;
-                    font-size: 12px;
-                }
-                
-                .pixel-font {
+                .file-size {
                     font-size: 12px;
                 }
             }
@@ -1168,30 +1146,8 @@ class PaymentModal {
         });
     }
 
-    startDownloadAndCountdown() {
-        // 立即触发下载
-        this.triggerDownload();
-        
-        // 开始3秒倒计时
-        let countdown = 3;
-        const countdownElement = this.modal.querySelector('.countdown');
-        
-        const updateCountdown = () => {
-            countdown--;
-            if (countdownElement) {
-                countdownElement.textContent = countdown;
-            }
-            
-            if (countdown > 0) {
-                this.countdownTimer = setTimeout(updateCountdown, 1000);
-            } else {
-                // 倒计时结束，自动关闭弹窗
-                this.hideModal();
-            }
-        };
-        
-        this.countdownTimer = setTimeout(updateCountdown, 1000);
-    }
+    // 移除倒计时功能，只触发下载
+    // startDownloadAndCountdown 方法已被移除
 
     async triggerDownload() {
         if (this.isDownloadTriggered || !this.downloadCallback) return;
@@ -1223,7 +1179,7 @@ class PaymentModal {
                 <h2 class="thanks-title">下载失败，请重试</h2>
                 <div class="error-actions">
                     <button class="retry-btn" type="button">重新下载</button>
-                    <button class="contact-support-btn" type="button">联系客服</button>
+                    <button class="contact-support-btn" type="button">意见反馈</button>
                 </div>
             </div>
         `;
