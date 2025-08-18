@@ -35,7 +35,10 @@
       "Bash(curl:*)",
       "Bash(mv:*)",
       "Bash(tree:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "WebFetch(domain:learn.microsoft.com)",
+      "Bash(open:*)",
+      "WebFetch(domain:microsoftedge.microsoft.com)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

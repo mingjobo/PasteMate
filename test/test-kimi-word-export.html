@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi Word导出功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .kimi-content {
+            background: #f8f9fa;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .test-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .table.markdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .table.markdown-table th,
+        .table.markdown-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .table.markdown-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .katex-container {
+            margin: 15px 0;
+        }
+        .math-display {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Kimi Word导出功能测试</h1>
+        <div class="test-info">
+            <strong>测试说明：</strong>
+            <br>1. 点击"测试Kimi Word导出"按钮测试改进后的功能
+            <br>2. 点击"测试DeepSeek Word导出"按钮确保兼容性
+            <br>3. 下载的Word文档应包含所有格式：标题、列表、表格、数学公式、代码等
+        </div>
+
+        <div class="buttons">
+            <button onclick="testKimiWordExport()">🔸 测试Kimi Word导出</button>
+            <button onclick="testDeepSeekWordExport()">🔹 测试DeepSeek Word导出</button>
+        </div>
+
+        <!-- Kimi 样式的测试内容 -->
+        <div class="kimi-content segment-content-box">
+            <div class="markdown-container">
+                <div class="markdown">
+                    <div class="paragraph">下面这段文字一次性示范了 .docx 里所有常见格式，你可以直接把它复制到 Word 里，看哪些能通过"粘贴保留源格式"被识别，哪些需要手动再点一下按钮。</div>
+                    <hr>
+                    <h1>实验报告：2025 年 8 月 8 日</h1>
+                    <h2>1 研究背景</h2>
+                    <div class="paragraph">本报告旨在验证<strong>牛顿第二定律</strong> 
+                        <span class="katex-container">
+                            <span class="katex">
+                                <annotation encoding="application/x-tex">F = ma</annotation>
+                                F = ma
+                            </span>
+                        </span> 在小车滑轨实验中的适用性。
+                    </div>
+                    <h3>1.1 实验假设</h3>
+                    <ul>
+                        <li><div class="paragraph">假设小车所受外力仅由砝码重力提供；</div></li>
+                        <li><div class="paragraph">忽略滑轮摩擦与空气阻力。</div></li>
+                    </ul>
+                    <div class="paragraph"><strong>注意</strong>：以上假设在<em>真实场景</em>中并不完全成立，因此需要误差分析。</div>
+                    
+                    <h2>2 实验数据</h2>
+                    <div class="table markdown-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>砝码质量 m / g</th>
+                                    <th>加速度 a / m·s⁻²</th>
+                                    <th>计算力 F / N</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>50</td>
+                                    <td>0.49</td>
+                                    <td>0.245</td>
+                                </tr>
+                                <tr>
+                                    <td>100</td>
+                                    <td>0.98</td>
+                                    <td>0.980</td>
+                                </tr>
+                                <tr>
+                                    <td>150</td>
+                                    <td>1.47</td>
+                                    <td>1.470</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h2>3 结果与讨论</h2>
+                    <div class="paragraph">如图 1 所示，实验数据与理论值之间呈显著线性关系（R² = 0.999）。</div>
+                    <blockquote>
+                        <div class="paragraph">图 1 位置：正文下方，设置为"嵌入型"环绕。</div>
+                    </blockquote>
+                    
+                    <h3>3.1 误差来源</h3>
+                    <ol>
+                        <li><div class="paragraph"><strong>滑轮摩擦</strong>：导致测量加速度偏小；</div></li>
+                        <li><div class="paragraph"><em>空气阻力</em>：随速度增大而增加；</div></li>
+                        <li><div class="paragraph">读数误差：人工计时精度 ±0.05 s。</div></li>
+                    </ol>
+
+                    <h2>4 结论</h2>
+                    <div class="paragraph">综合上述分析，可认为在小误差范围内验证了公式</div>
+                    <span class="katex-container math-display">
+                        <span class="katex">
+                            <annotation encoding="application/x-tex">\sum F = m \frac{d^2 x}{dt^2}</annotation>
+                            ∑F = m d²x/dt²
+                        </span>
+                    </span>
+                    <div class="paragraph">的正确性。</div>
+                    <hr>
+                    
+                    <h3>附：代码示例</h3>
+                    <pre><code>def calculate_force(mass, acceleration):
+    """计算牛顿第二定律中的力"""
+    return mass * acceleration
+
+# 示例计算
+masses = [0.05, 0.1, 0.15]  # kg
+accelerations = [0.49, 0.98, 1.47]  # m/s²
+
+for m, a in zip(masses, accelerations):
+    force = calculate_force(m, a)
+    print(f"质量: {m} kg, 加速度: {a} m/s², 力: {force} N")</code></pre>
+
+                    <div class="paragraph">行内代码示例：使用 <code>numpy.array()</code> 进行向量计算。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DeepSeek 样式的测试内容 -->
+        <div class="deepseek-content ds-markdown ds-markdown--block" style="margin-top: 40px; background: #f0f8ff; border: 2px solid #4CAF50; border-radius: 8px; padding: 20px;">
+            <h2>DeepSeek 格式测试内容</h2>
+            <p class="ds-markdown-paragraph">这是一个 <strong>DeepSeek</strong> 格式的段落，包含<em>斜体</em>和<code>行内代码</code>。</p>
+            <ul>
+                <li>
+                    <p class="ds-markdown-paragraph">DeepSeek列表项1</p>
+                </li>
+                <li>
+                    <p class="ds-markdown-paragraph">DeepSeek列表项2</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        // 动态导入所需模块
+        async function loadModules() {
+            const [
+                { KimiHtmlFormatter },
+                { DeepSeekHtmlFormatter },
+                { exportToWord }
+            ] = await Promise.all([
+                import('../src/formatters/KimiHtmlFormatter.js'),
+                import('../src/formatters/DeepSeekHtmlFormatter.js'),
+                import('../src/export-to-word.js')
+            ]);
+            
+            return { KimiHtmlFormatter, DeepSeekHtmlFormatter, exportToWord };
+        }
+
+        // 测试Kimi Word导出功能
+        window.testKimiWordExport = async function() {
+            try {
+                console.log('🧪 开始测试Kimi Word导出功能...');
+                
+                const { KimiHtmlFormatter, exportToWord } = await loadModules();
+                
+                // 获取Kimi格式的测试内容
+                const kimiContent = document.querySelector('.kimi-content');
+                if (!kimiContent) {
+                    throw new Error('未找到Kimi测试内容');
+                }
+                
+                console.log('📄 找到Kimi测试内容');
+                
+                // 初始化格式化器
+                const formatter = new KimiHtmlFormatter();
+                
+                // 检查是否可以处理该内容
+                const canHandle = formatter.canHandle(kimiContent);
+                console.log('🔍 格式化器可以处理该内容:', canHandle);
+                
+                if (!canHandle) {
+                    console.warn('⚠️ 格式化器无法处理该内容，使用原始HTML');
+                }
+                
+                // 格式化内容
+                const formattedHtml = await formatter.format(kimiContent);
+                console.log('✅ HTML格式化完成，长度:', formattedHtml.length);
+                console.log('📝 格式化结果预览:', formattedHtml.substring(0, 500) + '...');
+                
+                // 导出为Word
+                await exportToWord(
+                    formattedHtml, 
+                    'Kimi测试导出.docx',
+                    kimiContent,
+                    'kimi'
+                );
+                
+                alert('✅ Kimi Word导出测试完成！请检查下载的文档。');
+                
+            } catch (error) {
+                console.error('❌ Kimi Word导出测试失败:', error);
+                alert('❌ Kimi Word导出测试失败: ' + error.message);
+            }
+        };
+
+        // 测试DeepSeek Word导出功能
+        window.testDeepSeekWordExport = async function() {
+            try {
+                console.log('🧪 开始测试DeepSeek Word导出功能...');
+                
+                const { DeepSeekHtmlFormatter, exportToWord } = await loadModules();
+                
+                // 获取DeepSeek格式的测试内容
+                const deepseekContent = document.querySelector('.deepseek-content');
+                if (!deepseekContent) {
+                    throw new Error('未找到DeepSeek测试内容');
+                }
+                
+                console.log('📄 找到DeepSeek测试内容');
+                
+                // 初始化格式化器
+                const formatter = new DeepSeekHtmlFormatter();
+                
+                // 检查是否可以处理该内容
+                const canHandle = formatter.canHandle(deepseekContent);
+                console.log('🔍 格式化器可以处理该内容:', canHandle);
+                
+                if (!canHandle) {
+                    console.warn('⚠️ 格式化器无法处理该内容，使用原始HTML');
+                }
+                
+                // 格式化内容
+                const formattedHtml = await formatter.format(deepseekContent);
+                console.log('✅ HTML格式化完成，长度:', formattedHtml.length);
+                console.log('📝 格式化结果预览:', formattedHtml.substring(0, 500) + '...');
+                
+                // 导出为Word
+                await exportToWord(
+                    formattedHtml, 
+                    'DeepSeek测试导出.docx',
+                    deepseekContent,
+                    'deepseek'
+                );
+                
+                alert('✅ DeepSeek Word导出测试完成！请检查下载的文档。');
+                
+            } catch (error) {
+                console.error('❌ DeepSeek Word导出测试失败:', error);
+                alert('❌ DeepSeek Word导出测试失败: ' + error.message);
+            }
+        };
+
+        console.log('🚀 测试页面加载完成');
+    </script>
+</body>
+</html>
