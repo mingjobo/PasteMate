@@ -32,7 +32,10 @@
       "Bash(brew install:*)",
       "Bash(file:*)",
       "Bash(ffmpeg:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mv:*)",
+      "Bash(tree:*)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
