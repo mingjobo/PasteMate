@@ -101,6 +101,61 @@ function parseKimiHtmlToDocxParagraphs(html, bulletRef = 'my-bullet', orderedRef
     }
   }
 
+  // 处理包含<br>标签的段落，将其分割成多个Word段落
+  function parseParagraphWithBreaks(node) {
+    const result = [];
+    const segments = [];
+    let currentSegment = [];
+    
+    // 递归收集所有内容，遇到<br>时分段
+    function collectContent(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        if (text.trim()) {
+          currentSegment.push(new TextRun({ text }));
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+        
+        if (tag === 'br') {
+          // 遇到<br>，结束当前段落
+          if (currentSegment.length > 0) {
+            segments.push([...currentSegment]);
+            currentSegment = [];
+          }
+        } else {
+          // 其他元素，解析内联内容
+          const inlineContent = parseInlineElements(node);
+          currentSegment.push(...inlineContent);
+        }
+      }
+    }
+    
+    // 遍历节点的所有子节点
+    for (const child of node.childNodes) {
+      collectContent(child);
+    }
+    
+    // 处理最后一段
+    if (currentSegment.length > 0) {
+      segments.push(currentSegment);
+    }
+    
+    // 为每一段创建Paragraph
+    segments.forEach(segment => {
+      if (segment.length > 0) {
+        result.push(
+          new Paragraph({
+            children: segment,
+            spacing: { after: 120 },
+          })
+        );
+      }
+    });
+    
+    return result.length > 0 ? result : [new Paragraph({ children: [new TextRun({ text: '' })] })];
+  }
+
   function walk(node, listLevel = 0, inListItem = false) {
     if (node.nodeType === Node.TEXT_NODE) {
       // 文本节点在列表外才处理
@@ -221,15 +276,9 @@ function parseKimiHtmlToDocxParagraphs(html, bulletRef = 'my-bullet', orderedRef
         if (!inListItem) {
           // 检查是否为段落容器
           if (className.includes('paragraph') || tag === 'p') {
-            const children = parseInlineElements(node);
-            if (children.length > 0) {
-              paragraphs.push(
-                new Paragraph({
-                  children: children,
-                  spacing: { after: 120 },
-                })
-              );
-            }
+            // 处理包含<br>标签的段落，按换行符分割成多个段落
+            const paragraphContent = parseParagraphWithBreaks(node);
+            paragraphContent.forEach(para => paragraphs.push(para));
           } else {
             // 普通div，递归处理子节点
             Array.from(node.childNodes).forEach(child => 
@@ -529,6 +578,61 @@ function parseDeepSeekHtmlToDocxParagraphs(html, bulletRef = 'my-bullet', ordere
     }
   }
 
+  // 处理包含<br>标签的段落，将其分割成多个Word段落 (DeepSeek版本)
+  function parseParagraphWithBreaks(node) {
+    const result = [];
+    const segments = [];
+    let currentSegment = [];
+    
+    // 递归收集所有内容，遇到<br>时分段
+    function collectContent(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        if (text.trim()) {
+          currentSegment.push(new TextRun({ text }));
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+        
+        if (tag === 'br') {
+          // 遇到<br>，结束当前段落
+          if (currentSegment.length > 0) {
+            segments.push([...currentSegment]);
+            currentSegment = [];
+          }
+        } else {
+          // 其他元素，解析内联内容
+          const inlineContent = parseInlineElements(node);
+          currentSegment.push(...inlineContent);
+        }
+      }
+    }
+    
+    // 遍历节点的所有子节点
+    for (const child of node.childNodes) {
+      collectContent(child);
+    }
+    
+    // 处理最后一段
+    if (currentSegment.length > 0) {
+      segments.push(currentSegment);
+    }
+    
+    // 为每一段创建Paragraph
+    segments.forEach(segment => {
+      if (segment.length > 0) {
+        result.push(
+          new Paragraph({
+            children: segment,
+            spacing: { after: 120 },
+          })
+        );
+      }
+    });
+    
+    return result.length > 0 ? result : [new Paragraph({ children: [new TextRun({ text: '' })] })];
+  }
+
   function walk(node, listLevel = 0, inListItem = false) {
     if (node.nodeType === Node.TEXT_NODE) {
       // 文本节点在列表外才处理
@@ -642,17 +746,11 @@ function parseDeepSeekHtmlToDocxParagraphs(html, bulletRef = 'my-bullet', ordere
         break;
       
       case 'p':
-        // 处理段落 - 确保所有p标签内容都被解析
+        // 处理段落 - 确保所有p标签内容都被解析，支持<br>换行
         if (!inListItem) {
-          const children = parseInlineElements(node);
-          if (children.length > 0) {
-            paragraphs.push(
-              new Paragraph({
-                children: children,
-                spacing: { after: 120 },
-              })
-            );
-          }
+          // 处理包含<br>标签的段落，按换行符分割成多个段落
+          const paragraphContent = parseParagraphWithBreaks(node);
+          paragraphContent.forEach(para => paragraphs.push(para));
         }
         break;
       
