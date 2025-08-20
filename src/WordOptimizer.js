@@ -111,8 +111,8 @@ class WordOptimizer {
       // 为引用块添加样式
       .replace(/<blockquote([^>]*)>/g, '<blockquote$1 style="margin: 16px 0; padding: 8px 16px; border-left: 4px solid #ccc; background: #f9f9f9; font-style: italic;">')
       
-      // 为段落添加样式
-      .replace(/<p([^>]*)>/g, '<p$1 style="margin: 8px 0; line-height: 1.6;">')
+      // 为段落添加样式（使用Word兼容的pt单位）
+      .replace(/<p([^>]*)>/g, '<p$1 style="margin: 0 0 10pt 0; font-size: 11pt; font-family: Calibri, sans-serif; line-height: 1.15;">')
       
       // 为强调元素添加样式
       .replace(/<strong([^>]*)>/g, '<strong$1 style="font-weight: bold;">')
@@ -214,10 +214,11 @@ class WordOptimizer {
     // 2. 为WPS优化的列表样式（精确缩进版本）
     console.log('[WordOptimizer] 步骤2: 应用基础列表样式');
     const beforeBaseStyles = optimized;
+    // Word粘贴HTML时的兼容性优化
     optimized = optimized
-      .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc; list-style-position: outside;">')
-      .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal; list-style-position: outside;">')
-      .replace(/<li([^>]*)>/g, '<li$1 style="margin: 6px 0; line-height: 1.6; padding-left: 8px;">');
+      .replace(/<ul([^>]*)>/g, '<ul$1 style="margin: 0 0 10pt 0; padding: 0; margin-left: 36pt; list-style-type: disc;">')
+      .replace(/<ol([^>]*)>/g, '<ol$1 style="margin: 0 0 10pt 0; padding: 0; margin-left: 36pt; list-style-type: decimal;">')
+      .replace(/<li([^>]*)>/g, '<li$1 style="margin: 0 0 0 0; padding: 0; font-size: 11pt; font-family: Calibri, sans-serif; line-height: 1.15;">');
     console.log('[WordOptimizer] 基础样式变化:', optimized !== beforeBaseStyles ? '有变化' : '无变化');
     
     // 3. 处理嵌套列表 - 使用递增缩进
@@ -225,9 +226,9 @@ class WordOptimizer {
     const beforeNested = optimized;
     optimized = optimized
       .replace(/<ul([^>]*)><ul([^>]*)>/g, 
-        '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc; list-style-position: outside;"><ul$2 style="margin: 8px 0; padding-left: 50px; list-style: circle; list-style-position: outside;">')
+        '<ul$1 style="margin: 0 0 10pt 0; padding: 0; margin-left: 36pt; list-style-type: disc;"><ul$2 style="margin: 0 0 10pt 0; padding: 0; margin-left: 72pt; list-style-type: circle;">')
       .replace(/<ol([^>]*)><ol([^>]*)>/g, 
-        '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal; list-style-position: outside;"><ol$2 style="margin: 8px 0; padding-left: 50px; list-style: lower-alpha; list-style-position: outside;">');
+        '<ol$1 style="margin: 0 0 10pt 0; padding: 0; margin-left: 36pt; list-style-type: decimal;"><ol$2 style="margin: 0 0 10pt 0; padding: 0; margin-left: 72pt; list-style-type: lower-alpha;">');
     console.log('[WordOptimizer] 嵌套列表变化:', optimized !== beforeNested ? '有变化' : '无变化');
     
     // 4. 处理更深层嵌套
@@ -235,9 +236,9 @@ class WordOptimizer {
     const beforeDeepNested = optimized;
     optimized = optimized
       .replace(/<ul([^>]*)><ul([^>]*)><ul([^>]*)>/g, 
-        '<ul$1 style="margin: 12px 0; padding-left: 30px; list-style: disc; list-style-position: outside;"><ul$2 style="margin: 8px 0; padding-left: 50px; list-style: circle; list-style-position: outside;"><ul$3 style="margin: 8px 0; padding-left: 70px; list-style: square; list-style-position: outside;">')
+        '<ul$1 style="margin: 0 0 10pt 0; padding: 0; margin-left: 36pt; list-style-type: disc;"><ul$2 style="margin: 0 0 10pt 0; padding: 0; margin-left: 72pt; list-style-type: circle;"><ul$3 style="margin: 0 0 10pt 0; padding: 0; margin-left: 108pt; list-style-type: square;">')
       .replace(/<ol([^>]*)><ol([^>]*)><ol([^>]*)>/g, 
-        '<ol$1 style="margin: 12px 0; padding-left: 30px; list-style: decimal; list-style-position: outside;"><ol$2 style="margin: 8px 0; padding-left: 50px; list-style: lower-alpha; list-style-position: outside;"><ol$3 style="margin: 8px 0; padding-left: 70px; list-style: lower-roman; list-style-position: outside;">');
+        '<ol$1 style="margin: 0 0 10pt 0; padding: 0; margin-left: 36pt; list-style-type: decimal;"><ol$2 style="margin: 0 0 10pt 0; padding: 0; margin-left: 72pt; list-style-type: lower-alpha;"><ol$3 style="margin: 0 0 10pt 0; padding: 0; margin-left: 108pt; list-style-type: lower-roman;">');
     console.log('[WordOptimizer] 深层嵌套变化:', optimized !== beforeDeepNested ? '有变化' : '无变化');
     
     // 5. 添加Word特定的MSO样式（保持向后兼容）
@@ -318,54 +319,62 @@ class WordOptimizer {
       box-sizing: border-box;
     }
     
-    /* 段落样式 */
+    /* 段落样式 - Word兼容 */
     p { 
-      margin: 8px 0; 
-      line-height: 1.6; 
+      margin: 0 0 10pt 0;
+      font-size: 11pt;
+      font-family: Calibri, sans-serif;
+      line-height: 1.15;
     }
     
-    /* WPS和Word兼容的列表样式 */
+    /* Word粘贴HTML兼容的列表样式 */
     ul {
-      margin: 12px 0;
-      padding-left: 30px;
-      list-style: disc;
-      list-style-position: outside;
+      margin: 0 0 10pt 0;
+      padding: 0;
+      margin-left: 36pt;
+      list-style-type: disc;
     }
     
     ol {
-      margin: 12px 0;
-      padding-left: 30px;
-      list-style: decimal;
-      list-style-position: outside;
+      margin: 0 0 10pt 0;
+      padding: 0;
+      margin-left: 36pt;
+      list-style-type: decimal;
     }
     
     li {
-      margin: 6px 0;
-      line-height: 1.6;
-      padding-left: 8px;
+      margin: 0;
+      padding: 0;
+      font-size: 11pt;
+      font-family: Calibri, sans-serif;
+      line-height: 1.15;
     }
     
     /* 嵌套列表样式 - 递增缩进 */
     ul ul {
       list-style: circle;
       margin: 8px 0;
-      padding-left: 50px;
+      padding-left: 44px;
+      font-size: 14px;
     }
     
     ol ol {
       list-style: lower-alpha;
       margin: 8px 0;
-      padding-left: 50px;
+      padding-left: 44px;
+      font-size: 14px;
     }
     
     ul ul ul {
       list-style: square;
-      padding-left: 70px;
+      padding-left: 64px;
+      font-size: 14px;
     }
     
     ol ol ol {
       list-style: lower-roman;
-      padding-left: 70px;
+      padding-left: 64px;
+      font-size: 14px;
     }
     
     /* 代码样式 */

@@ -55,9 +55,8 @@ class ClipboardManager {
       }
       
       // 使用统一的 WordProcessor 处理
-      console.log('[ClipboardManager] 🔥 使用 WordProcessor 处理内容...');
-      const doc = await WordProcessor.htmlToDocument(element, null, source);
-      const formattedHtml = await WordProcessor.documentToHtml(doc, element);
+      console.log('[ClipboardManager] 🔥 使用 WordProcessor 统一处理内容...');
+      const formattedHtml = await WordProcessor.getFormattedHtml(element, source);
       console.log('[ClipboardManager] ✅ WordProcessor 处理完成 html.length=', formattedHtml.length);
       
       // 同时准备纯文本版本（作为降级方案）

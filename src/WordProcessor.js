@@ -75,101 +75,397 @@ class WordProcessor {
   }
 
   /**
-   * 将docx文档对象转换为HTML字符串（用于复制到剪贴板）
-   * 注意：由于docx对象的内部结构复杂，这里采用更简单的方案：
-   * 直接使用原始HTML，通过WordOptimizer优化后返回
-   * @param {Document} doc - docx文档对象
-   * @param {string|HTMLElement} originalContent - 原始内容
-   * @returns {Promise<string>} HTML字符串
+   * 获取统一格式化的HTML（供复制和下载功能共用）
+   * @param {HTMLElement|string} content - HTML元素或HTML字符串
+   * @param {string} source - 内容来源，'kimi' 或 'deepseek' 或 'auto'
+   * @returns {Promise<string>} 格式化后的HTML字符串
    */
-  static async documentToHtml(doc, originalContent) {
-    // 由于docx对象结构复杂，难以反向转换为HTML
-    // 这里采用更实用的方案：直接处理原始HTML
-    
+  static async getFormattedHtml(content, source = 'auto') {
     let html = '';
-    if (typeof originalContent === 'string') {
-      html = originalContent;
-    } else if (originalContent instanceof HTMLElement) {
-      html = originalContent.innerHTML || '';
+    if (typeof content === 'string') {
+      html = content;
+    } else if (content instanceof HTMLElement) {
+      html = content.innerHTML || '';
+    }
+
+    // 自动判断来源
+    let useKimi = false;
+    if (source === 'kimi') {
+      useKimi = true;
+    } else if (source === 'deepseek') {
+      useKimi = false;
+    } else {
+      // auto: 通过 className 判断
+      if (content instanceof HTMLElement && content.closest('.segment-assistant')) {
+        useKimi = true;
+      }
+    }
+
+    console.log('[WordProcessor] getFormattedHtml: useKimi=', useKimi, 'html length=', html.length);
+
+    // 直接转换HTML到标准化格式，而不通过docx对象
+    let standardHtml = '';
+    if (useKimi) {
+      standardHtml = this.convertKimiHtmlToStandard(html);
+    } else {
+      standardHtml = this.convertDeepSeekHtmlToStandard(html);
     }
     
-    // 使用WordOptimizer进行优化
+    console.log('[WordProcessor] Standard HTML length:', standardHtml.length);
+    
+    // 使用WordOptimizer进行最终优化
     const optimizer = new WordOptimizer();
-    const optimizedHtml = await optimizer.optimize(html);
+    const optimizedHtml = await optimizer.optimize(standardHtml);
     
     return optimizedHtml;
   }
 
   /**
-   * 将docx元素转换为HTML
-   * @param {Object} element - docx元素
-   * @returns {Promise<string>} HTML字符串
+   * 将Kimi的HTML转换为标准HTML格式
+   * @param {string} html - Kimi的HTML
+   * @returns {string} 标准HTML
    */
-  static async convertDocxElementToHtml(element) {
-    if (element instanceof Paragraph) {
-      return this.convertParagraphToHtml(element);
-    } else if (element instanceof Table) {
-      return this.convertTableToHtml(element);
+  static convertKimiHtmlToStandard(html) {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    let result = '';
+
+    const walk = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent;
+      }
+      
+      if (node.nodeType !== Node.ELEMENT_NODE) return '';
+      
+      const tag = node.tagName.toLowerCase();
+      const className = node.className || '';
+      
+      // 跳过按钮和UI元素
+      if (className.includes('simple-button') || 
+          className.includes('puretext-') ||
+          className.includes('table-actions') ||
+          tag === 'button') {
+        return '';
+      }
+      
+      let childContent = '';
+      for (const child of node.childNodes) {
+        childContent += walk(child);
+      }
+      
+      switch (tag) {
+        case 'h1':
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6':
+          return `<${tag}>${childContent}</${tag}>`;
+        
+        case 'div':
+          if (className.includes('paragraph')) {
+            return `<p>${childContent}</p>`;
+          }
+          return childContent;
+        
+        case 'ul':
+        case 'ol':
+          // 清理列表内容，移除多余空格
+          const cleanedContent = childContent.replace(/\s+/g, ' ').trim();
+          return `<${tag}>${cleanedContent}</${tag}>`;
+        
+        case 'li':
+          // 特别处理Kimi的列表项结构
+          // 如果包含 div.paragraph，需要提取其内容并去除多余空格
+          let itemContent = childContent.trim();
+          
+          // 检查是否有嵌套的div.paragraph结构
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = node.innerHTML;
+          const paragraphDivs = tempDiv.querySelectorAll('div.paragraph');
+          
+          if (paragraphDivs.length > 0) {
+            // 如果有paragraph div，提取它们的文本内容
+            itemContent = Array.from(paragraphDivs)
+              .map(div => div.textContent.trim())
+              .filter(text => text)
+              .join(' ');
+          }
+          
+          return `<li>${itemContent}</li>`;
+        
+        case 'table':
+        case 'thead':
+        case 'tbody':
+        case 'tr':
+        case 'th':
+        case 'td':
+          return `<${tag}>${childContent}</${tag}>`;
+        
+        case 'strong':
+        case 'em':
+        case 'code':
+          return `<${tag}>${childContent}</${tag}>`;
+        
+        case 'blockquote':
+          return `<blockquote>${childContent}</blockquote>`;
+        
+        case 'pre':
+          return `<pre><code>${childContent}</code></pre>`;
+        
+        case 'hr':
+          return '<hr>';
+        
+        case 'br':
+          return '<br>';
+        
+        case 'span':
+          if (className.includes('katex-container')) {
+            // 处理数学公式
+            const annotation = node.querySelector('annotation[encoding="application/x-tex"]');
+            if (annotation) {
+              return `<span class="math">${annotation.textContent}</span>`;
+            }
+          }
+          return childContent;
+        
+        default:
+          return childContent;
+      }
+    };
+
+    for (const child of container.childNodes) {
+      result += walk(child);
     }
-    return '';
+    
+    return result;
   }
 
   /**
-   * 将段落转换为HTML
-   * @param {Paragraph} paragraph - docx段落
-   * @returns {string} HTML字符串
+   * 将DeepSeek的HTML转换为标准HTML格式
+   * @param {string} html - DeepSeek的HTML
+   * @returns {string} 标准HTML
    */
-  static convertParagraphToHtml(paragraph) {
-    const options = paragraph.options || {};
-    let tag = 'p';
-    let style = 'margin: 8px 0; line-height: 1.6;';
-    
-    // 检查是否是标题
-    if (options.heading) {
-      const level = {
-        [HeadingLevel.HEADING_1]: 1,
-        [HeadingLevel.HEADING_2]: 2,
-        [HeadingLevel.HEADING_3]: 3,
-        [HeadingLevel.HEADING_4]: 4,
-        [HeadingLevel.HEADING_5]: 5,
-        [HeadingLevel.HEADING_6]: 6,
-      }[options.heading] || 1;
-      tag = `h${level}`;
-      style = `font-weight: bold; margin: ${20 - level * 2}px 0 ${12 - level}px 0; color: #333;`;
-    }
-    
-    // 检查是否是列表项
-    if (options.numbering) {
-      const indent = options.indent?.left || 360;
-      style += ` margin-left: ${indent / 20}px;`;
-      
-      // 添加列表标记
-      let prefix = '';
-      if (options.numbering.reference === 'my-bullet') {
-        prefix = '• ';
-      } else if (options.numbering.reference === 'my-numbered') {
-        // 这里简化处理，实际应该根据level计算序号
-        prefix = '1. ';
+  static convertDeepSeekHtmlToStandard(html) {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    let result = '';
+
+    const walk = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent;
       }
       
-      const content = this.extractTextFromParagraph(paragraph);
-      return `<li style="${style}">${prefix}${content}</li>`;
+      if (node.nodeType !== Node.ELEMENT_NODE) return '';
+      
+      const tag = node.tagName.toLowerCase();
+      const className = node.className || '';
+      
+      // 跳过特殊元素
+      if (className.includes('ds-markdown-html') ||
+          className.includes('ds-button') ||
+          className.includes('code-info-button') ||
+          tag === 'button') {
+        return '';
+      }
+      
+      let childContent = '';
+      for (const child of node.childNodes) {
+        childContent += walk(child);
+      }
+      
+      switch (tag) {
+        case 'h1':
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6':
+          return `<${tag}>${childContent}</${tag}>`;
+        
+        case 'p':
+          if (className.includes('ds-markdown-paragraph')) {
+            return `<p>${childContent}</p>`;
+          }
+          return `<p>${childContent}</p>`;
+        
+        case 'ul':
+        case 'ol':
+          return `<${tag}>${childContent}</${tag}>`;
+        
+        case 'li':
+          return `<li>${childContent}</li>`;
+        
+        case 'div':
+          if (className.includes('markdown-table-wrapper')) {
+            return childContent;
+          } else if (className.includes('md-code-block')) {
+            const pre = node.querySelector('pre');
+            if (pre) {
+              return `<pre><code>${pre.textContent}</code></pre>`;
+            }
+          }
+          return childContent;
+        
+        case 'table':
+        case 'thead':
+        case 'tbody':
+        case 'tr':
+        case 'th':
+        case 'td':
+          return `<${tag}>${childContent}</${tag}>`;
+        
+        case 'strong':
+        case 'em':
+        case 'code':
+          return `<${tag}>${childContent}</${tag}>`;
+        
+        case 'blockquote':
+          return `<blockquote>${childContent}</blockquote>`;
+        
+        case 'pre':
+          return `<pre><code>${childContent}</code></pre>`;
+        
+        case 'hr':
+          return '<hr>';
+        
+        case 'br':
+          return '<br>';
+        
+        case 'span':
+          if (className.includes('katex')) {
+            const annotation = node.querySelector('annotation[encoding="application/x-tex"]');
+            if (annotation) {
+              return `<span class="math">${annotation.textContent}</span>`;
+            }
+          }
+          return childContent;
+        
+        default:
+          return childContent;
+      }
+    };
+
+    for (const child of container.childNodes) {
+      result += walk(child);
     }
     
-    // 检查其他样式
-    if (options.indent?.left) {
-      style += ` margin-left: ${options.indent.left / 20}px;`;
-    }
-    if (options.shading?.fill) {
-      style += ` background-color: #${options.shading.fill};`;
-    }
-    if (options.alignment === AlignmentType.CENTER) {
-      style += ' text-align: center;';
-    }
-    
-    const content = this.extractTextFromParagraph(paragraph);
-    return `<${tag} style="${style}">${content}</${tag}>`;
+    return result;
   }
+
+  /**
+   * 将docx元素数组转换为HTML字符串
+   * @param {Array} elements - docx元素数组
+   * @returns {Promise<string>} HTML字符串
+   */
+  static async convertDocxElementsToHtml(elements) {
+    let html = '';
+    let inList = false;
+    let currentListType = null;
+
+    console.log('[WordProcessor] Converting docx elements to HTML, count:', elements.length);
+
+    for (const element of elements) {
+      // 调试：输出元素结构
+      if (elements.length > 0 && elements.indexOf(element) === 0) {
+        console.log('[WordProcessor] First element structure:', {
+          constructor: element?.constructor?.name,
+          hasOptions: !!element?.options,
+          hasChildren: !!element?.children,
+          hasRows: !!element?.rows,
+          elementKeys: element ? Object.keys(element) : [],
+          numbering: element?.numbering,
+          heading: element?.heading,
+          shading: element?.shading,
+          element: element
+        });
+      }
+      
+      // 更可靠的类型检查：基于 rootKey 属性
+      const isParagraph = element && element.rootKey === 'w:p';
+      const isTable = element && element.rootKey === 'w:tbl';
+      
+      if (isParagraph) {
+        // 属性可能直接在element上，也可能在element.options中
+        const numbering = element.numbering || element.options?.numbering;
+        const heading = element.heading || element.options?.heading;
+        const shading = element.shading || element.options?.shading;
+        
+        // 处理列表项
+        if (numbering) {
+          const isOrdered = numbering.reference === 'my-numbered';
+          const listType = isOrdered ? 'ol' : 'ul';
+          
+          // 开始新列表或切换列表类型
+          if (!inList || currentListType !== listType) {
+            if (inList) {
+              html += `</${currentListType}>`;
+            }
+            html += `<${listType}>`;
+            inList = true;
+            currentListType = listType;
+          }
+          
+          // 提取列表项内容
+          const content = this.extractTextFromParagraph(element);
+          html += `<li>${content}</li>`;
+        } else {
+          // 结束列表
+          if (inList) {
+            html += `</${currentListType}>`;
+            inList = false;
+            currentListType = null;
+          }
+          
+          // 处理其他段落类型
+          if (heading) {
+            const level = {
+              [HeadingLevel.HEADING_1]: 1,
+              [HeadingLevel.HEADING_2]: 2,
+              [HeadingLevel.HEADING_3]: 3,
+              [HeadingLevel.HEADING_4]: 4,
+              [HeadingLevel.HEADING_5]: 5,
+              [HeadingLevel.HEADING_6]: 6,
+            }[heading] || 1;
+            const content = this.extractTextFromParagraph(element);
+            html += `<h${level}>${content}</h${level}>`;
+          } else {
+            const content = this.extractTextFromParagraph(element);
+            if (shading?.fill === 'F5F5F5') {
+              // 代码块
+              html += `<pre><code>${content}</code></pre>`;
+            } else if (shading?.fill === 'F0F0F0') {
+              // 引用块
+              html += `<blockquote>${content}</blockquote>`;
+            } else if (content.trim()) {
+              // 普通段落（只有内容非空才添加）
+              html += `<p>${content}</p>`;
+            }
+          }
+        }
+      } else if (isTable) {
+        // 结束列表
+        if (inList) {
+          html += `</${currentListType}>`;
+          inList = false;
+          currentListType = null;
+        }
+        
+        html += this.convertTableToHtml(element);
+      } else {
+        console.warn('[WordProcessor] Unknown element type:', element);
+      }
+    }
+    
+    // 确保列表闭合
+    if (inList) {
+      html += `</${currentListType}>`;
+    }
+    
+    console.log('[WordProcessor] HTML conversion complete, length:', html.length);
+    return html;
+  }
+
 
   /**
    * 从段落中提取文本内容
@@ -178,31 +474,45 @@ class WordProcessor {
    */
   static extractTextFromParagraph(paragraph) {
     let html = '';
-    const children = paragraph.options?.children || [];
+    const children = paragraph.children || paragraph.options?.children || [];
+    
+    // 如果没有children，可能文本直接在paragraph上
+    if (children.length === 0 && (paragraph.text || paragraph.options?.text)) {
+      return paragraph.text || paragraph.options?.text || '';
+    }
     
     for (const child of children) {
-      if (child instanceof TextRun) {
-        const options = child.options || {};
-        let text = options.text || '';
+      // 检查是否是 TextRun（基于属性而不是 instanceof）
+      const isTextRun = child && (child.rootKey === 'w:r' || child.text !== undefined || child.options?.text !== undefined);
+      
+      if (isTextRun) {
+        // 属性可能直接在child上，也可能在child.options中
+        let text = child.text || child.options?.text || '';
+        const bold = child.bold || child.options?.bold;
+        const italics = child.italics || child.options?.italics;
+        const underline = child.underline || child.options?.underline;
+        const font = child.font || child.options?.font;
+        const color = child.color || child.options?.color;
+        const highlight = child.highlight || child.options?.highlight;
         
         // 应用文本样式
-        if (options.bold) {
+        if (bold) {
           text = `<strong>${text}</strong>`;
         }
-        if (options.italics) {
+        if (italics) {
           text = `<em>${text}</em>`;
         }
-        if (options.underline) {
+        if (underline) {
           text = `<u>${text}</u>`;
         }
-        if (options.font) {
-          text = `<span style="font-family: '${options.font}';">${text}</span>`;
+        if (font) {
+          text = `<span style="font-family: '${font}';">${text}</span>`;
         }
-        if (options.color) {
-          text = `<span style="color: #${options.color};">${text}</span>`;
+        if (color) {
+          text = `<span style="color: #${color};">${text}</span>`;
         }
-        if (options.highlight) {
-          text = `<span style="background-color: ${options.highlight};">${text}</span>`;
+        if (highlight) {
+          text = `<span style="background-color: ${highlight};">${text}</span>`;
         }
         
         html += text;
@@ -220,12 +530,13 @@ class WordProcessor {
   static convertTableToHtml(table) {
     let html = '<table style="border-collapse: collapse; width: 100%; margin: 16px 0;">';
     
-    const rows = table.options?.rows || [];
+    const rows = table.rows || table.options?.rows || [];
     for (const row of rows) {
       html += '<tr>';
-      const cells = row.options?.children || [];
+      const cells = row.children || row.options?.children || [];
       for (const cell of cells) {
-        const isHeader = cell.options?.shading?.fill === 'E0E0E0';
+        const shading = cell.shading || cell.options?.shading;
+        const isHeader = shading?.fill === 'E0E0E0';
         const tag = isHeader ? 'th' : 'td';
         const style = 'border: 1px solid #000000; padding: 8px; vertical-align: top;' +
                      (isHeader ? ' background: #f5f5f5; font-weight: bold;' : '');
@@ -233,9 +544,11 @@ class WordProcessor {
         html += `<${tag} style="${style}">`;
         
         // 提取单元格内容
-        const paragraphs = cell.options?.children || [];
+        const paragraphs = cell.children || cell.options?.children || [];
         for (const para of paragraphs) {
-          if (para instanceof Paragraph) {
+          // 检查是否是段落（基于属性）
+          const isPara = para && para.rootKey === 'w:p';
+          if (isPara) {
             const content = this.extractTextFromParagraph(para);
             html += content;
           }
