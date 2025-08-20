@@ -1,4 +1,5 @@
 import { HtmlFormatterManager } from './HtmlFormatterManager.js';
+import { WordProcessor } from './WordProcessor.js';
 
 /**
  * 剪贴板管理器类
@@ -20,7 +21,7 @@ class ClipboardManager {
   }
 
   /**
-   * 复制元素的统一格式文本到剪贴板（Word和WPS兼容）
+   * 复制元素的统一格式文本到剪贴板（使用统一的 WordProcessor）
    * @param {HTMLElement} element - 要复制内容的DOM元素
    * @returns {Promise<boolean>} 复制是否成功
    */
@@ -45,15 +46,19 @@ class ClipboardManager {
       const hostname = this.detectWebsite();
       console.log('[ClipboardManager] 检测到网站:', hostname);
       
-      // 确保格式化管理器已初始化
-      console.log('[ClipboardManager] 初始化格式化管理器...');
-      await this.initializeFormatterManager();
-      console.log('[ClipboardManager] ✅ 格式化管理器已初始化');
+      // 判断内容来源
+      let source = 'auto';
+      if (hostname === 'www.kimi.com') {
+        source = 'kimi';
+      } else if (hostname === 'chat.deepseek.com') {
+        source = 'deepseek';
+      }
       
-      // 使用格式化管理器获取HTML格式
-      console.log('[ClipboardManager] 🔥 开始HTML格式化！！！');
-      const formattedHtml = await this.formatterManager.formatForWord(element, hostname);
-      console.log('[ClipboardManager] ✅ HTML格式化完成 html.length=', formattedHtml.length);
+      // 使用统一的 WordProcessor 处理
+      console.log('[ClipboardManager] 🔥 使用 WordProcessor 处理内容...');
+      const doc = await WordProcessor.htmlToDocument(element, null, source);
+      const formattedHtml = await WordProcessor.documentToHtml(doc, element);
+      console.log('[ClipboardManager] ✅ WordProcessor 处理完成 html.length=', formattedHtml.length);
       
       // 同时准备纯文本版本（作为降级方案）
       const plainText = this.convertHtmlToPlainText(formattedHtml);

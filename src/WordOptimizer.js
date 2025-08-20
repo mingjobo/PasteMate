@@ -467,9 +467,5 @@ ${html}
   }
 }
 
-// 导出类
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = WordOptimizer;
-} else if (typeof window !== 'undefined') {
-  window.WordOptimizer = WordOptimizer;
-}
+// 导出类 - 使用ES6模块语法
+export { WordOptimizer };
