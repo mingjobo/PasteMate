@@ -759,115 +759,19 @@ class ButtonInjector {
             }
         };
 
-        // 为Kimi actions容器创建特殊样式的按钮
-        const buttonText = chrome?.i18n ? chrome.i18n.getMessage('copyToWord') : '复制为Word格式';
-        
+        // 为Kimi actions容器创建按钮组
         const container = document.createElement('div');
-        container.className = 'puretext-button-container';
+        container.className = 'puretext-button-group';
         container.style.cssText = `
             display: inline-flex;
             align-items: center;
+            gap: 4px;
             margin-left: 8px;
             pointer-events: auto;
-            background: none;
-            border: none;
-            box-shadow: none;
-            padding: 0;
         `;
 
-        // 复制按钮
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'puretext-action-btn';
-        copyBtn.textContent = buttonText;
-        copyBtn.type = 'button';
-        copyBtn.setAttribute('aria-label', buttonText);
-        copyBtn.setAttribute('title', buttonText);
-        
-        // 应用Kimi actions按钮的特殊样式
-        copyBtn.style.cssText = `
-            all: initial;
-            font-family: inherit;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 8px;
-            min-width: auto;
-            height: 24px;
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 1.2;
-            text-align: center;
-            white-space: nowrap;
-            background: transparent;
-            color: var(--color-text-1, #374151);
-            border: none;
-            border-radius: 4px;
-            box-shadow: none;
-            cursor: pointer;
-            pointer-events: auto;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            transition: all 0.15s ease;
-            transform: translateZ(0);
-            will-change: background-color;
-            opacity: 1;
-        `;
-
-        // 添加交互效果
-        copyBtn.addEventListener('mouseenter', () => {
-            copyBtn.style.opacity = '1';
-            copyBtn.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
-            copyBtn.style.transform = 'translateY(-1px) translateZ(0)';
-        });
-        copyBtn.addEventListener('mouseleave', () => {
-            copyBtn.style.opacity = '0.9';
-            copyBtn.style.background = 'transparent';
-            copyBtn.style.transform = 'translateY(0) translateZ(0)';
-        });
-        copyBtn.addEventListener('focus', () => {
-            copyBtn.style.outline = '2px solid #3b82f6';
-            copyBtn.style.outlineOffset = '2px';
-            copyBtn.style.opacity = '1';
-        });
-        copyBtn.addEventListener('blur', () => {
-            copyBtn.style.outline = 'none';
-            copyBtn.style.opacity = '0.9';
-        });
-        copyBtn.addEventListener('mousedown', () => {
-            copyBtn.style.transform = 'translateY(0) scale(0.98) translateZ(0)';
-            copyBtn.style.background = 'var(--color-fill-3, rgba(0, 0, 0, 0.08))';
-        });
-        copyBtn.addEventListener('mouseup', () => {
-            copyBtn.style.transform = 'translateY(-1px) translateZ(0)';
-            copyBtn.style.background = 'var(--color-fill-2, rgba(0, 0, 0, 0.04))';
-        });
-
-        // 添加点击事件
-        copyBtn.addEventListener('click', async (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            // 点击反馈
-            copyBtn.style.transform = 'scale(0.95) translateZ(0)';
-            setTimeout(() => {
-                copyBtn.style.transform = 'translateZ(0)';
-            }, 150);
-            
-            // const originalText = copyBtn.textContent;
-            // copyBtn.textContent = '处理中...';
-            
-            try {
-                await onCopy(actionContainer);
-            } catch (error) {
-                console.error('PureText: Kimi action failed:', error);
-            } finally {
-                setTimeout(() => {
-                    // copyBtn.textContent = originalText;
-                }, 500);
-            }
-        });
+        // 使用新的统一按钮系统创建复制按钮
+        const copyBtn = CopyButton.create(actionContainer, onCopy);
 
         // 新增：下载为 Word 按钮
         const onDownloadWord = async (buttonContainer) => {

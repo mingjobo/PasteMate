@@ -149,8 +149,8 @@ describe('WordOptimizer', () => {
       const result = optimizer.optimizeTables(html);
       
       expect(result).toContain('style="border-collapse: collapse; width: 100%;');
-      expect(result).toContain('style="border: 1px solid #ddd; padding: 8px; background: #f5f5f5;');
-      expect(result).toContain('style="border: 1px solid #ddd; padding: 8px; vertical-align: top;"');
+      expect(result).toContain('style="border: 1px solid #000000; padding: 8px; background: #f5f5f5;');
+      expect(result).toContain('style="border: 1px solid #000000; padding: 8px; vertical-align: top;"');
     });
   });
 

@@ -274,17 +274,17 @@ class WordOptimizer {
    */
   optimizeTables(html) {
     return html
-      // 为表格添加边框样式
+      // 为表格添加边框样式 - 使用纯黑色边框，简化设置避免重复边框
       .replace(/<table([^>]*)>/g, 
-        '<table$1 style="border-collapse: collapse; width: 100%; margin: 16px 0; border: 1px solid #ddd;">')
+        '<table$1 style="border-collapse: collapse; width: 100%; margin: 16px 0;">')
       .replace(/<td([^>]*)>/g, 
-        '<td$1 style="border: 1px solid #ddd; padding: 8px; vertical-align: top;">')
+        '<td$1 style="border: 1px solid #000000; padding: 8px; vertical-align: top;">')
       .replace(/<th([^>]*)>/g, 
-        '<th$1 style="border: 1px solid #ddd; padding: 8px; background: #f5f5f5; font-weight: bold; text-align: left; vertical-align: top;">')
+        '<th$1 style="border: 1px solid #000000; padding: 8px; background: #f5f5f5; font-weight: bold; text-align: left; vertical-align: top;">')
       .replace(/<tr([^>]*)>/g, 
-        '<tr$1 style="border-bottom: 1px solid #ddd;">')
+        '<tr$1>')
       .replace(/<thead([^>]*)>/g, 
-        '<thead$1 style="background: #f0f0f0;">')
+        '<thead$1>')
       .replace(/<tbody([^>]*)>/g, 
         '<tbody$1>');
   }

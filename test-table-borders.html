@@ -101,12 +101,14 @@
     </div>
     
     <div>
-        <button onclick="testKimiExport()">测试 Kimi 格式导出</button>
-        <button onclick="testDeepSeekExport()">测试 DeepSeek 格式导出</button>
+        <button onclick="testKimiExport()">测试 Kimi 格式导出 (.docx)</button>
+        <button onclick="testDeepSeekExport()">测试 DeepSeek 格式导出 (.docx)</button>
+        <button onclick="testCopyToWordFormat()">测试复制为Word格式</button>
     </div>
     
     <script type="module">
         import { exportToWord } from './src/export-to-word.js';
+        import { ClipboardManager } from './src/ClipboardManager.js';
         
         window.testKimiExport = function() {
             const content = document.getElementById('test-content');
@@ -116,6 +118,21 @@
         window.testDeepSeekExport = function() {
             const content = document.getElementById('test-content');
             exportToWord(content, 'deepseek-table-test.docx', null, 'deepseek');
+        };
+        
+        window.testCopyToWordFormat = async function() {
+            try {
+                const content = document.getElementById('test-content');
+                const success = await ClipboardManager.copyHtmlToClipboard(content);
+                if (success) {
+                    alert('复制成功！现在可以粘贴到Word中检查表格边框是否为纯黑色。');
+                } else {
+                    alert('复制失败，请检查浏览器设置。');
+                }
+            } catch (error) {
+                console.error('复制失败:', error);
+                alert('复制失败: ' + error.message);
+            }
         };
     </script>
 </body>

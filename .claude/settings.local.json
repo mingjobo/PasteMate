@@ -40,7 +40,8 @@
       "Bash(open:*)",
       "WebFetch(domain:microsoftedge.microsoft.com)",
       "Bash(open test-buttons.html)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
