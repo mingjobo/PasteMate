@@ -1,5 +1,5 @@
 // 导出为 Word 工具函数，使用 docx 和 file-saver，兼容 HTML/纯文本输入
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, LevelFormat } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, LevelFormat, TableBorders, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
 import { UserQuestionExtractor } from './UserQuestionExtractor.js';
 
@@ -348,6 +348,14 @@ function parseKimiHtmlToDocxParagraphs(html, bulletRef = 'my-bullet', orderedRef
             new Table({
               rows: rows,
               width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                bottom: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                left: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                right: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+              },
             })
           );
         }
@@ -757,6 +765,14 @@ function parseDeepSeekHtmlToDocxParagraphs(html, bulletRef = 'my-bullet', ordere
             new Table({
               rows: rows,
               width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                bottom: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                left: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                right: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+              },
             })
           );
         }

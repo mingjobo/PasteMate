@@ -9,7 +9,7 @@ class DownloadPdfButton extends BaseActionButton {
    * @returns {HTMLElement}
    */
   static create(targetElement, onDownload, options = {}) {
-    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('downloadAsPdf') : '下载为 PDF';
+    const buttonText = chrome?.i18n ? chrome.i18n.getMessage('downloadAsPdf') : '下载为PDF';
     const isKimi = window.location.hostname === 'www.kimi.com';
     const isDeepSeek = window.location.hostname === 'chat.deepseek.com';
     const { customStyle = {} } = options;
@@ -17,7 +17,8 @@ class DownloadPdfButton extends BaseActionButton {
       targetElement,
       isKimi,
       isDeepSeek,
-      customStyle
+      customStyle,
+      iconName: 'pdf'
     });
   }
 }

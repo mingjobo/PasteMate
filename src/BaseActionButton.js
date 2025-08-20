@@ -1,3 +1,5 @@
+import { IconManager } from './IconManager.js';
+
 // 通用基础按钮父类，供所有操作按钮继承
 class BaseActionButton {
   static BUTTON_CLASS = 'puretext-action-btn';
@@ -7,21 +9,24 @@ class BaseActionButton {
    * 创建按钮容器和按钮元素
    * @param {string} text - 按钮文本
    * @param {Function} onAction - 按钮点击回调
-   * @param {Object} options - 额外参数（如 isKimi、isDeepSeek、自定义样式等）
+   * @param {Object} options - 额外参数（如 isKimi、isDeepSeek、自定义样式、图标等）
    * @returns {HTMLElement} 按钮容器元素
    */
   static createBaseButton(text, onAction, options = {}) {
-    const { targetElement, isKimi = false, isDeepSeek = false, customStyle = {} } = options;
+    const { targetElement, isKimi = false, isDeepSeek = false, customStyle = {}, iconName = null } = options;
     const container = document.createElement('div');
     container.className = this.CONTAINER_CLASS;
     this.applyContainerStyles(container, isKimi, isDeepSeek, customStyle);
 
     const button = document.createElement('button');
     button.className = this.BUTTON_CLASS;
-    button.textContent = text;
     button.type = 'button';
     button.setAttribute('aria-label', text);
     button.setAttribute('title', text);
+    
+    // 添加图标和文本
+    this.setupButtonContent(button, text, iconName);
+    
     this.applyButtonStyles(button, isKimi, isDeepSeek);
     this.addButtonInteractions(button, this.getColorScheme(isDeepSeek));
     this.addActionEventListeners(button, targetElement, onAction);
@@ -30,28 +35,48 @@ class BaseActionButton {
     return container;
   }
 
+  /**
+   * 设置按钮内容（图标+文本）
+   * @param {HTMLElement} button - 按钮元素
+   * @param {string} text - 按钮文本
+   * @param {string} iconName - 图标名称
+   */
+  static setupButtonContent(button, text, iconName) {
+    if (iconName) {
+      const icon = IconManager.createIconElement(iconName);
+      if (icon) {
+        button.appendChild(icon);
+      }
+    }
+    
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+    textSpan.style.cssText = 'line-height: 1.2;';
+    button.appendChild(textSpan);
+  }
+
   static getColorScheme(isDeepSeek = false) {
     if (isDeepSeek) {
       return {
-        background: 'transparent',
-        text: '#9CA3AF', // 浅灰色
-        border: 'none',
-        shadow: 'none',
-        hoverBackground: 'rgba(156, 163, 175, 0.1)', // 浅灰色悬停背景
-        hoverShadow: 'none',
-        activeBackground: 'rgba(156, 163, 175, 0.15)', // 浅灰色激活背景
-        focus: '#3b82f6'
+        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1))',
+        text: '#6366f1',
+        border: '1px solid rgba(99, 102, 241, 0.2)',
+        shadow: '0 2px 4px rgba(99, 102, 241, 0.1)',
+        hoverBackground: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15))',
+        hoverShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
+        activeBackground: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2))',
+        focus: '#6366f1'
       };
     }
     
     return {
-      background: 'transparent',
-      text: 'var(--color-text-1, #374151)',
-      border: 'none',
-      shadow: 'none',
-      hoverBackground: 'var(--color-fill-2, rgba(0, 0, 0, 0.04))',
-      hoverShadow: 'none',
-      activeBackground: 'var(--color-fill-3, rgba(0, 0, 0, 0.08))',
+      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))',
+      text: '#3b82f6',
+      border: '1px solid rgba(59, 130, 246, 0.2)',
+      shadow: '0 2px 4px rgba(59, 130, 246, 0.1)',
+      hoverBackground: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 51, 234, 0.15))',
+      hoverShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+      activeBackground: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2))',
       focus: '#3b82f6'
     };
   }
@@ -76,22 +101,22 @@ class BaseActionButton {
     
     const baseStyles = {
       all: 'initial',
-      fontFamily: 'inherit',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: isDeepSeek ? '2px 6px' : '4px 8px',
+      padding: isDeepSeek ? '4px 8px' : '6px 12px',
       minWidth: 'auto',
-      height: isDeepSeek ? '20px' : '24px',
+      height: isDeepSeek ? '24px' : '28px',
       fontSize: isDeepSeek ? '11px' : '12px',
-      fontWeight: '400',
+      fontWeight: '500',
       lineHeight: '1.2',
       textAlign: 'center',
       whiteSpace: 'nowrap',
       background: colorScheme.background,
       color: colorScheme.text,
       border: colorScheme.border,
-      borderRadius: '4px',
+      borderRadius: '6px',
       boxShadow: colorScheme.shadow,
       cursor: 'pointer',
       pointerEvents: 'auto',
@@ -99,10 +124,12 @@ class BaseActionButton {
       WebkitUserSelect: 'none',
       MozUserSelect: 'none',
       msUserSelect: 'none',
-      transition: 'all 0.15s ease',
+      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
       transform: 'translateZ(0)',
-      willChange: 'background-color',
-      opacity: isDeepSeek ? '0.8' : '1'
+      willChange: 'transform, box-shadow, background',
+      opacity: '1',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)'
     };
     
     Object.assign(button.style, baseStyles);
@@ -110,37 +137,33 @@ class BaseActionButton {
 
   static addButtonInteractions(button, colorScheme) {
     button.addEventListener('mouseenter', () => {
-      button.style.opacity = '1';
       button.style.background = colorScheme.hoverBackground;
-      button.style.transform = 'translateY(-1px) translateZ(0)';
-      button.style.boxShadow = `0 2px 6px ${colorScheme.hoverShadow}`;
+      button.style.transform = 'translateY(-2px) translateZ(0)';
+      button.style.boxShadow = colorScheme.hoverShadow;
     });
     button.addEventListener('mouseleave', () => {
-      button.style.opacity = '0.9';
       button.style.background = colorScheme.background;
       button.style.transform = 'translateY(0) translateZ(0)';
-      button.style.boxShadow = `0 1px 3px ${colorScheme.shadow}`;
+      button.style.boxShadow = colorScheme.shadow;
     });
     button.addEventListener('focus', () => {
       button.style.outline = `2px solid ${colorScheme.focus}`;
       button.style.outlineOffset = '2px';
-      button.style.opacity = '1';
     });
     button.addEventListener('blur', () => {
       button.style.outline = 'none';
-      button.style.opacity = '0.9';
     });
     button.addEventListener('mousedown', () => {
-      button.style.transform = 'translateY(0) scale(0.98) translateZ(0)';
+      button.style.transform = 'translateY(0) scale(0.96) translateZ(0)';
       button.style.background = colorScheme.activeBackground;
     });
     button.addEventListener('mouseup', () => {
-      button.style.transform = 'translateY(-1px) translateZ(0)';
+      button.style.transform = 'translateY(-2px) scale(1) translateZ(0)';
       button.style.background = colorScheme.hoverBackground;
     });
     button.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      button.style.transform = 'scale(0.98) translateZ(0)';
+      button.style.transform = 'scale(0.96) translateZ(0)';
       button.style.background = colorScheme.activeBackground;
     }, { passive: false });
     button.addEventListener('touchend', (e) => {
