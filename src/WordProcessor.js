@@ -103,6 +103,7 @@ class WordProcessor {
     }
 
     logger.debug('getFormattedHtml: useKimi=', useKimi, 'html length=', html.length);
+    logger.debug('Original HTML preview:', html.substring(0, 500));
 
     // 直接转换HTML到标准化格式，而不通过docx对象
     let standardHtml = '';
@@ -113,10 +114,13 @@ class WordProcessor {
     }
     
     logger.debug('Standard HTML length:', standardHtml.length);
+    logger.debug('Standard HTML preview:', standardHtml.substring(0, 500));
     
     // 使用WordOptimizer进行最终优化
     const optimizer = new WordOptimizer();
     const optimizedHtml = await optimizer.optimize(standardHtml);
+    
+    logger.debug('Optimized HTML preview:', optimizedHtml.substring(0, 500));
     
     return optimizedHtml;
   }
@@ -170,30 +174,57 @@ class WordProcessor {
           return childContent;
         
         case 'ul':
+          // 将无序列表转换为带符号的段落，避免WPS列表样式问题
+          const kimiUlItems = [];
+          const kimiUlChildren = Array.from(node.children).filter(child => child.tagName.toLowerCase() === 'li');
+          for (const li of kimiUlChildren) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = li.innerHTML;
+            const paragraphDivs = tempDiv.querySelectorAll('div.paragraph');
+            
+            if (paragraphDivs.length > 0) {
+              const itemText = Array.from(paragraphDivs)
+                .map(div => div.textContent.trim())
+                .filter(text => text)
+                .join(' ');
+              kimiUlItems.push(`<p>• ${itemText}</p>`);
+            } else {
+              const itemText = li.textContent.trim();
+              if (itemText) {
+                kimiUlItems.push(`<p>• ${itemText}</p>`);
+              }
+            }
+          }
+          return kimiUlItems.join('');
+        
         case 'ol':
-          // 清理列表内容，移除多余空格
-          const cleanedContent = childContent.replace(/\s+/g, ' ').trim();
-          return `<${tag}>${cleanedContent}</${tag}>`;
+          // 将有序列表转换为带数字的段落，避免WPS列表样式问题
+          const kimiOlItems = [];
+          const kimiOlChildren = Array.from(node.children).filter(child => child.tagName.toLowerCase() === 'li');
+          for (let i = 0; i < kimiOlChildren.length; i++) {
+            const li = kimiOlChildren[i];
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = li.innerHTML;
+            const paragraphDivs = tempDiv.querySelectorAll('div.paragraph');
+            
+            if (paragraphDivs.length > 0) {
+              const itemText = Array.from(paragraphDivs)
+                .map(div => div.textContent.trim())
+                .filter(text => text)
+                .join(' ');
+              kimiOlItems.push(`<p>${i + 1}. ${itemText}</p>`);
+            } else {
+              const itemText = li.textContent.trim();
+              if (itemText) {
+                kimiOlItems.push(`<p>${i + 1}. ${itemText}</p>`);
+              }
+            }
+          }
+          return kimiOlItems.join('');
         
         case 'li':
-          // 特别处理Kimi的列表项结构
-          // 如果包含 div.paragraph，需要提取其内容并去除多余空格
-          let itemContent = childContent.trim();
-          
-          // 检查是否有嵌套的div.paragraph结构
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = node.innerHTML;
-          const paragraphDivs = tempDiv.querySelectorAll('div.paragraph');
-          
-          if (paragraphDivs.length > 0) {
-            // 如果有paragraph div，提取它们的文本内容
-            itemContent = Array.from(paragraphDivs)
-              .map(div => div.textContent.trim())
-              .filter(text => text)
-              .join(' ');
-          }
-          
-          return `<li>${itemContent}</li>`;
+          // li现在由ul/ol处理，这里直接返回空
+          return '';
         
         case 'table':
         case 'thead':
@@ -291,33 +322,63 @@ class WordProcessor {
           return `<p>${childContent}</p>`;
         
         case 'ul':
+          // 将无序列表转换为带符号的段落，避免WPS列表样式问题
+          const ulItems = [];
+          const ulChildren = Array.from(node.children).filter(child => child.tagName.toLowerCase() === 'li');
+          for (const li of ulChildren) {
+            const tempLi = document.createElement('div');
+            tempLi.innerHTML = li.innerHTML;
+            const paragraphs = tempLi.querySelectorAll('p.ds-markdown-paragraph');
+            
+            if (paragraphs.length > 0) {
+              let liText = '';
+              for (const p of paragraphs) {
+                for (const child of p.childNodes) {
+                  liText += walk(child);
+                }
+              }
+              ulItems.push(`<p>• ${liText}</p>`);
+            } else {
+              let liText = '';
+              for (const child of li.childNodes) {
+                liText += walk(child);
+              }
+              ulItems.push(`<p>• ${liText}</p>`);
+            }
+          }
+          return ulItems.join('');
+        
         case 'ol':
-          return `<${tag}>${childContent}</${tag}>`;
+          // 将有序列表转换为带数字的段落，避免WPS列表样式问题
+          const olItems = [];
+          const olChildren = Array.from(node.children).filter(child => child.tagName.toLowerCase() === 'li');
+          for (let i = 0; i < olChildren.length; i++) {
+            const li = olChildren[i];
+            const tempLi = document.createElement('div');
+            tempLi.innerHTML = li.innerHTML;
+            const paragraphs = tempLi.querySelectorAll('p.ds-markdown-paragraph');
+            
+            if (paragraphs.length > 0) {
+              let liText = '';
+              for (const p of paragraphs) {
+                for (const child of p.childNodes) {
+                  liText += walk(child);
+                }
+              }
+              olItems.push(`<p>${i + 1}. ${liText}</p>`);
+            } else {
+              let liText = '';
+              for (const child of li.childNodes) {
+                liText += walk(child);
+              }
+              olItems.push(`<p>${i + 1}. ${liText}</p>`);
+            }
+          }
+          return olItems.join('');
         
         case 'li':
-          // DeepSeek的li内部有p.ds-markdown-paragraph，需要特殊处理
-          // 提取p标签内的文本，避免嵌套问题
-          const tempLi = document.createElement('div');
-          tempLi.innerHTML = node.innerHTML;
-          const paragraphs = tempLi.querySelectorAll('p.ds-markdown-paragraph');
-          
-          if (paragraphs.length > 0) {
-            // 提取所有p标签的内容，去掉p标签本身
-            let liContent = '';
-            for (const p of paragraphs) {
-              // 递归处理p标签内的内容
-              for (const child of p.childNodes) {
-                liContent += walk(child);
-              }
-            }
-            // 处理嵌套列表
-            const nestedLists = tempLi.querySelectorAll('ul, ol');
-            for (const list of nestedLists) {
-              liContent += walk(list);
-            }
-            return `<li>${liContent}</li>`;
-          }
-          return `<li>${childContent}</li>`;
+          // li现在由ul/ol处理，这里直接返回空
+          return '';
         
         case 'div':
           if (className.includes('markdown-table-wrapper')) {
@@ -621,48 +682,59 @@ class WordProcessor {
       line-height: 1.6; 
     }
     
-    /* WPS和Word兼容的列表样式 */
+    /* WPS和Word兼容的列表样式 - 符号内置策略 */
     ul {
-      margin: 12px 0;
-      padding-left: 30px;
+      margin: 12px 0 !important;
+      padding-left: 0px !important;
+      margin-left: 0px !important;
       list-style: disc;
-      list-style-position: outside;
+      list-style-position: inside;
     }
     
     ol {
-      margin: 12px 0;
-      padding-left: 30px;
+      margin: 12px 0 !important;
+      padding-left: 0px !important;
+      margin-left: 0px !important;
       list-style: decimal;
-      list-style-position: outside;
+      list-style-position: inside;
     }
     
     li {
-      margin: 6px 0;
+      margin: 6px 0 !important;
       line-height: 1.6;
-      padding-left: 8px;
+      padding-left: 0px !important;
+      margin-left: 0px !important;
     }
     
-    /* 嵌套列表样式 */
+    /* 嵌套列表样式 - 符号内置策略 */
     ul ul {
       list-style: circle;
-      margin: 8px 0;
-      padding-left: 50px;
+      list-style-position: inside;
+      margin: 8px 0 !important;
+      padding-left: 0px !important;
+      margin-left: 0px !important;
     }
     
     ol ol {
       list-style: lower-alpha;
-      margin: 8px 0;
-      padding-left: 50px;
+      list-style-position: inside;
+      margin: 8px 0 !important;
+      padding-left: 0px !important;
+      margin-left: 0px !important;
     }
     
     ul ul ul {
       list-style: square;
-      padding-left: 70px;
+      list-style-position: inside;
+      padding-left: 0px !important;
+      margin-left: 0px !important;
     }
     
     ol ol ol {
       list-style: lower-roman;
-      padding-left: 70px;
+      list-style-position: inside;
+      padding-left: 0px !important;
+      margin-left: 0px !important;
     }
     
     /* 代码样式 */
@@ -744,21 +816,21 @@ ${bodyHtml}
               format: LevelFormat.BULLET,
               text: '\u2022',
               alignment: AlignmentType.LEFT,
-              style: { paragraph: { indent: { left: 360, hanging: 360 } } },
+              style: { paragraph: { indent: { left: 120, hanging: 120 } } },
             },
             {
               level: 1,
               format: LevelFormat.BULLET,
               text: '\u25E6',
               alignment: AlignmentType.LEFT,
-              style: { paragraph: { indent: { left: 720, hanging: 360 } } },
+              style: { paragraph: { indent: { left: 240, hanging: 120 } } },
             },
             {
               level: 2,
               format: LevelFormat.BULLET,
               text: '\u25AA',
               alignment: AlignmentType.LEFT,
-              style: { paragraph: { indent: { left: 1080, hanging: 360 } } },
+              style: { paragraph: { indent: { left: 360, hanging: 120 } } },
             },
           ],
         },
@@ -770,21 +842,21 @@ ${bodyHtml}
               format: LevelFormat.DECIMAL,
               text: '%1.',
               alignment: AlignmentType.LEFT,
-              style: { paragraph: { indent: { left: 360, hanging: 360 } } },
+              style: { paragraph: { indent: { left: 120, hanging: 120 } } },
             },
             {
               level: 1,
               format: LevelFormat.LOWER_LETTER,
               text: '%2.',
               alignment: AlignmentType.LEFT,
-              style: { paragraph: { indent: { left: 720, hanging: 360 } } },
+              style: { paragraph: { indent: { left: 240, hanging: 120 } } },
             },
             {
               level: 2,
               format: LevelFormat.LOWER_ROMAN,
               text: '%3.', 
               alignment: AlignmentType.LEFT,
-              style: { paragraph: { indent: { left: 1080, hanging: 360 } } },
+              style: { paragraph: { indent: { left: 360, hanging: 120 } } },
             },
           ],
         },
