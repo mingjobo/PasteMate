@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extensionDescription": {
-    "message": "One-click copy plain text content from AI chat websites, removing Markdown formatting",
+    "message": "One-click export AI chats from DeepSeek, Kimi to Word with preserved code blocks, tables, and formulas.",
     "description": "Extension description"
   },
   "copyToWord": {
