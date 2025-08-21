@@ -1,3 +1,5 @@
+import logger from './Logger.js';
+
 /**
  * Word优化器 - 优化HTML以提高Word兼容性
  * 
@@ -14,57 +16,57 @@ class WordOptimizer {
    * @returns {Promise<string>} 优化后的HTML
    */
   async optimize(html) {
-    console.log('[WordOptimizer] ========== 开始优化HTML ==========');
-    console.log('[WordOptimizer] 原始HTML长度:', html.length);
-    console.log('[WordOptimizer] 原始HTML预览:', html.substring(0, 200) + '...');
+    logger.debug('========== 开始优化HTML ==========');
+    logger.debug('原始HTML长度:', html.length);
+    logger.debug('原始HTML预览:', html.substring(0, 200) + '...');
     
     let optimized = html;
     
     // 1. 标准化HTML结构
-    console.log('[WordOptimizer] ---------- 步骤1: 标准化HTML结构 ----------');
+    logger.debug('---------- 步骤1: 标准化HTML结构 ----------');
     const beforeStandardize = optimized;
     optimized = this.standardizeHtml(optimized);
-    console.log('[WordOptimizer] 标准化后HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 标准化变化:', optimized !== beforeStandardize ? '有变化' : '无变化');
+    logger.debug('标准化后HTML长度:', optimized.length);
+    logger.debug('标准化变化:', optimized !== beforeStandardize ? '有变化' : '无变化');
     
     // 2. 内联关键样式
-    console.log('[WordOptimizer] ---------- 步骤2: 内联关键样式 ----------');
+    logger.debug('---------- 步骤2: 内联关键样式 ----------');
     const beforeInlineStyles = optimized;
     optimized = this.inlineStyles(optimized);
-    console.log('[WordOptimizer] 内联样式后HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 内联样式变化:', optimized !== beforeInlineStyles ? '有变化' : '无变化');
+    logger.debug('内联样式后HTML长度:', optimized.length);
+    logger.debug('内联样式变化:', optimized !== beforeInlineStyles ? '有变化' : '无变化');
     
     // 3. 处理特殊字符
-    console.log('[WordOptimizer] ---------- 步骤3: 处理特殊字符 ----------');
+    logger.debug('---------- 步骤3: 处理特殊字符 ----------');
     const beforeSpecialChars = optimized;
     optimized = this.handleSpecialCharacters(optimized);
-    console.log('[WordOptimizer] 特殊字符处理后HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 特殊字符处理变化:', optimized !== beforeSpecialChars ? '有变化' : '无变化');
+    logger.debug('特殊字符处理后HTML长度:', optimized.length);
+    logger.debug('特殊字符处理变化:', optimized !== beforeSpecialChars ? '有变化' : '无变化');
     
     // 4. 优化列表结构
-    console.log('[WordOptimizer] ---------- 步骤4: 优化列表结构 ----------');
+    logger.debug('---------- 步骤4: 优化列表结构 ----------');
     const beforeOptimizeLists = optimized;
     optimized = this.optimizeLists(optimized);
-    console.log('[WordOptimizer] 列表优化后HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 列表优化变化:', optimized !== beforeOptimizeLists ? '有变化' : '无变化');
+    logger.debug('列表优化后HTML长度:', optimized.length);
+    logger.debug('列表优化变化:', optimized !== beforeOptimizeLists ? '有变化' : '无变化');
     
     // 5. 优化表格结构
-    console.log('[WordOptimizer] ---------- 步骤5: 优化表格结构 ----------');
+    logger.debug('---------- 步骤5: 优化表格结构 ----------');
     const beforeOptimizeTables = optimized;
     optimized = this.optimizeTables(optimized);
-    console.log('[WordOptimizer] 表格优化后HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 表格优化变化:', optimized !== beforeOptimizeTables ? '有变化' : '无变化');
+    logger.debug('表格优化后HTML长度:', optimized.length);
+    logger.debug('表格优化变化:', optimized !== beforeOptimizeTables ? '有变化' : '无变化');
     
     // 6. 包装完整HTML文档
-    console.log('[WordOptimizer] ---------- 步骤6: 包装完整HTML文档 ----------');
+    logger.debug('---------- 步骤6: 包装完整HTML文档 ----------');
     const beforeWrap = optimized;
     optimized = this.wrapCompleteDocument(optimized);
-    console.log('[WordOptimizer] 包装后HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 包装变化:', optimized !== beforeWrap ? '有变化' : '无变化');
+    logger.debug('包装后HTML长度:', optimized.length);
+    logger.debug('包装变化:', optimized !== beforeWrap ? '有变化' : '无变化');
     
-    console.log('[WordOptimizer] ========== 优化完成 ==========');
-    console.log('[WordOptimizer] 最终HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 最终HTML预览:', optimized.substring(0, 300) + '...');
+    logger.debug('========== 优化完成 ==========');
+    logger.debug('最终HTML长度:', optimized.length);
+    logger.debug('最终HTML预览:', optimized.substring(0, 300) + '...');
     
     return optimized;
   }
@@ -187,110 +189,110 @@ class WordOptimizer {
    * @returns {string} 优化后的HTML
    */
   optimizeLists(html) {
-    console.log('[WordOptimizer] ---------- 开始优化列表结构 ----------');
-    console.log('[WordOptimizer] 输入HTML长度:', html.length);
-    console.log('[WordOptimizer] 输入HTML前100字符:', html.substring(0, 100));
+    logger.debug('---------- 开始优化列表结构 ----------');
+    logger.debug('输入HTML长度:', html.length);
+    logger.debug('输入HTML前100字符:', html.substring(0, 100));
     
     // 检查是否包含列表标签
     const hasUl = html.includes('<ul');
     const hasOl = html.includes('<ol');
     const hasLi = html.includes('<li');
-    console.log('[WordOptimizer] 列表标签检查:', { hasUl, hasOl, hasLi });
+    logger.debug('列表标签检查:', { hasUl, hasOl, hasLi });
     
     // 查找所有列表标签
     const ulMatches = html.match(/<ul[^>]*>/g) || [];
     const olMatches = html.match(/<ol[^>]*>/g) || [];
     const liMatches = html.match(/<li[^>]*>/g) || [];
-    console.log('[WordOptimizer] 列表标签统计:', {
+    logger.debug('列表标签统计:', {
       ul数量: ulMatches.length,
       ol数量: olMatches.length,
       li数量: liMatches.length
     });
     
     if (!hasUl && !hasOl && !hasLi) {
-      console.log('[WordOptimizer] 未发现列表标签，跳过列表优化');
+      logger.debug('未发现列表标签，跳过列表优化');
       return html;
     }
     
     let optimized = html;
     
     // 1. 清理列表项内容，移除多余的包装
-    console.log('[WordOptimizer] 步骤1: 清理列表项内容');
+    logger.debug('步骤1: 清理列表项内容');
     const beforeClean = optimized;
     optimized = optimized
       .replace(/<li[^>]*>\s*<div[^>]*class="paragraph"[^>]*>/g, '<li>')
       .replace(/<\/div>\s*<\/li>/g, '</li>');
-    console.log('[WordOptimizer] 清理变化:', optimized !== beforeClean ? '有变化' : '无变化');
+    logger.debug('清理变化:', optimized !== beforeClean ? '有变化' : '无变化');
     if (optimized !== beforeClean) {
-      console.log('[WordOptimizer] 清理后示例:', optimized.substring(0, 200));
+      logger.debug('清理后示例:', optimized.substring(0, 200));
     }
     
     // 2. 为WPS优化的列表样式（精确缩进版本）
-    console.log('[WordOptimizer] 步骤2: 应用基础列表样式');
+    logger.debug('步骤2: 应用基础列表样式');
     const beforeBaseStyles = optimized;
     
     // 先记录替换前的标签
-    console.log('[WordOptimizer] 替换前的ul标签:', ulMatches.slice(0, 3));
-    console.log('[WordOptimizer] 替换前的ol标签:', olMatches.slice(0, 3));
-    console.log('[WordOptimizer] 替换前的li标签:', liMatches.slice(0, 3));
+    logger.debug('替换前的ul标签:', ulMatches.slice(0, 3));
+    logger.debug('替换前的ol标签:', olMatches.slice(0, 3));
+    logger.debug('替换前的li标签:', liMatches.slice(0, 3));
     
     // Word粘贴HTML时的兼容性优化
     // 明确指定列表类型，确保Word正确识别
     optimized = optimized
       .replace(/<ul([^>]*)>/g, (match, attrs) => {
-        console.log('[WordOptimizer]   替换ul标签:', match, '-> 添加disc样式');
+        logger.debug('  替换ul标签:', match, '-> 添加disc样式');
         // 明确指定无序列表样式
         return `<ul${attrs} style="list-style-type: disc;">`;
       })
       .replace(/<ol([^>]*)>/g, (match, attrs) => {
-        console.log('[WordOptimizer]   替换ol标签:', match, '-> 添加decimal样式');
+        logger.debug('  替换ol标签:', match, '-> 添加decimal样式');
         // 明确指定有序列表样式
         return `<ol${attrs} style="list-style-type: decimal;">`;
       })
       .replace(/<li([^>]*)>/g, (match, attrs) => {
-        console.log('[WordOptimizer]   保持li标签简单:', match);
+        logger.debug('  保持li标签简单:', match);
         // li标签不添加样式，让它继承父元素的样式
         return `<li${attrs}>`;
       });
     
-    console.log('[WordOptimizer] 基础样式变化:', optimized !== beforeBaseStyles ? '有变化' : '无变化');
+    logger.debug('基础样式变化:', optimized !== beforeBaseStyles ? '有变化' : '无变化');
     if (optimized !== beforeBaseStyles) {
       // 查看替换后的结果
       const newUlMatches = optimized.match(/<ul[^>]*>/g) || [];
       const newOlMatches = optimized.match(/<ol[^>]*>/g) || [];
       const newLiMatches = optimized.match(/<li[^>]*>/g) || [];
-      console.log('[WordOptimizer] 替换后的ul标签:', newUlMatches.slice(0, 3));
-      console.log('[WordOptimizer] 替换后的ol标签:', newOlMatches.slice(0, 3));
-      console.log('[WordOptimizer] 替换后的li标签:', newLiMatches.slice(0, 3));
+      logger.debug('替换后的ul标签:', newUlMatches.slice(0, 3));
+      logger.debug('替换后的ol标签:', newOlMatches.slice(0, 3));
+      logger.debug('替换后的li标签:', newLiMatches.slice(0, 3));
     }
     
     // 3. 跳过嵌套列表处理 - 让Word完全自动处理
-    console.log('[WordOptimizer] 步骤3: 跳过嵌套列表处理（让Word自动处理）');
+    logger.debug('步骤3: 跳过嵌套列表处理（让Word自动处理）');
     const beforeNested = optimized;
     // 不做任何嵌套处理
-    console.log('[WordOptimizer] 嵌套列表变化:', optimized !== beforeNested ? '有变化' : '无变化');
+    logger.debug('嵌套列表变化:', optimized !== beforeNested ? '有变化' : '无变化');
     
     // 5. 移除MSO样式（避免与Word默认列表样式冲突）
-    console.log('[WordOptimizer] 步骤5: 跳过MSO样式（避免冲突）');
+    logger.debug('步骤5: 跳过MSO样式（避免冲突）');
     const beforeMso = optimized;
     // 注释掉MSO样式，因为它们可能导致列表格式混乱
     // optimized = optimized
     //   .replace(/<ul([^>]*style="[^"]*")/g, '<ul$1; mso-list: l0 level1 lfo1;')
     //   .replace(/<ol([^>]*style="[^"]*")/g, '<ol$1; mso-list: l1 level1 lfo2;')
     //   .replace(/<li([^>]*style="[^"]*")/g, '<li$1; mso-list: l0 level1 lfo1;');
-    console.log('[WordOptimizer] MSO样式变化:', optimized !== beforeMso ? '有变化' : '无变化');
+    logger.debug('MSO样式变化:', optimized !== beforeMso ? '有变化' : '无变化');
     
     // 6. 确保列表项内容正确显示
-    console.log('[WordOptimizer] 步骤6: 清理空列表项');
+    logger.debug('步骤6: 清理空列表项');
     const beforeCleanEmpty = optimized;
     optimized = optimized
       .replace(/<li[^>]*>\s*<\/li>/g, '') // 移除空列表项
       .replace(/<li[^>]*>(\s*)<\/li>/g, ''); // 移除只包含空白字符的列表项
-    console.log('[WordOptimizer] 清理空列表项变化:', optimized !== beforeCleanEmpty ? '有变化' : '无变化');
+    logger.debug('清理空列表项变化:', optimized !== beforeCleanEmpty ? '有变化' : '无变化');
     
-    console.log('[WordOptimizer] 列表优化完成，输出HTML长度:', optimized.length);
-    console.log('[WordOptimizer] 输出HTML前200字符:', optimized.substring(0, 200));
-    console.log('[WordOptimizer] 列表优化前后对比:', {
+    logger.debug('列表优化完成，输出HTML长度:', optimized.length);
+    logger.debug('输出HTML前200字符:', optimized.substring(0, 200));
+    logger.debug('列表优化前后对比:', {
       原始长度: html.length,
       优化后长度: optimized.length,
       是否有变化: optimized !== html
@@ -464,7 +466,7 @@ ${html}
       // 检查是否所有标签都正确闭合
       return Object.values(tagCounts).every(count => count === 0);
     } catch (error) {
-      console.warn('HTML validation failed:', error);
+      logger.warn('HTML validation failed:', error);
       return false;
     }
   }

@@ -1,3 +1,5 @@
+import logger from './Logger.js';
+
 /**
  * 结构转换器
  * 负责识别和转换DOM结构，将各种格式转换为标准HTML
@@ -168,7 +170,7 @@ class StructureConverter {
       return '';
     }
     
-    console.debug('[StructureConverter] Generating list HTML for', items.length, 'items');
+    logger.debug('[StructureConverter] Generating list HTML for', items.length, 'items');
     
     // 分析列表类型
     const listType = this.analyzeListType(items);
@@ -180,13 +182,13 @@ class StructureConverter {
       const cleanItem = this.cleanListItem(item);
       if (cleanItem) {
         html += `<li>${cleanItem}</li>`;
-        console.debug(`[StructureConverter] List item ${index + 1}:`, cleanItem.substring(0, 50) + '...');
+        logger.debug(`[StructureConverter] List item ${index + 1}:`, cleanItem.substring(0, 50) + '...');
       }
     });
     
     html += `</${listTag}>`;
     
-    console.debug('[StructureConverter] Generated list HTML:', html.substring(0, 200) + '...');
+    logger.debug('[StructureConverter] Generated list HTML:', html.substring(0, 200) + '...');
     return html;
   }
   
@@ -273,7 +275,7 @@ class StructureConverter {
     // 为标题添加强调
     const html = `<h${level}><strong>${cleanText}</strong></h${level}>`;
     
-    console.debug('[StructureConverter] Generated heading HTML:', html);
+    logger.debug('[StructureConverter] Generated heading HTML:', html);
     return html;
   }
   
@@ -302,7 +304,7 @@ class StructureConverter {
     
     const html = `<blockquote><p>${cleanText}</p></blockquote>`;
     
-    console.debug('[StructureConverter] Generated blockquote HTML:', html);
+    logger.debug('[StructureConverter] Generated blockquote HTML:', html);
     return html;
   }
   
@@ -558,7 +560,7 @@ class StructureConverter {
   addListPattern(pattern) {
     if (pattern instanceof RegExp) {
       this.listPatterns.push(pattern);
-      console.debug('[StructureConverter] Added custom list pattern:', pattern);
+      logger.debug('[StructureConverter] Added custom list pattern:', pattern);
     }
   }
   
@@ -569,7 +571,7 @@ class StructureConverter {
   addHeadingPattern(pattern) {
     if (pattern instanceof RegExp) {
       this.headingPatterns.push(pattern);
-      console.debug('[StructureConverter] Added custom heading pattern:', pattern);
+      logger.debug('[StructureConverter] Added custom heading pattern:', pattern);
     }
   }
   
@@ -580,7 +582,7 @@ class StructureConverter {
   addBlockQuotePattern(pattern) {
     if (pattern instanceof RegExp) {
       this.blockQuotePatterns.push(pattern);
-      console.debug('[StructureConverter] Added custom blockquote pattern:', pattern);
+      logger.debug('[StructureConverter] Added custom blockquote pattern:', pattern);
     }
   }
   

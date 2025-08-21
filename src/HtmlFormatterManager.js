@@ -3,6 +3,7 @@ import { ContentCleaner } from './ContentCleaner.js';
 import { GenericHtmlFormatter } from './formatters/GenericHtmlFormatter.js';
 import { KimiHtmlFormatter } from './formatters/KimiHtmlFormatter.js';
 import { DeepSeekHtmlFormatter } from './formatters/DeepSeekHtmlFormatter.js';
+import logger from './Logger.js';
 
 /**
  * HTML格式化管理器
@@ -36,7 +37,7 @@ class HtmlFormatterManager {
       throw new Error('Formatter must extend HtmlFormatter class');
     }
     
-    console.debug(`[HtmlFormatterManager] Registering formatter for ${hostname}:`, formatter.getName());
+    logger.debug(`[HtmlFormatterManager] Registering formatter for ${hostname}:`, formatter.getName());
     this.formatters.set(hostname, formatter);
   }
   
@@ -49,7 +50,7 @@ class HtmlFormatterManager {
       throw new Error('Generic formatter must extend HtmlFormatter class');
     }
     
-    console.debug('[HtmlFormatterManager] Setting generic formatter:', formatter.getName());
+    logger.debug('[HtmlFormatterManager] Setting generic formatter:', formatter.getName());
     this.genericFormatter = formatter;
   }
   
@@ -60,14 +61,14 @@ class HtmlFormatterManager {
    * @returns {Promise<string>} 格式化后的HTML字符串
    */
   async formatForWord(element, hostname = window.location.hostname) {
-    console.log('[HtmlFormatterManager] formatForWord收到element:', element?.tagName, element?.className, (element?.innerText || '').slice(0, 50));
-    console.log('[HtmlFormatterManager] hostname:', hostname);
+    logger.debug('[HtmlFormatterManager] formatForWord收到element:', element?.tagName, element?.className, (element?.innerText || '').slice(0, 50));
+    logger.debug('[HtmlFormatterManager] hostname:', hostname);
     const startTime = performance.now();
     
     try {
-      console.log(`[HtmlFormatterManager] ========== 开始格式化 ${hostname} ==========`);
-      console.log(`[HtmlFormatterManager] 输入元素:`, element.tagName, element.className);
-      console.log(`[HtmlFormatterManager] 元素内容长度:`, (element.textContent || '').length);
+      logger.debug(`[HtmlFormatterManager] ========== 开始格式化 ${hostname} ==========`);
+      logger.debug(`[HtmlFormatterManager] 输入元素:`, element.tagName, element.className);
+      logger.debug(`[HtmlFormatterManager] 元素内容长度:`, (element.textContent || '').length);
       
       // 1. 验证输入参数
       if (!element) {
@@ -75,40 +76,40 @@ class HtmlFormatterManager {
       }
       
       // 2. 等待初始化完成
-      console.log(`[HtmlFormatterManager] 等待初始化完成...`);
+      logger.debug(`[HtmlFormatterManager] 等待初始化完成...`);
       await this.waitForInitialization();
-      console.log(`[HtmlFormatterManager] 初始化完成`);
+      logger.debug(`[HtmlFormatterManager] 初始化完成`);
       
       // 3. 选择合适的格式化器
-      console.log(`[HtmlFormatterManager] 选择格式化器... hostname=`, hostname);
+      logger.debug(`[HtmlFormatterManager] 选择格式化器... hostname=`, hostname);
       const formatter = this.getFormatter(hostname, element);
-      console.log(`[HtmlFormatterManager] 使用格式化器: ${formatter.getName()} for hostname: ${hostname}`);
+      logger.debug(`[HtmlFormatterManager] 使用格式化器: ${formatter.getName()} for hostname: ${hostname}`);
       
       // 4. 克隆元素避免修改原DOM
-      console.log(`[HtmlFormatterManager] 克隆DOM元素...`);
+      logger.debug(`[HtmlFormatterManager] 克隆DOM元素...`);
       const cloned = element.cloneNode(true);
-      console.log(`[HtmlFormatterManager] DOM元素已克隆`);
+      logger.debug(`[HtmlFormatterManager] DOM元素已克隆`);
       
       // 5. 执行格式化
-      console.log(`[HtmlFormatterManager] 开始执行格式化...`);
+      logger.debug(`[HtmlFormatterManager] 开始执行格式化...`);
       const formattedHtml = await this.executeFormatting(formatter, cloned, hostname);
-      console.log(`[HtmlFormatterManager] 格式化完成，结果长度: ${formattedHtml.length}`);
-      console.log(`[HtmlFormatterManager] 格式化结果预览: ${formattedHtml.substring(0, 300)}...`);
+      logger.debug(`[HtmlFormatterManager] 格式化完成，结果长度: ${formattedHtml.length}`);
+      logger.debug(`[HtmlFormatterManager] 格式化结果预览: ${formattedHtml.substring(0, 300)}...`);
       
       // 6. 记录性能
       const duration = performance.now() - startTime;
-      console.log(`[HtmlFormatterManager] 格式化总耗时: ${duration.toFixed(2)}ms`);
+      logger.info(`[HtmlFormatterManager] 格式化总耗时: ${duration.toFixed(2)}ms`);
       
       return formattedHtml;
       
     } catch (error) {
-      console.error(`[HtmlFormatterManager] Formatting failed for ${hostname}:`, error);
+      logger.error(`[HtmlFormatterManager] Formatting failed for ${hostname}:`, error);
       
       // 降级到基本文本提取
       const fallbackResult = this.fallbackFormat(element);
       
       const duration = performance.now() - startTime;
-      console.warn(`[HtmlFormatterManager] Used fallback formatting in ${duration.toFixed(2)}ms`);
+      logger.warn(`[HtmlFormatterManager] Used fallback formatting in ${duration.toFixed(2)}ms`);
       
       return fallbackResult;
     }
@@ -130,16 +131,16 @@ class HtmlFormatterManager {
     // 2. 尝试找到能处理该元素的其他格式化器
     for (const [site, formatter] of this.formatters) {
       const can = formatter.canHandle(element);
-      console.log(`[HtmlFormatterManager] 检查formatter: ${formatter.getName()} for site: ${site}, canHandle: ${can}, element.className: ${element.className}`);
+      logger.debug(`[HtmlFormatterManager] 检查formatter: ${formatter.getName()} for site: ${site}, canHandle: ${can}, element.className: ${element.className}`);
       if (site !== hostname && can) {
-        console.debug(`[HtmlFormatterManager] Using cross-site formatter from ${site} for ${hostname}`);
+        logger.debug(`[HtmlFormatterManager] Using cross-site formatter from ${site} for ${hostname}`);
         return formatter;
       }
     }
     
     // 3. 使用通用格式化器作为最后的降级方案
     if (this.genericFormatter) {
-      console.debug(`[HtmlFormatterManager] Using generic formatter for ${hostname}`);
+      logger.debug(`[HtmlFormatterManager] Using generic formatter for ${hostname}`);
       return this.genericFormatter;
     }
     
@@ -180,7 +181,7 @@ class HtmlFormatterManager {
     } catch (error) {
       // 如果特定格式化器失败，尝试通用格式化器
       if (formatter !== this.genericFormatter && this.genericFormatter) {
-        console.warn(`[HtmlFormatterManager] Specific formatter failed, trying generic formatter:`, error);
+        logger.warn(`[HtmlFormatterManager] Specific formatter failed, trying generic formatter:`, error);
         return await this.doFormatting(this.genericFormatter, element, hostname);
       }
       
@@ -230,7 +231,7 @@ class HtmlFormatterManager {
       return `<div>${paragraphs}</div>`;
       
     } catch (error) {
-      console.error('[HtmlFormatterManager] Fallback formatting failed:', error);
+      logger.error('[HtmlFormatterManager] Fallback formatting failed:', error);
       return '<div><p>格式化失败</p></div>';
     }
   }
@@ -251,32 +252,32 @@ class HtmlFormatterManager {
    * 注册通用格式化器作为降级方案
    */
   async initializeDefaultFormatters() {
-    console.debug('[HtmlFormatterManager] Initializing default formatters...');
+    logger.debug('[HtmlFormatterManager] Initializing default formatters...');
     
     try {
       // 使用已导入的格式化器类
       // 注册通用格式化器
       this.setGenericFormatter(new GenericHtmlFormatter());
-      console.debug('[HtmlFormatterManager] Generic formatter registered');
+      logger.debug('[HtmlFormatterManager] Generic formatter registered');
       
       // 注册Kimi网站格式化器
       this.registerFormatter('www.kimi.com', new KimiHtmlFormatter());
-      console.debug('[HtmlFormatterManager] Kimi formatter registered');
+      logger.debug('[HtmlFormatterManager] Kimi formatter registered');
       
       // 注册DeepSeek网站格式化器
       this.registerFormatter('chat.deepseek.com', new DeepSeekHtmlFormatter());
-      console.log('[HtmlFormatterManager] DeepSeek formatter registered for chat.deepseek.com');
+      logger.debug('[HtmlFormatterManager] DeepSeek formatter registered for chat.deepseek.com');
       
       // 标记初始化完成
       this.initialized = true;
       
     } catch (error) {
-      console.error('[HtmlFormatterManager] Failed to initialize default formatters:', error);
+      logger.error('[HtmlFormatterManager] Failed to initialize default formatters:', error);
       // 即使失败也标记为已初始化，避免阻塞
       this.initialized = true;
     }
     
-    console.debug('[HtmlFormatterManager] Default formatters initialized');
+    logger.debug('[HtmlFormatterManager] Default formatters initialized');
   }
 
   /**
@@ -299,7 +300,7 @@ class HtmlFormatterManager {
     }
     
     if (!this.initialized) {
-      console.warn('[HtmlFormatterManager] Initialization timeout, proceeding anyway');
+      logger.warn('[HtmlFormatterManager] Initialization timeout, proceeding anyway');
     }
   }
   
@@ -336,7 +337,7 @@ class HtmlFormatterManager {
   clearFormatters() {
     this.formatters.clear();
     this.genericFormatter = null;
-    console.debug('[HtmlFormatterManager] All formatters cleared');
+    logger.debug('[HtmlFormatterManager] All formatters cleared');
   }
 }
 

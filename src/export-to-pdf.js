@@ -1,6 +1,7 @@
 // 导出为 PDF 工具函数，使用打包的 html2pdf.js
 // 兼容 HTML/纯文本输入
 import { UserQuestionExtractor } from './UserQuestionExtractor.js';
+import logger from './Logger.js';
 
 /**
  * 将 HTML/纯文本内容导出为 PDF 文件
@@ -21,7 +22,7 @@ export async function exportToPdf(content, filename = 'PureText.pdf', aiResponse
       throw new Error('内容类型不支持');
     }
 
-    console.log('PureText: 开始生成 PDF...');
+    logger.info('开始生成 PDF...');
     
     // 生成智能文件名
     let finalFilename = filename;
@@ -29,23 +30,23 @@ export async function exportToPdf(content, filename = 'PureText.pdf', aiResponse
       try {
         const userQuestion = UserQuestionExtractor.getUserQuestion(aiResponseElement);
         finalFilename = UserQuestionExtractor.generateFilename(userQuestion, 'pdf');
-        console.log('PureText: 生成智能文件名:', finalFilename);
+        logger.debug('生成智能文件名:', finalFilename);
       } catch (error) {
-        console.error('PureText: 生成文件名失败:', error);
+        logger.error('生成文件名失败:', error);
       }
     }
     
     // 为DeepSeek网站添加特殊的PDF样式处理
     const isDeepSeek = window.location.hostname === 'chat.deepseek.com';
     if (isDeepSeek) {
-      console.log('PureText: 检测到DeepSeek网站，应用特殊PDF样式');
+      logger.debug('检测到DeepSeek网站，应用特殊PDF样式');
       applyDeepSeekPdfStyles(element);
     }
     
     // 为Kimi网站添加特殊的PDF样式处理
     const isKimi = window.location.hostname === 'www.kimi.com';
     if (isKimi) {
-      console.log('PureText: 检测到Kimi网站，应用特殊PDF样式');
+      logger.debug('检测到Kimi网站，应用特殊PDF样式');
       applyKimiPdfStyles(element);
     }
     
@@ -71,10 +72,10 @@ export async function exportToPdf(content, filename = 'PureText.pdf', aiResponse
       }
     }).save();
     
-    console.log(`PureText: PDF 导出成功 - ${finalFilename}`);
+    logger.info(`PDF 导出成功 - ${finalFilename}`);
     
   } catch (error) {
-    console.error('PureText: PDF 导出失败:', error);
+    logger.error('PDF 导出失败:', error);
     throw new Error('PDF 导出失败: ' + error.message);
   }
 }
@@ -188,10 +189,10 @@ function applyDeepSeekPdfStyles(element) {
       }
     });
     
-    console.log('PureText: DeepSeek PDF 样式应用完成');
+    logger.debug('DeepSeek PDF 样式应用完成');
     
   } catch (error) {
-    console.error('PureText: 应用DeepSeek PDF样式失败:', error);
+    logger.error('应用DeepSeek PDF样式失败:', error);
   }
 }
 
@@ -356,9 +357,9 @@ function applyKimiPdfStyles(element) {
       }
     });
     
-    console.log('PureText: Kimi PDF 样式应用完成');
+    logger.debug('Kimi PDF 样式应用完成');
     
   } catch (error) {
-    console.error('PureText: 应用Kimi PDF样式失败:', error);
+    logger.error('应用Kimi PDF样式失败:', error);
   }
 } 

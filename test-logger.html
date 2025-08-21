@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logger 测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .primary { background-color: #007bff; color: white; }
+        .secondary { background-color: #6c757d; color: white; }
+        .success { background-color: #28a745; color: white; }
+        .warning { background-color: #ffc107; color: black; }
+        .danger { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>PureText Logger 系统测试</h1>
+    
+    <div class="test-section">
+        <h2>调试模式控制</h2>
+        <p>当前调试模式状态: <span id="debug-status">未知</span></p>
+        <button class="primary" onclick="toggleDebug()">切换调试模式</button>
+        <button class="secondary" onclick="checkDebugStatus()">检查调试状态</button>
+        <p><strong>快捷键:</strong> 按 Ctrl+Shift+D (Windows/Linux) 或 Command+Shift+D (Mac) 切换调试模式</p>
+    </div>
+
+    <div class="test-section">
+        <h2>日志级别测试</h2>
+        <button class="success" onclick="testDebugLog()">测试调试日志</button>
+        <button class="primary" onclick="testInfoLog()">测试信息日志</button>
+        <button class="warning" onclick="testWarnLog()">测试警告日志</button>
+        <button class="danger" onclick="testErrorLog()">测试错误日志</button>
+    </div>
+
+    <div class="test-section">
+        <h2>高级日志功能测试</h2>
+        <button class="primary" onclick="testGroupLogs()">测试分组日志</button>
+        <button class="secondary" onclick="testTimeLogs()">测试计时日志</button>
+        <button class="warning" onclick="testTableLog()">测试表格日志</button>
+    </div>
+
+    <div class="test-section">
+        <h2>说明</h2>
+        <ul>
+            <li><strong>调试日志:</strong> 只有在调试模式开启时才会显示</li>
+            <li><strong>信息、警告、错误日志:</strong> 始终显示</li>
+            <li><strong>localStorage 控制:</strong> 用户设置会保存在 localStorage 中</li>
+            <li><strong>快捷键:</strong> Ctrl+Shift+D (Windows/Linux) 或 Command+Shift+D (Mac) 可以快速切换调试模式</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        import logger from './src/Logger.js';
+        
+        // 将 logger 和测试函数暴露到全局作用域
+        window.logger = logger;
+        
+        window.toggleDebug = function() {
+            logger.toggleDebugMode();
+            updateDebugStatus();
+        };
+        
+        window.checkDebugStatus = function() {
+            updateDebugStatus();
+        };
+        
+        window.testDebugLog = function() {
+            logger.debug('这是一个调试日志消息 - 只有在调试模式下才会显示');
+        };
+        
+        window.testInfoLog = function() {
+            logger.info('这是一个信息日志消息 - 始终显示');
+        };
+        
+        window.testWarnLog = function() {
+            logger.warn('这是一个警告日志消息 - 始终显示');
+        };
+        
+        window.testErrorLog = function() {
+            logger.error('这是一个错误日志消息 - 始终显示');
+        };
+        
+        window.testGroupLogs = function() {
+            logger.group('日志分组测试');
+            logger.debug('分组内的调试信息');
+            logger.info('分组内的信息');
+            logger.warn('分组内的警告');
+            logger.groupEnd();
+        };
+        
+        window.testTimeLogs = function() {
+            logger.time('性能测试');
+            setTimeout(() => {
+                logger.timeEnd('性能测试');
+            }, 1000);
+        };
+        
+        window.testTableLog = function() {
+            const data = [
+                { name: 'Alice', age: 25, city: 'New York' },
+                { name: 'Bob', age: 30, city: 'San Francisco' },
+                { name: 'Charlie', age: 35, city: 'Chicago' }
+            ];
+            logger.table(data);
+        };
+        
+        function updateDebugStatus() {
+            const status = logger.isDebugMode() ? '✅ 已开启' : '❌ 已关闭';
+            document.getElementById('debug-status').textContent = status;
+            logger.info(`调试模式状态: ${status}`);
+        }
+        
+        // 初始化显示
+        updateDebugStatus();
+        
+        // 显示初始化信息
+        logger.info('Logger 测试页面已加载');
+        logger.debug('这条调试信息只有在调试模式下才会显示');
+    </script>
+</body>
+</html>

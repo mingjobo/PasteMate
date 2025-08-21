@@ -2,6 +2,8 @@
  * 用户问题提取器
  * 用于从不同AI聊天网站中提取用户问题
  */
+import logger from './Logger.js';
+
 export class UserQuestionExtractor {
   /**
    * 获取当前对话的用户问题
@@ -25,7 +27,7 @@ export class UserQuestionExtractor {
           return this.getGenericUserQuestion(aiResponseElement);
       }
     } catch (error) {
-      console.error('PureText: 获取用户问题失败:', error);
+      logger.error('PureText: 获取用户问题失败:', error);
       return '';
     }
   }

@@ -1,5 +1,6 @@
 import { HtmlFormatter } from './HtmlFormatter.js';
 import { StructureConverter } from '../StructureConverter.js';
+import logger from '../Logger.js';
 
 /**
  * 通用HTML格式化器
@@ -19,7 +20,7 @@ class GenericHtmlFormatter extends HtmlFormatter {
    * @returns {Promise<string>} 格式化后的HTML字符串
    */
   async format(element) {
-    console.debug('[GenericHtmlFormatter] Starting generic formatting');
+    logger.debug('[GenericHtmlFormatter] Starting generic formatting');
     
     try {
       // 克隆元素避免修改原DOM
@@ -31,11 +32,11 @@ class GenericHtmlFormatter extends HtmlFormatter {
       // 提取和格式化文本内容
       const formattedHtml = this.extractAndFormat(cloned);
       
-      console.debug('[GenericHtmlFormatter] Generic formatting completed');
+      logger.debug('[GenericHtmlFormatter] Generic formatting completed');
       return formattedHtml;
       
     } catch (error) {
-      console.error('[GenericHtmlFormatter] Formatting failed:', error);
+      logger.error('[GenericHtmlFormatter] Formatting failed:', error);
       // 最基本的降级处理
       return this.fallbackTextExtraction(element);
     }
@@ -346,7 +347,7 @@ class GenericHtmlFormatter extends HtmlFormatter {
    * @returns {string} 基本HTML格式
    */
   fallbackTextExtraction(element) {
-    console.warn('[GenericHtmlFormatter] Using fallback text extraction');
+    logger.warn('[GenericHtmlFormatter] Using fallback text extraction');
     
     try {
       // 获取纯文本内容
@@ -372,7 +373,7 @@ class GenericHtmlFormatter extends HtmlFormatter {
       return html;
       
     } catch (error) {
-      console.error('[GenericHtmlFormatter] Fallback extraction failed:', error);
+      logger.error('[GenericHtmlFormatter] Fallback extraction failed:', error);
       return '<div><p>内容提取失败</p></div>';
     }
   }

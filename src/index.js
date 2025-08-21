@@ -10,6 +10,7 @@ import { DeepSeekHtmlFormatter } from './formatters/DeepSeekHtmlFormatter.js';
 import { HtmlFormatterManager } from './HtmlFormatterManager.js';
 import { ClipboardManager } from './ClipboardManager.js';
 import { CopyButton } from './CopyButton.js';
+import logger from './Logger.js';
 
 // 暴露为全局变量
 window.HtmlFormatter = HtmlFormatter;
@@ -22,4 +23,4 @@ window.HtmlFormatterManager = HtmlFormatterManager;
 window.ClipboardManager = ClipboardManager;
 window.CopyButton = CopyButton;
 
-console.log('📦 All modules imported and exposed globally');
+logger.info('📦 All modules imported and exposed globally');

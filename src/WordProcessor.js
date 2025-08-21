@@ -6,6 +6,7 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, LevelFormat, BorderStyle } from 'docx';
 import { UserQuestionExtractor } from './UserQuestionExtractor.js';
 import { WordOptimizer } from './WordOptimizer.js';
+import logger from './Logger.js';
 
 class WordProcessor {
   /**
@@ -55,7 +56,7 @@ class WordProcessor {
         const userQuestion = UserQuestionExtractor.getUserQuestion(aiResponseElement);
         title = UserQuestionExtractor.generateFilename(userQuestion, 'docx').replace('.docx', '');
       } catch (error) {
-        console.error('PureText: 生成文件名失败:', error);
+        logger.error('生成文件名失败:', error);
       }
     }
 
@@ -101,7 +102,7 @@ class WordProcessor {
       }
     }
 
-    console.log('[WordProcessor] getFormattedHtml: useKimi=', useKimi, 'html length=', html.length);
+    logger.debug('getFormattedHtml: useKimi=', useKimi, 'html length=', html.length);
 
     // 直接转换HTML到标准化格式，而不通过docx对象
     let standardHtml = '';
@@ -111,7 +112,7 @@ class WordProcessor {
       standardHtml = this.convertDeepSeekHtmlToStandard(html);
     }
     
-    console.log('[WordProcessor] Standard HTML length:', standardHtml.length);
+    logger.debug('Standard HTML length:', standardHtml.length);
     
     // 使用WordOptimizer进行最终优化
     const optimizer = new WordOptimizer();
@@ -385,12 +386,12 @@ class WordProcessor {
     let inList = false;
     let currentListType = null;
 
-    console.log('[WordProcessor] Converting docx elements to HTML, count:', elements.length);
+    logger.debug('Converting docx elements to HTML, count:', elements.length);
 
     for (const element of elements) {
       // 调试：输出元素结构
       if (elements.length > 0 && elements.indexOf(element) === 0) {
-        console.log('[WordProcessor] First element structure:', {
+        logger.debug('First element structure:', {
           constructor: element?.constructor?.name,
           hasOptions: !!element?.options,
           hasChildren: !!element?.children,
@@ -475,7 +476,7 @@ class WordProcessor {
         
         html += this.convertTableToHtml(element);
       } else {
-        console.warn('[WordProcessor] Unknown element type:', element);
+        logger.warn('Unknown element type:', element);
       }
     }
     
@@ -484,7 +485,7 @@ class WordProcessor {
       html += `</${currentListType}>`;
     }
     
-    console.log('[WordProcessor] HTML conversion complete, length:', html.length);
+    logger.debug('HTML conversion complete, length:', html.length);
     return html;
   }
 

@@ -1,3 +1,5 @@
+import logger from './Logger.js';
+
 /**
  * 内容清理器
  * 负责移除DOM元素中不需要的内容，如按钮、AI声明、推荐问题等
@@ -24,7 +26,7 @@ class ContentCleaner {
     async clean(element, hostname = window.location.hostname, isCopyScenario = false) {
         try {
             this.cleaningForCopy = isCopyScenario;
-            console.debug(`[ContentCleaner] Starting cleanup for ${hostname}, copy scenario: ${isCopyScenario}`);
+            logger.debug(`Starting cleanup for ${hostname}, copy scenario: ${isCopyScenario}`);
 
             // 1. 移除复制按钮
             this.removeButtons(element);
@@ -44,10 +46,10 @@ class ContentCleaner {
             // 6. 清理空元素
             this.removeEmptyElements(element);
 
-            console.debug(`[ContentCleaner] Cleanup completed for ${hostname}`);
+            logger.debug(`Cleanup completed for ${hostname}`);
 
         } catch (error) {
-            console.error(`[ContentCleaner] Cleanup failed for ${hostname}:`, error);
+            logger.error(`Cleanup failed for ${hostname}:`, error);
             // 不抛出错误，避免阻塞格式化流程
         }
     }
@@ -57,11 +59,11 @@ class ContentCleaner {
      * @param {HTMLElement} element - DOM元素
      */
     removeButtons(element) {
-        console.debug('[ContentCleaner] Removing buttons');
+        logger.debug('Removing buttons');
 
         // 移除复制按钮容器
         element.querySelectorAll('.puretext-copy-btn, .puretext-button-container').forEach(btn => {
-            console.debug('[ContentCleaner] Removing PureText button:', btn.textContent?.trim());
+            logger.debug('Removing PureText button:', btn.textContent?.trim());
             btn.remove();
         });
 
@@ -83,7 +85,7 @@ class ContentCleaner {
 
                 // 只移除特定的操作按钮，避免误删重要内容
                 if (text && this.isOperationButton(text)) {
-                    console.debug('[ContentCleaner] Removing operation button:', text);
+                    logger.debug('Removing operation button:', text);
                     button.remove();
                 }
             });
@@ -114,7 +116,7 @@ class ContentCleaner {
      * @param {HTMLElement} element - DOM元素
      */
     removeAIStatements(element) {
-        console.debug('[ContentCleaner] Removing AI statements');
+        logger.debug('Removing AI statements');
 
         const aiStatementPatterns = [
             /本回答由\s*AI\s*生成.*内容仅供参考/,
@@ -133,7 +135,7 @@ class ContentCleaner {
         allElements.forEach(el => {
             const text = el.textContent?.trim();
             if (text && aiStatementPatterns.some(pattern => pattern.test(text))) {
-                console.debug('[ContentCleaner] Removing AI statement:', text.substring(0, 50) + '...');
+                logger.debug('Removing AI statement:', text.substring(0, 50) + '...');
                 el.remove();
             }
         });
@@ -145,7 +147,7 @@ class ContentCleaner {
      * @param {string} hostname - 网站域名
      */
     removeRecommendedQuestions(element, hostname) {
-        console.debug('[ContentCleaner] Removing recommended questions');
+        logger.debug('Removing recommended questions');
 
         // 1. 通过CSS选择器移除明显的推荐问题区域
         const questionSelectors = [
@@ -161,7 +163,7 @@ class ContentCleaner {
 
         questionSelectors.forEach(selector => {
             element.querySelectorAll(selector).forEach(el => {
-                console.debug('[ContentCleaner] Removing question container by selector:', selector);
+                logger.debug('Removing question container by selector:', selector);
                 el.remove();
             });
         });
@@ -185,7 +187,7 @@ class ContentCleaner {
             if (text && this.isRecommendedQuestion(text)) {
                 // 检查是否是独立的问题元素（不包含其他重要内容）
                 if (this.isStandaloneQuestion(el)) {
-                    console.debug('[ContentCleaner] Removing recommended question:', text.substring(0, 30) + '...');
+                    logger.debug('Removing recommended question:', text.substring(0, 30) + '...');
                     el.remove();
                 }
             }
@@ -287,7 +289,7 @@ class ContentCleaner {
 
         kimiQuestionSelectors.forEach(selector => {
             element.querySelectorAll(selector).forEach(el => {
-                console.debug('[ContentCleaner] Removing Kimi question container:', selector);
+                logger.debug('Removing Kimi question container:', selector);
                 el.remove();
             });
         });
@@ -316,7 +318,7 @@ class ContentCleaner {
 
         chatgptQuestionSelectors.forEach(selector => {
             element.querySelectorAll(selector).forEach(el => {
-                console.debug('[ContentCleaner] Removing ChatGPT question container:', selector);
+                logger.debug('Removing ChatGPT question container:', selector);
                 el.remove();
             });
         });
@@ -327,7 +329,7 @@ class ContentCleaner {
      * @param {HTMLElement} element - DOM元素
      */
     removeNavigationElements(element) {
-        console.debug('[ContentCleaner] Removing navigation elements');
+        logger.debug('Removing navigation elements');
 
         const navigationSelectors = [
             'nav',
@@ -348,7 +350,7 @@ class ContentCleaner {
             element.querySelectorAll(selector).forEach(el => {
                 // 只移除明显的导航元素，避免误删内容
                 if (this.isNavigationElement(el)) {
-                    console.debug('[ContentCleaner] Removing navigation element:', selector);
+                    logger.debug('Removing navigation element:', selector);
                     el.remove();
                 }
             });
@@ -388,13 +390,13 @@ class ContentCleaner {
         const rules = this.cleaningRules.get(hostname);
 
         if (rules && rules.length > 0) {
-            console.debug(`[ContentCleaner] Applying ${rules.length} custom rules for ${hostname}`);
+            logger.debug(`Applying ${rules.length} custom rules for ${hostname}`);
 
             for (const rule of rules) {
                 try {
                     await rule(element);
                 } catch (error) {
-                    console.error(`[ContentCleaner] Custom rule failed for ${hostname}:`, error);
+                    logger.error(`Custom rule failed for ${hostname}:`, error);
                 }
             }
         }
@@ -405,7 +407,7 @@ class ContentCleaner {
      * @param {HTMLElement} element - DOM元素
      */
     removeEmptyElements(element) {
-        console.debug('[ContentCleaner] Removing empty elements');
+        logger.debug('Removing empty elements');
 
         // 多次清理，因为移除元素后可能产生新的空元素
         let removedCount = 0;
@@ -427,7 +429,7 @@ class ContentCleaner {
         }
 
         if (removedCount > 0) {
-            console.debug(`[ContentCleaner] Removed ${removedCount} empty elements`);
+            logger.debug(`Removed ${removedCount} empty elements`);
         }
     }
 
@@ -490,7 +492,7 @@ class ContentCleaner {
         }
 
         this.cleaningRules.get(hostname).push(rule);
-        console.debug(`[ContentCleaner] Registered cleaning rule for ${hostname}`);
+        logger.debug(`Registered cleaning rule for ${hostname}`);
     }
 
     /**
@@ -507,9 +509,9 @@ class ContentCleaner {
             // 只在复制场景下移除按钮容器，不在注入场景下移除
             if (this.cleaningForCopy) {
                 element.querySelectorAll('.segment-assistant-actions').forEach(el => el.remove());
-                console.debug('[ContentCleaner] Removed segment-assistant-actions in copy scenario');
+                logger.debug('Removed segment-assistant-actions in copy scenario');
             } else {
-                console.debug('[ContentCleaner] Preserved segment-assistant-actions in injection scenario');
+                logger.debug('Preserved segment-assistant-actions in injection scenario');
             }
         });
 
@@ -532,7 +534,7 @@ class ContentCleaner {
      */
     clearRules() {
         this.cleaningRules.clear();
-        console.debug('[ContentCleaner] All cleaning rules cleared');
+        logger.debug('All cleaning rules cleared');
     }
 }
 

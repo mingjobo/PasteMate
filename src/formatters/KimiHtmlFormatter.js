@@ -1,5 +1,6 @@
 import { HtmlFormatter } from './HtmlFormatter.js';
 import { StructureConverter } from '../StructureConverter.js';
+import logger from '../Logger.js';
 
 /**
  * Kimi网站专用HTML格式化器
@@ -19,23 +20,23 @@ class KimiHtmlFormatter extends HtmlFormatter {
    */
   async format(element) {
     try {
-      console.log('[KimiHtmlFormatter] ========== 开始Kimi格式化 ==========');
-      console.log('[KimiHtmlFormatter] 输入元素:', element?.tagName || 'Unknown', element?.className || '');
-      console.log('[KimiHtmlFormatter] 元素内容预览:', (element?.textContent || '').substring(0, 100) + '...');
+      logger.debug('[KimiHtmlFormatter] ========== 开始Kimi格式化 ==========');
+      logger.debug('[KimiHtmlFormatter] 输入元素:', element?.tagName || 'Unknown', element?.className || '');
+      logger.debug('[KimiHtmlFormatter] 元素内容预览:', (element?.textContent || '').substring(0, 100) + '...');
       
       let html = '<div>';
       html += this.processNode(element, 0);
       html += '</div>';
       
-      console.log('[KimiHtmlFormatter] ========== 格式化完成 ==========');
-      console.log('[KimiHtmlFormatter] 最终HTML长度:', html.length);
-      console.log('[KimiHtmlFormatter] 最终HTML预览:', html.substring(0, 200) + '...');
+      logger.debug('[KimiHtmlFormatter] ========== 格式化完成 ==========');
+      logger.debug('[KimiHtmlFormatter] 最终HTML长度:', html.length);
+      logger.debug('[KimiHtmlFormatter] 最终HTML预览:', html.substring(0, 200) + '...');
       
       return html;
       
     } catch (error) {
-      console.error('[KimiHtmlFormatter] 格式化失败:', error);
-      console.error('[KimiHtmlFormatter] 错误堆栈:', error.stack);
+      logger.error('[KimiHtmlFormatter] 格式化失败:', error);
+      logger.error('[KimiHtmlFormatter] 错误堆栈:', error.stack);
       // 降级到基本处理
       return this.fallbackFormat(element);
     }
@@ -48,7 +49,7 @@ class KimiHtmlFormatter extends HtmlFormatter {
    */
   fallbackFormat(element) {
     try {
-      console.debug('[KimiHtmlFormatter] Using fallback formatting');
+      logger.debug('[KimiHtmlFormatter] Using fallback formatting');
       
       let html = '<div>';
       
@@ -99,11 +100,11 @@ class KimiHtmlFormatter extends HtmlFormatter {
       
       html += '</div>';
       
-      console.debug('[KimiHtmlFormatter] Fallback formatting completed');
+      logger.debug('[KimiHtmlFormatter] Fallback formatting completed');
       return html;
       
     } catch (error) {
-      console.error('[KimiHtmlFormatter] Fallback formatting failed:', error);
+      logger.error('[KimiHtmlFormatter] Fallback formatting failed:', error);
       return '<div><p>格式化失败</p></div>';
     }
   }
@@ -119,7 +120,7 @@ class KimiHtmlFormatter extends HtmlFormatter {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
       if (!text) return '';
-      console.log(`${indent}[KimiHtmlFormatter] TEXT: "${text.slice(0, 40)}"`);
+      logger.debug(`${indent}[KimiHtmlFormatter] TEXT: "${text.slice(0, 40)}"`);
       // 返回转义后的文本，保留空格
       return this.escapeHtml(text);
     }
@@ -128,7 +129,7 @@ class KimiHtmlFormatter extends HtmlFormatter {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const tag = node.tagName;
       const className = node.className || '';
-      console.log(`${indent}[KimiHtmlFormatter] ELEMENT: <${tag}> class="${className}"`);
+      logger.debug(`${indent}[KimiHtmlFormatter] ELEMENT: <${tag}> class="${className}"`);
       
       // 跳过按钮和界面元素
       if (className.includes('simple-button') || 
@@ -453,7 +454,7 @@ class KimiHtmlFormatter extends HtmlFormatter {
     if (element.classList?.contains('ds-markdown') || 
         element.querySelector('.ds-markdown') ||
         element.querySelector('.ds-icon-button')) {
-      console.log('[KimiHtmlFormatter] canHandle: 检测到DeepSeek内容，拒绝处理');
+      logger.debug('[KimiHtmlFormatter] canHandle: 检测到DeepSeek内容，拒绝处理');
       return false;
     }
     
@@ -474,7 +475,7 @@ class KimiHtmlFormatter extends HtmlFormatter {
       }
     });
     
-    console.log('[KimiHtmlFormatter] canHandle: hasKimiStructure=', hasKimiStructure, ', element.className=', element.className);
+    logger.debug('[KimiHtmlFormatter] canHandle: hasKimiStructure=', hasKimiStructure, ', element.className=', element.className);
     return hasKimiStructure;
   }
   

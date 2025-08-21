@@ -7,6 +7,15 @@
   "permissions": [
     "clipboardWrite"
   ],
+  "commands": {
+    "toggle-debug": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D",
+        "mac": "Command+Shift+D"
+      },
+      "description": "Toggle debug mode"
+    }
+  },
   "content_scripts": [
     {
       "matches": [

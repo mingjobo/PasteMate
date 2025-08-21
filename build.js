@@ -28,7 +28,8 @@ const buildConfig = {
   platform: 'browser',
   define: {
     'process.env.NODE_ENV': '"production"',
-    'global': 'window' // 确保global指向window
+    'global': 'window', // 确保global指向window
+    'PURETEXT_DEBUG': process.env.PURETEXT_DEBUG ? '"true"' : '"false"' // 注入调试模式环境变量
   },
   // 处理Node.js polyfills
   alias: {

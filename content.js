@@ -1,4 +1,5 @@
 import './src/ClipboardManager.js';
+import logger from './src/Logger.js';
 import { CopyButton } from './src/CopyButton.js';
 import { DownloadWordButton } from './src/DownloadWordButton.js';
 import { DownloadPdfButton } from './src/DownloadPdfButton.js';
@@ -9,42 +10,11 @@ import { SUPPORTED_SITES } from './sites.js';
 // 静态导入 html2pdf.js 并设置为全局变量
 import html2pdf from 'html2pdf.js';
 window.html2pdf = html2pdf;
-// 将所有模块合并到一个文件中，避免ES模块导入问题
 
-// ==================== 调试日志系统 ====================
-const DEBUG_LEVEL = {
-    ERROR: 0,
-    WARN: 1,
-    INFO: 2,
-    DEBUG: 3
-};
+// 将日志系统设置为全局可用
+window.puretextLogger = logger;
 
-window.PURETEXT_DEBUG_LEVEL = window.PURETEXT_DEBUG_LEVEL || DEBUG_LEVEL.INFO;
-
-function debugLog(level, message, ...args) {
-    if (level <= window.PURETEXT_DEBUG_LEVEL) {
-        const timestamp = new Date().toLocaleTimeString();
-        const levelNames = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
-        const prefix = `[${timestamp}] PureText-${levelNames[level]}:`;
-
-        switch (level) {
-            case DEBUG_LEVEL.ERROR:
-                console.error(prefix, message, ...args);
-                break;
-            case DEBUG_LEVEL.WARN:
-                console.warn(prefix, message, ...args);
-                break;
-            case DEBUG_LEVEL.INFO:
-                console.info(prefix, message, ...args);
-                break;
-            case DEBUG_LEVEL.DEBUG:
-                console.log(prefix, message, ...args);
-                break;
-        }
-    }
-}
-
-debugLog(DEBUG_LEVEL.INFO, '🚀 Content script loaded');
+logger.info('🚀 Content script loaded');
 
 // ==================== 站点管理器 ====================
 class SiteManager {
@@ -54,18 +24,18 @@ class SiteManager {
     }
 
     async loadSiteConfig() {
-        debugLog(DEBUG_LEVEL.DEBUG, '📋 Loading site configuration...');
+        logger.debug('📋 Loading site configuration...');
 
         try {
-            debugLog(DEBUG_LEVEL.DEBUG, '🔍 Checking SUPPORTED_SITES availability:', typeof SUPPORTED_SITES);
+            logger.debug('🔍 Checking SUPPORTED_SITES availability:', typeof SUPPORTED_SITES);
 
             if (typeof SUPPORTED_SITES === 'undefined') {
-                debugLog(DEBUG_LEVEL.ERROR, '❌ SUPPORTED_SITES is undefined!');
+                logger.error('❌ SUPPORTED_SITES is undefined!');
                 this.siteConfig = {};
                 return;
             }
 
-            debugLog(DEBUG_LEVEL.DEBUG, '📊 Available sites:', Object.keys(SUPPORTED_SITES));
+            logger.debug('📊 Available sites:', Object.keys(SUPPORTED_SITES));
 
             const baseSites = { ...SUPPORTED_SITES };
 
@@ -73,16 +43,16 @@ class SiteManager {
                 const result = await chrome.storage.sync.get(['customSites', 'disabledSites']);
                 if (result.customSites || result.disabledSites) {
                     this.siteConfig = this.mergeConfigs(baseSites, result);
-                    debugLog(DEBUG_LEVEL.INFO, '✅ Loaded user configuration');
+                    logger.info('✅ Loaded user configuration');
                     return;
                 }
             }
 
             this.siteConfig = baseSites;
-            debugLog(DEBUG_LEVEL.INFO, '✅ Using built-in site configuration');
+            logger.info('✅ Using built-in site configuration');
 
         } catch (error) {
-            debugLog(DEBUG_LEVEL.WARN, '⚠️ Failed to load user config, using built-in config:', error);
+            logger.warn('⚠️ Failed to load user config, using built-in config:', error);
             this.siteConfig = typeof SUPPORTED_SITES !== 'undefined' ? { ...SUPPORTED_SITES } : {};
         }
     }
@@ -105,28 +75,28 @@ class SiteManager {
 
     identifyCurrentSite() {
         if (!this.siteConfig) {
-            debugLog(DEBUG_LEVEL.WARN, '⚠️ Site config not loaded');
+            logger.warn('⚠️ Site config not loaded');
             return null;
         }
 
         const hostname = window.location.hostname;
-        debugLog(DEBUG_LEVEL.DEBUG, `🔍 Identifying site for hostname: ${hostname}`);
+        logger.debug(`🔍 Identifying site for hostname: ${hostname}`);
 
         if (this.siteConfig[hostname]) {
             this.currentSite = { hostname, ...this.siteConfig[hostname] };
-            debugLog(DEBUG_LEVEL.INFO, `✅ Direct match found for ${hostname}`);
+            logger.info(`✅ Direct match found for ${hostname}`);
             return this.currentSite;
         }
 
         for (const [configHostname, config] of Object.entries(this.siteConfig)) {
             if (hostname.includes(configHostname) || configHostname.includes(hostname)) {
                 this.currentSite = { hostname: configHostname, ...config };
-                debugLog(DEBUG_LEVEL.INFO, `✅ Fuzzy match found: ${hostname} -> ${configHostname}`);
+                logger.info(`✅ Fuzzy match found: ${hostname} -> ${configHostname}`);
                 return this.currentSite;
             }
         }
 
-        debugLog(DEBUG_LEVEL.INFO, `ℹ️ No configuration found for ${hostname}`);
+        logger.info(`ℹ️ No configuration found for ${hostname}`);
         return null;
     }
 
@@ -554,7 +524,7 @@ class ButtonInjector {
             // Kimi网站特殊处理：直接查找segment-assistant-actions-content容器
             if (window.location.hostname === 'www.kimi.com') {
                 const actionContainers = document.querySelectorAll('.segment-assistant-actions-content');
-                debugLog(DEBUG_LEVEL.DEBUG, `🔍 Found ${actionContainers.length} action containers for Kimi`);
+                logger.debug(`🔍 Found ${actionContainers.length} action containers for Kimi`);
                 for (const container of actionContainers) {
                     this.injectButtonToKimiActions(container);
                 }
@@ -582,12 +552,12 @@ class ButtonInjector {
                         opArea = bubble.parentElement;
                         iconButtons = opArea ? opArea.querySelectorAll('.ds-icon-button') : [];
                     }
-                    console.log('[PureText] bubble:', bubble);
-                    console.log('[PureText] opArea:', opArea);
-                    console.log('[PureText] iconButtons:', iconButtons);
+                    logger.debug('[PureText] bubble:', bubble);
+                    logger.debug('[PureText] opArea:', opArea);
+                    logger.debug('[PureText] iconButtons:', iconButtons);
                     if (!iconButtons || iconButtons.length === 0) continue;
                     const parent = iconButtons[0].parentNode;
-                    console.log('[PureText] parent:', parent);
+                    logger.debug('[PureText] parent:', parent);
                     // 检查是否已插入
                     if (parent.querySelector('.puretext-button-group')) continue;
                     
@@ -632,7 +602,7 @@ class ButtonInjector {
                     
                     // 插入到最后一个ds-icon-button后面
                     parent.insertBefore(buttonGroup, iconButtons[iconButtons.length - 1].nextSibling);
-                    console.log('[PureText] 已插入puretext-button-group', buttonGroup, '到', parent);
+                    logger.debug('[PureText] 已插入puretext-button-group', buttonGroup, '到', parent);
                 }
                 return;
             }
@@ -655,7 +625,7 @@ class ButtonInjector {
                 this.injectButton(bubble);
             }
         } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Error scanning for buttons:', error);
+            logger.error('❌ Error scanning for buttons:', error);
         }
     }
 
@@ -677,7 +647,7 @@ class ButtonInjector {
             // 检查是否是AI回复的actions容器
             const segmentAssistant = actionContainer.closest('.segment-assistant');
             if (!segmentAssistant) {
-                debugLog(DEBUG_LEVEL.DEBUG, '🔄 Skipping non-assistant actions container');
+                logger.debug('🔄 Skipping non-assistant actions container');
                 return;
             }
 
@@ -685,10 +655,10 @@ class ButtonInjector {
             actionContainer.appendChild(button);
             this.injectedButtons.add(actionContainer);
 
-            debugLog(DEBUG_LEVEL.DEBUG, '✅ Kimi actions button injected successfully');
+            logger.debug('✅ Kimi actions button injected successfully');
 
         } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Error injecting Kimi actions button:', error);
+            logger.error('❌ Error injecting Kimi actions button:', error);
         }
     }
 
@@ -709,7 +679,7 @@ class ButtonInjector {
             // 检查是否是 AI 回复（对于 Kimi 网站）
             if (window.location.hostname === 'www.kimi.com') {
                 if (!KimiMessageDetector.isAIResponse(bubble)) {
-                    debugLog(DEBUG_LEVEL.DEBUG, '🔄 Skipping human message for Kimi');
+                    logger.debug('🔄 Skipping human message for Kimi');
                     return;
                 }
             }
@@ -718,10 +688,10 @@ class ButtonInjector {
             bubble.appendChild(button);
             this.injectedButtons.add(bubble);
 
-            debugLog(DEBUG_LEVEL.DEBUG, '✅ Button injected successfully');
+            logger.debug('✅ Button injected successfully');
 
         } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Error injecting button:', error);
+            logger.error('❌ Error injecting button:', error);
         }
     }
 
@@ -731,30 +701,30 @@ class ButtonInjector {
                 // 从actions容器向上查找AI回复内容
                 const segmentAssistant = buttonContainer.closest('.segment-assistant');
                 if (!segmentAssistant) {
-                    debugLog(DEBUG_LEVEL.ERROR, '❌ 未找到 segment-assistant 容器');
+                    logger.error('❌ 未找到 segment-assistant 容器');
                     return false;
                 }
 
                 const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
                 if (!aiContent) {
-                    debugLog(DEBUG_LEVEL.ERROR, '❌ 未找到 AI 回复内容');
+                    logger.error('❌ 未找到 AI 回复内容');
                     return false;
                 }
 
                 // 添加详细日志
-                console.log('[PureText] ========== Kimi复制操作开始 ==========');
-                console.log('[PureText] 按钮容器:', buttonContainer?.tagName, buttonContainer?.className);
-                console.log('[PureText] 找到的 AI 内容容器:', aiContent?.tagName, aiContent?.className);
-                console.log('[PureText] AI 内容文本预览:', (aiContent?.textContent || '').substring(0, 100) + '...');
+                logger.debug('[PureText] ========== Kimi复制操作开始 ==========');
+                logger.debug('[PureText] 按钮容器:', buttonContainer?.tagName, buttonContainer?.className);
+                logger.debug('[PureText] 找到的 AI 内容容器:', aiContent?.tagName, aiContent?.className);
+                logger.debug('[PureText] AI 内容文本预览:', (aiContent?.textContent || '').substring(0, 100) + '...');
 
                 const success = await window.ClipboardManager.copyHtmlToClipboard(aiContent);
                 
-                console.log('[PureText] 复制结果:', success ? '成功' : '失败');
-                console.log('[PureText] ========== Kimi复制操作结束 ==========');
+                logger.debug('[PureText] 复制结果:', success ? '成功' : '失败');
+                logger.debug('[PureText] ========== Kimi复制操作结束 ==========');
                 
                 return success;
             } catch (error) {
-                debugLog(DEBUG_LEVEL.ERROR, '❌ Kimi copy operation failed:', error);
+                logger.error('❌ Kimi copy operation failed:', error);
                 return false;
             }
         };
@@ -811,25 +781,25 @@ class ButtonInjector {
                 // 关键修正：找到正确的 AI 回复内容，而不是按钮容器
                 const aiContent = this.findAIResponseContent(buttonContainer);
                 if (!aiContent) {
-                    debugLog(DEBUG_LEVEL.ERROR, '❌ 未找到 AI 回复内容');
+                    logger.error('❌ 未找到 AI 回复内容');
                     return false;
                 }
 
                 // 添加详细日志
-                console.log('[PureText] ========== 复制操作开始 ==========');
-                console.log('[PureText] 按钮容器:', buttonContainer?.tagName, buttonContainer?.className);
-                console.log('[PureText] 找到的 AI 内容容器:', aiContent?.tagName, aiContent?.className);
-                console.log('[PureText] AI 内容文本预览:', (aiContent?.textContent || '').substring(0, 100) + '...');
-                console.log('[PureText] AI 内容 outerHTML 预览:', (aiContent?.outerHTML || '').substring(0, 200) + '...');
+                logger.debug('[PureText] ========== 复制操作开始 ==========');
+                logger.debug('[PureText] 按钮容器:', buttonContainer?.tagName, buttonContainer?.className);
+                logger.debug('[PureText] 找到的 AI 内容容器:', aiContent?.tagName, aiContent?.className);
+                logger.debug('[PureText] AI 内容文本预览:', (aiContent?.textContent || '').substring(0, 100) + '...');
+                logger.debug('[PureText] AI 内容 outerHTML 预览:', (aiContent?.outerHTML || '').substring(0, 200) + '...');
 
                 const success = await window.ClipboardManager.copyHtmlToClipboard(aiContent);
                 
-                console.log('[PureText] 复制结果:', success ? '成功' : '失败');
-                console.log('[PureText] ========== 复制操作结束 ==========');
+                logger.debug('[PureText] 复制结果:', success ? '成功' : '失败');
+                logger.debug('[PureText] ========== 复制操作结束 ==========');
                 
                 return success;
             } catch (error) {
-                debugLog(DEBUG_LEVEL.ERROR, '❌ Copy operation failed:', error);
+                logger.error('❌ Copy operation failed:', error);
                 return false;
             }
         };
@@ -878,23 +848,23 @@ class ButtonInjector {
         
         if (hostname === 'www.kimi.com') {
             // Kimi 网站：从按钮容器向上查找 AI 回复内容
-            console.log('[PureText] 查找 Kimi AI 回复内容...');
+            logger.debug('[PureText] 查找 Kimi AI 回复内容...');
             
             // 方法1：从 segment-assistant-actions-content 向上查找 segment-content-box
             let current = buttonContainer;
             while (current && current !== document.body) {
-                console.log('[PureText] 检查元素:', current.tagName, current.className);
+                logger.debug('[PureText] 检查元素:', current.tagName, current.className);
                 
                 // 检查是否是 AI 回复容器
                 if (current.classList.contains('segment-content-box')) {
-                    console.log('[PureText] 找到 segment-content-box');
+                    logger.debug('[PureText] 找到 segment-content-box');
                     return current;
                 }
                 
                 // 检查是否包含 markdown-container
                 const markdownContainer = current.querySelector('.markdown-container');
                 if (markdownContainer) {
-                    console.log('[PureText] 找到 markdown-container');
+                    logger.debug('[PureText] 找到 markdown-container');
                     return markdownContainer;
                 }
                 
@@ -904,11 +874,11 @@ class ButtonInjector {
             // 方法2：直接查找最近的 AI 回复内容
             const aiContent = buttonContainer.closest('.segment-content-box')?.querySelector('.markdown-container');
             if (aiContent) {
-                console.log('[PureText] 通过 closest 找到 AI 内容');
+                logger.debug('[PureText] 通过 closest 找到 AI 内容');
                 return aiContent;
             }
             
-            console.log('[PureText] 未找到 Kimi AI 回复内容');
+            logger.debug('[PureText] 未找到 Kimi AI 回复内容');
             return null;
         }
         
@@ -963,54 +933,54 @@ class PureTextExtension {
 
     async start() {
         if (this.isRunning) {
-            debugLog(DEBUG_LEVEL.DEBUG, '🔄 Extension already running');
+            logger.debug('🔄 Extension already running');
             return;
         }
 
         try {
-            debugLog(DEBUG_LEVEL.INFO, '🚀 Starting PureText Extension...');
+            logger.info('🚀 Starting PureText Extension...');
 
             await this.siteManager.loadSiteConfig();
 
             if (!this.siteManager.isCurrentSiteSupported()) {
-                debugLog(DEBUG_LEVEL.INFO, `ℹ️ Current site (${window.location.hostname}) is not supported`);
+                logger.info(`ℹ️ Current site (${window.location.hostname}) is not supported`);
                 return;
             }
 
-            debugLog(DEBUG_LEVEL.INFO, `✅ Current site supported: ${window.location.hostname}`);
+            logger.info(`✅ Current site supported: ${window.location.hostname}`);
 
             this.buttonInjector.start();
 
             this.isRunning = true;
-            debugLog(DEBUG_LEVEL.INFO, '✅ PureText Extension started successfully');
+            logger.info('✅ PureText Extension started successfully');
 
         } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Failed to start extension:', error);
+            logger.error('❌ Failed to start extension:', error);
         }
     }
 
     stop() {
         if (!this.isRunning) {
-            debugLog(DEBUG_LEVEL.DEBUG, '🔄 Extension not running');
+            logger.debug('🔄 Extension not running');
             return;
         }
 
         try {
-            debugLog(DEBUG_LEVEL.INFO, '🛑 Stopping PureText Extension...');
+            logger.info('🛑 Stopping PureText Extension...');
 
             this.buttonInjector.stop();
             this.buttonInjector.cleanup();
 
             this.isRunning = false;
-            debugLog(DEBUG_LEVEL.INFO, '✅ PureText Extension stopped successfully');
+            logger.info('✅ PureText Extension stopped successfully');
 
         } catch (error) {
-            debugLog(DEBUG_LEVEL.ERROR, '❌ Failed to stop extension:', error);
+            logger.error('❌ Failed to stop extension:', error);
         }
     }
 
     async restart() {
-        debugLog(DEBUG_LEVEL.INFO, '🔄 Restarting PureText Extension...');
+        logger.info('🔄 Restarting PureText Extension...');
         this.stop();
         await this.start();
     }
@@ -1035,7 +1005,7 @@ async function startExtension() {
         }
         await pureTextExtension.start();
     } catch (error) {
-        console.error('PureText: Failed to start extension:', error);
+        logger.error('Failed to start extension:', error);
     }
 }
 
@@ -1076,4 +1046,4 @@ window.PaymentModal = window.PaymentModal;
 window.exportToWord = exportToWord;
 window.exportToPdf = exportToPdf;
 
-debugLog(DEBUG_LEVEL.INFO, '✅ PureText extension unified script loaded successfully');
+logger.info('✅ PureText extension unified script loaded successfully');

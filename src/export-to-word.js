@@ -3,6 +3,7 @@ import { Packer } from 'docx';
 import { saveAs } from 'file-saver';
 import { WordProcessor } from './WordProcessor.js';
 import { UserQuestionExtractor } from './UserQuestionExtractor.js';
+import logger from './Logger.js';
 
 /**
  * 将 HTML/纯文本内容导出为 Word 文件（使用统一的 WordProcessor）
@@ -12,7 +13,7 @@ import { UserQuestionExtractor } from './UserQuestionExtractor.js';
  * @param {string} source - 内容来源，'kimi' 或 'deepseek' 或 'auto'
  */
 export async function exportToWord(content, filename = 'PureText.docx', aiResponseElement = null, source = 'auto') {
-  console.log('[exportToWord] 开始导出，source:', source);
+  logger.debug('[exportToWord] 开始导出，source:', source);
   
   // 生成智能文件名
   let finalFilename = filename;
@@ -20,9 +21,9 @@ export async function exportToWord(content, filename = 'PureText.docx', aiRespon
     try {
       const userQuestion = UserQuestionExtractor.getUserQuestion(aiResponseElement);
       finalFilename = UserQuestionExtractor.generateFilename(userQuestion, 'docx');
-      console.log('PureText: 生成智能文件名:', finalFilename);
+      logger.info('PureText: 生成智能文件名:', finalFilename);
     } catch (error) {
-      console.error('PureText: 生成文件名失败:', error);
+      logger.error('PureText: 生成文件名失败:', error);
     }
   }
   
@@ -34,9 +35,9 @@ export async function exportToWord(content, filename = 'PureText.docx', aiRespon
     const blob = await Packer.toBlob(doc);
     saveAs(blob, finalFilename);
     
-    console.log('[exportToWord] 导出成功:', finalFilename);
+    logger.info('[exportToWord] 导出成功:', finalFilename);
   } catch (error) {
-    console.error('[exportToWord] 导出失败:', error);
+    logger.error('[exportToWord] 导出失败:', error);
     throw error;
   }
 }

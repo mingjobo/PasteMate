@@ -1,4 +1,5 @@
 import { IconManager } from './IconManager.js';
+import logger from './Logger.js';
 
 // 通用基础按钮父类，供所有操作按钮继承
 class BaseActionButton {
@@ -235,7 +236,7 @@ class BaseActionButton {
           container.style.bottom = 'auto';
         }
       } catch (error) {
-        console.debug('PureText: Error ensuring button in viewport:', error);
+        logger.debug('Error ensuring button in viewport:', error);
       }
     }, 50);
   }
@@ -253,7 +254,7 @@ class BaseActionButton {
           await onAction(targetElement);
         }
       } catch (error) {
-        console.error('PureText: Action failed:', error);
+        logger.error('Action failed:', error);
       }
     });
     button.addEventListener('keydown', async (event) => {
@@ -266,7 +267,7 @@ class BaseActionButton {
             await onAction(targetElement);
           }
         } catch (error) {
-          console.error('PureText: Action failed:', error);
+          logger.error('Action failed:', error);
         }
       }
     });

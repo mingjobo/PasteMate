@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试开关测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .status {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .enabled { color: #28a745; }
+        .disabled { color: #dc3545; }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        .console-output {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>调试开关功能测试</h1>
+    
+    <div class="status">
+        当前调试模式: <span id="debug-status">检查中...</span>
+    </div>
+    
+    <div>
+        <button onclick="toggleDebug()">切换调试模式</button>
+        <button onclick="testLogs()">测试日志输出</button>
+        <button onclick="clearConsole()">清空控制台</button>
+    </div>
+    
+    <h3>测试说明:</h3>
+    <ul>
+        <li>点击"切换调试模式"按钮</li>
+        <li>观察浏览器控制台的输出</li>
+        <li>调试模式开启时应该看到样式化的通知消息</li>
+        <li>调试模式关闭时应该看到样式化的关闭消息</li>
+        <li>使用快捷键 Ctrl+Shift+D (Windows/Linux) 或 Command+Shift+D (Mac)</li>
+    </ul>
+    
+    <h3>预期行为:</h3>
+    <div style="background-color: #e7f3ff; padding: 10px; border-radius: 3px;">
+        <strong>调试模式开启时:</strong>
+        <ul>
+            <li>绿色消息: "[PureText] 调试模式已开启"</li>
+            <li>提示消息: "提示：再次按 [快捷键] 可关闭调试模式"</li>
+            <li>logger.debug() 消息会显示</li>
+        </ul>
+        
+        <strong>调试模式关闭时:</strong>
+        <ul>
+            <li>橙色消息: "[PureText] 调试模式已关闭"</li>
+            <li>logger.debug() 消息不会显示</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        import logger from './src/Logger.js';
+        
+        window.logger = logger;
+        
+        function updateStatus() {
+            const status = document.getElementById('debug-status');
+            const isDebug = logger.isDebugMode();
+            status.textContent = isDebug ? '✅ 已开启' : '❌ 已关闭';
+            status.className = isDebug ? 'enabled' : 'disabled';
+        }
+        
+        window.toggleDebug = function() {
+            console.log('=== 手动切换调试模式 ===');
+            logger.toggleDebugMode();
+            updateStatus();
+        };
+        
+        window.testLogs = function() {
+            console.log('=== 测试日志输出 ===');
+            logger.error('这是错误日志 (始终显示)');
+            logger.warn('这是警告日志 (始终显示)');
+            logger.info('这是信息日志 (始终显示)');
+            logger.debug('这是调试日志 (仅调试模式显示)');
+            console.log('=== 日志测试完成 ===');
+        };
+        
+        window.clearConsole = function() {
+            console.clear();
+        };
+        
+        // 初始化
+        updateStatus();
+        
+        // 监听键盘事件以显示状态
+        document.addEventListener('keydown', function(e) {
+            const isMac = navigator.userAgent.toUpperCase().indexOf('MAC') >= 0;
+            const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+            
+            if (ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd') {
+                console.log('=== 键盘快捷键触发 ===');
+                // Logger 会自动处理，我们只需要更新UI
+                setTimeout(updateStatus, 100); // 稍微延迟以确保状态更新
+            }
+        });
+        
+        // 初始日志
+        logger.info('调试开关测试页面已加载');
+        logger.debug('这条调试消息只有在调试模式下才会显示');
+    </script>
+</body>
+</html>

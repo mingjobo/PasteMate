@@ -8,7 +8,9 @@
     "test:coverage": "vitest run --coverage",
     "icons": "node create-icons.js",
     "build": "npm run icons && node build.js",
+    "build:debug": "PURETEXT_DEBUG=true npm run build",
     "package": "npm run build && node package.js",
+    "package:debug": "npm run build:debug && node package.js",
     "clean": "rm -rf dist *.zip"
   },
   "devDependencies": {

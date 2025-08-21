@@ -1,4 +1,6 @@
 // 付费下载弹窗组件
+import logger from './Logger.js';
+
 class PaymentModal {
     constructor() {
         this.modal = null;
@@ -1169,7 +1171,7 @@ class PaymentModal {
         try {
             await this.downloadCallback();
         } catch (error) {
-            console.error('Download failed:', error);
+            logger.error('Download failed:', error);
             this.handleDownloadFailure();
         }
     }

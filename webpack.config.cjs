@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   mode: 'development',
@@ -22,6 +23,11 @@ module.exports = {
       },
     },
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      'PURETEXT_DEBUG': JSON.stringify(process.env.PURETEXT_DEBUG === 'true')
+    })
+  ],
   resolve: {
     fallback: {
       "fs": false,

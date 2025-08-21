@@ -1,5 +1,6 @@
 import { HtmlFormatter } from './HtmlFormatter.js';
 import { StructureConverter } from '../StructureConverter.js';
+import logger from '../Logger.js';
 
 /**
  * DeepSeek网站专用HTML格式化器
@@ -19,14 +20,14 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
    */
   async format(element) {
     try {
-      console.log('[DeepSeekHtmlFormatter] format: 入口', element.tagName, element.className);
+      logger.debug('[DeepSeekHtmlFormatter] format: 入口', element.tagName, element.className);
       let html = '<div>';
       html += this.processNode(element, 0);
       html += '</div>';
-      console.log('[DeepSeekHtmlFormatter] format: 最终HTML长度', html.length, '片段：', html.substring(0, 200));
+      logger.debug('[DeepSeekHtmlFormatter] format: 最终HTML长度', html.length, '片段：', html.substring(0, 200));
       return html;
     } catch (error) {
-      console.error('[DeepSeekHtmlFormatter] format: 异常', error);
+      logger.error('[DeepSeekHtmlFormatter] format: 异常', error);
       return this.fallbackFormat(element);
     }
   }
@@ -42,7 +43,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
       if (!text) return '';
-      console.log(`${indent}[DeepSeekHtmlFormatter] TEXT: "${text.slice(0, 40)}"`);
+      logger.debug(`${indent}[DeepSeekHtmlFormatter] TEXT: "${text.slice(0, 40)}"`);
       // 返回转义后的文本，保留空格
       return this.escapeHtml(text);
     }
@@ -51,7 +52,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const tag = node.tagName;
       const className = node.className || '';
-      console.log(`${indent}[DeepSeekHtmlFormatter] ELEMENT: <${tag}> class="${className}"`);
+      logger.debug(`${indent}[DeepSeekHtmlFormatter] ELEMENT: <${tag}> class="${className}"`);
       
       // 处理特殊元素
       // 跳过代码块的按钮区域
@@ -205,9 +206,9 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
   // 处理列表项
   processListItem(node, depth) {
     const indent = '  '.repeat(depth);
-    console.log(`${indent}[DeepSeekHtmlFormatter] processListItem 开始处理`);
-    console.log(`${indent}  - node.children.length:`, node.children.length);
-    console.log(`${indent}  - node.childNodes.length:`, node.childNodes.length);
+    logger.debug(`${indent}[DeepSeekHtmlFormatter] processListItem 开始处理`);
+    logger.debug(`${indent}  - node.children.length:`, node.children.length);
+    logger.debug(`${indent}  - node.childNodes.length:`, node.childNodes.length);
     
     let html = '<li>';
     
@@ -217,25 +218,25 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     let processedChildren = [];
     
     for (const child of node.children) {
-      console.log(`${indent}  - 处理child: ${child.tagName}, className: ${child.className}`);
+      logger.debug(`${indent}  - 处理child: ${child.tagName}, className: ${child.className}`);
       
       if (child.tagName === 'P' && child.classList.contains('ds-markdown-paragraph')) {
         hasP = true;
-        console.log(`${indent}    发现ds-markdown-paragraph，提取内容`);
+        logger.debug(`${indent}    发现ds-markdown-paragraph，提取内容`);
         // 直接提取p内的内容，不包含p标签本身
         const content = this.processChildren(child, depth);
-        console.log(`${indent}    提取的内容: "${content.substring(0, 50)}..."`);
+        logger.debug(`${indent}    提取的内容: "${content.substring(0, 50)}..."`);
         html += content;
         processedChildren.push(child);
       } else if (child.tagName === 'UL' || child.tagName === 'OL') {
         // 嵌套列表
-        console.log(`${indent}    发现嵌套列表 ${child.tagName}`);
+        logger.debug(`${indent}    发现嵌套列表 ${child.tagName}`);
         const listHtml = this.processList(child, depth + 1);
-        console.log(`${indent}    嵌套列表HTML: "${listHtml.substring(0, 50)}..."`);
+        logger.debug(`${indent}    嵌套列表HTML: "${listHtml.substring(0, 50)}..."`);
         html += listHtml;
         processedChildren.push(child);
       } else {
-        console.log(`${indent}    处理其他元素 ${child.tagName}`);
+        logger.debug(`${indent}    处理其他元素 ${child.tagName}`);
         html += this.processNode(child, depth + 1);
         processedChildren.push(child);
       }
@@ -243,13 +244,13 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     
     // 如果没有p标签，处理所有子节点
     if (!hasP) {
-      console.log(`${indent}  没有发现p标签，处理所有子节点`);
+      logger.debug(`${indent}  没有发现p标签，处理所有子节点`);
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE || 
             (child.nodeType === Node.ELEMENT_NODE && 
              child.tagName !== 'UL' && child.tagName !== 'OL')) {
           if (!processedChildren.includes(child)) {
-            console.log(`${indent}    处理额外子节点: ${child.nodeType === Node.TEXT_NODE ? 'TEXT' : child.tagName}`);
+            logger.debug(`${indent}    处理额外子节点: ${child.nodeType === Node.TEXT_NODE ? 'TEXT' : child.tagName}`);
             html += this.processNode(child, depth + 1);
           }
         }
@@ -257,7 +258,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
     }
     
     html += '</li>';
-    console.log(`${indent}[DeepSeekHtmlFormatter] processListItem 结果: "${html.substring(0, 100)}..."`);
+    logger.debug(`${indent}[DeepSeekHtmlFormatter] processListItem 结果: "${html.substring(0, 100)}..."`);
     return html;
   }
 
@@ -423,7 +424,7 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
 
   canHandle(element) {
     const result = element?.classList?.contains('ds-markdown');
-    console.log('[DeepSeekHtmlFormatter] canHandle: classList=', element?.className, ', 结果=', result);
+    logger.debug('[DeepSeekHtmlFormatter] canHandle: classList=', element?.className, ', 结果=', result);
     return result;
   }
 }
