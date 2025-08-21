@@ -294,6 +294,28 @@ class WordProcessor {
           return `<${tag}>${childContent}</${tag}>`;
         
         case 'li':
+          // DeepSeek的li内部有p.ds-markdown-paragraph，需要特殊处理
+          // 提取p标签内的文本，避免嵌套问题
+          const tempLi = document.createElement('div');
+          tempLi.innerHTML = node.innerHTML;
+          const paragraphs = tempLi.querySelectorAll('p.ds-markdown-paragraph');
+          
+          if (paragraphs.length > 0) {
+            // 提取所有p标签的内容，去掉p标签本身
+            let liContent = '';
+            for (const p of paragraphs) {
+              // 递归处理p标签内的内容
+              for (const child of p.childNodes) {
+                liContent += walk(child);
+              }
+            }
+            // 处理嵌套列表
+            const nestedLists = tempLi.querySelectorAll('ul, ol');
+            for (const list of nestedLists) {
+              liContent += walk(list);
+            }
+            return `<li>${liContent}</li>`;
+          }
           return `<li>${childContent}</li>`;
         
         case 'div':

@@ -204,36 +204,60 @@ class DeepSeekHtmlFormatter extends HtmlFormatter {
 
   // 处理列表项
   processListItem(node, depth) {
+    const indent = '  '.repeat(depth);
+    console.log(`${indent}[DeepSeekHtmlFormatter] processListItem 开始处理`);
+    console.log(`${indent}  - node.children.length:`, node.children.length);
+    console.log(`${indent}  - node.childNodes.length:`, node.childNodes.length);
+    
     let html = '<li>';
     
     // DeepSeek的li内部可能包含p.ds-markdown-paragraph
     // 需要特殊处理，避免生成<li><p>内容</p></li>这种结构
     let hasP = false;
+    let processedChildren = [];
+    
     for (const child of node.children) {
+      console.log(`${indent}  - 处理child: ${child.tagName}, className: ${child.className}`);
+      
       if (child.tagName === 'P' && child.classList.contains('ds-markdown-paragraph')) {
         hasP = true;
+        console.log(`${indent}    发现ds-markdown-paragraph，提取内容`);
         // 直接提取p内的内容，不包含p标签本身
-        html += this.processChildren(child, depth);
+        const content = this.processChildren(child, depth);
+        console.log(`${indent}    提取的内容: "${content.substring(0, 50)}..."`);
+        html += content;
+        processedChildren.push(child);
       } else if (child.tagName === 'UL' || child.tagName === 'OL') {
         // 嵌套列表
-        html += this.processList(child, depth + 1);
+        console.log(`${indent}    发现嵌套列表 ${child.tagName}`);
+        const listHtml = this.processList(child, depth + 1);
+        console.log(`${indent}    嵌套列表HTML: "${listHtml.substring(0, 50)}..."`);
+        html += listHtml;
+        processedChildren.push(child);
       } else {
+        console.log(`${indent}    处理其他元素 ${child.tagName}`);
         html += this.processNode(child, depth + 1);
+        processedChildren.push(child);
       }
     }
     
     // 如果没有p标签，处理所有子节点
     if (!hasP) {
+      console.log(`${indent}  没有发现p标签，处理所有子节点`);
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE || 
             (child.nodeType === Node.ELEMENT_NODE && 
              child.tagName !== 'UL' && child.tagName !== 'OL')) {
-          html += this.processNode(child, depth + 1);
+          if (!processedChildren.includes(child)) {
+            console.log(`${indent}    处理额外子节点: ${child.nodeType === Node.TEXT_NODE ? 'TEXT' : child.tagName}`);
+            html += this.processNode(child, depth + 1);
+          }
         }
       }
     }
     
     html += '</li>';
+    console.log(`${indent}[DeepSeekHtmlFormatter] processListItem 结果: "${html.substring(0, 100)}..."`);
     return html;
   }
 
