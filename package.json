@@ -1,6 +1,6 @@
 {
   "name": "pastemate",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Browser extension for copying plain text from AI chat responses",
   "scripts": {
     "test": "vitest run",
