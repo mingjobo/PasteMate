@@ -13,6 +13,19 @@ class KimiHtmlFormatter extends HtmlFormatter {
     this.structureConverter = new StructureConverter();
   }
   
+  /** 获取安全的类名字符串，避免 SVGAnimatedString 导致的 includes 报错 */
+  safeClassName(node) {
+    try {
+      const cn = node?.className;
+      if (!cn) return '';
+      if (typeof cn === 'string') return cn;
+      if (typeof cn.baseVal === 'string') return cn.baseVal; // SVG
+      return String(cn);
+    } catch (_) {
+      return '';
+    }
+  }
+  
   /**
    * 格式化Kimi的DOM元素为标准HTML
    * @param {HTMLElement} element - 要格式化的DOM元素
@@ -128,7 +141,7 @@ class KimiHtmlFormatter extends HtmlFormatter {
     // 元素节点
     if (node.nodeType === Node.ELEMENT_NODE) {
       const tag = node.tagName;
-      const className = node.className || '';
+      const className = this.safeClassName(node);
       logger.debug(`${indent}[KimiHtmlFormatter] ELEMENT: <${tag}> class="${className}"`);
       
       // 跳过按钮和界面元素

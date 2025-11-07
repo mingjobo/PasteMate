@@ -9,6 +9,20 @@ import { WordOptimizer } from './WordOptimizer.js';
 import logger from './Logger.js';
 
 class WordProcessor {
+  /** 获取安全的类名字符串（兼容 SVGAnimatedString 等非字符串类型） */
+  static safeClassName(node) {
+    try {
+      const cn = node?.className;
+      if (!cn) return '';
+      if (typeof cn === 'string') return cn;
+      // SVG 元素的 className 可能是 SVGAnimatedString
+      if (typeof cn.baseVal === 'string') return cn.baseVal;
+      // 兜底：转成字符串
+      return String(cn);
+    } catch (_) {
+      return '';
+    }
+  }
   /**
    * 将HTML内容转换为docx文档对象
    * @param {HTMLElement|string} content - HTML元素或HTML字符串
@@ -143,7 +157,7 @@ class WordProcessor {
       if (node.nodeType !== Node.ELEMENT_NODE) return '';
       
       const tag = node.tagName.toLowerCase();
-      const className = node.className || '';
+      const className = WordProcessor.safeClassName(node);
       
       // 跳过按钮和UI元素
       if (className.includes('simple-button') || 
@@ -291,7 +305,7 @@ class WordProcessor {
       if (node.nodeType !== Node.ELEMENT_NODE) return '';
       
       const tag = node.tagName.toLowerCase();
-      const className = node.className || '';
+      const className = WordProcessor.safeClassName(node);
       
       // 跳过特殊元素
       if (className.includes('ds-markdown-html') ||
@@ -889,7 +903,7 @@ ${bodyHtml}
       if (node.nodeType !== Node.ELEMENT_NODE) return [];
       
       const tag = node.tagName.toLowerCase();
-      const className = node.className || '';
+      const className = WordProcessor.safeClassName(node);
       
       // 处理数学公式
       if (className.includes('katex-container')) {
@@ -1020,7 +1034,7 @@ ${bodyHtml}
       if (node.nodeType !== Node.ELEMENT_NODE) return [];
       
       const tag = node.tagName.toLowerCase();
-      const className = node.className || '';
+      const className = WordProcessor.safeClassName(node);
       
       // 跳过按钮和界面元素
       if (className.includes('simple-button') || 
@@ -1308,7 +1322,7 @@ ${bodyHtml}
       if (node.nodeType !== Node.ELEMENT_NODE) return [];
       
       const tag = node.tagName.toLowerCase();
-      const className = node.className || '';
+      const className = WordProcessor.safeClassName(node);
       
       if (className.includes('ds-markdown-html')) {
         return [];
@@ -1448,7 +1462,7 @@ ${bodyHtml}
       if (node.nodeType !== Node.ELEMENT_NODE) return [];
       
       const tag = node.tagName.toLowerCase();
-      const className = node.className || '';
+      const className = WordProcessor.safeClassName(node);
       
       if (className.includes('md-code-block-banner') || 
           className.includes('ds-button') ||

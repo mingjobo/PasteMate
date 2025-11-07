@@ -26,7 +26,8 @@ export const SUPPORTED_SITES = {
   "chat.deepseek.com": {
     name: "DeepSeek",
     selectors: [
-      ".ds-markdown.ds-markdown--block", // DeepSeek特有的markdown容器
+      ".ds-markdown.ds-markdown--block", // DeepSeek特有的markdown容器（旧版本）
+      ".ds-markdown", // 新版/通用的 DeepSeek markdown 容器
       ".message-content[data-role='assistant']", // 助手角色的消息内容
       "[data-role='assistant'] .markdown", // 助手角色的markdown内容
       ".assistant-message .content" // 助手消息的内容区域

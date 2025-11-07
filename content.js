@@ -531,7 +531,7 @@ class ButtonInjector {
                 return;
             }
 
-            // DeepSeek特殊处理：按钮插入到所有ds-icon-button同级，且在其右侧
+            // DeepSeek特殊处理：优先插在操作区（ds-icon-button）右侧；找不到则退化为直接插入到气泡内部
             if (window.location.hostname === 'chat.deepseek.com') {
                 // 选择所有AI回复区块
                 const selectors = siteConfig.selectors || [];
@@ -555,54 +555,65 @@ class ButtonInjector {
                     logger.debug('[PureText] bubble:', bubble);
                     logger.debug('[PureText] opArea:', opArea);
                     logger.debug('[PureText] iconButtons:', iconButtons);
-                    if (!iconButtons || iconButtons.length === 0) continue;
-                    const parent = iconButtons[0].parentNode;
-                    logger.debug('[PureText] parent:', parent);
-                    // 检查是否已插入
-                    if (parent.querySelector('.puretext-button-group')) continue;
-                    
-                    // 创建按钮组容器
-                    const buttonGroup = document.createElement('div');
-                    buttonGroup.className = 'puretext-button-group';
-                    buttonGroup.style.display = 'inline-flex';
-                    buttonGroup.style.alignItems = 'center';
-                    buttonGroup.style.gap = '4px';
-                    
-                    // 创建复制按钮
-                    const onCopy = async (buttonContainer) => {
-                        const aiContent = bubble;
-                        return window.ClipboardManager.copyHtmlToClipboard(aiContent);
+
+                    // 统一的按钮组构建函数
+                    const buildGroup = () => {
+                        const buttonGroup = document.createElement('div');
+                        buttonGroup.className = 'puretext-button-group';
+                        buttonGroup.style.display = 'inline-flex';
+                        buttonGroup.style.alignItems = 'center';
+                        buttonGroup.style.gap = '4px';
+
+                        // 复制
+                        const onCopy = async () => {
+                            const aiContent = bubble;
+                            return window.ClipboardManager.copyHtmlToClipboard(aiContent);
+                        };
+                        const copyBtn = CopyButton.create(bubble, onCopy);
+                        // 下载 Word
+                        const onDownloadWord = async () => {
+                            const aiContent = bubble;
+                            const paymentModal = window.PaymentModal;
+                            paymentModal.showPaymentModal('word', async () => {
+                                await exportToWord(aiContent, 'PureText.docx', bubble, 'deepseek');
+                            });
+                        };
+                        const wordBtn = DownloadWordButton.create(bubble, onDownloadWord);
+                        // 下载 PDF
+                        const onDownloadPdf = async () => {
+                            const aiContent = bubble;
+                            const paymentModal = window.PaymentModal;
+                            paymentModal.showPaymentModal('pdf', async () => {
+                                await exportToPdf(aiContent, 'PureText.pdf', bubble);
+                            });
+                        };
+                        const pdfBtn = DownloadPdfButton.create(bubble, onDownloadPdf);
+
+                        buttonGroup.appendChild(copyBtn);
+                        buttonGroup.appendChild(wordBtn);
+                        buttonGroup.appendChild(pdfBtn);
+                        return buttonGroup;
                     };
-                    const copyBtn = CopyButton.create(bubble, onCopy);
-                    
-                    // 创建下载为 Word 按钮
-                    const onDownloadWord = async (buttonContainer) => {
-                        const aiContent = bubble;
-                        const paymentModal = window.PaymentModal;
-                        paymentModal.showPaymentModal('word', async () => {
-                            await exportToWord(aiContent, 'PureText.docx', bubble, 'deepseek');
-                        });
-                    };
-                    const wordBtn = DownloadWordButton.create(bubble, onDownloadWord);
-                    
-                    // 创建下载为 PDF 按钮
-                    const onDownloadPdf = async (buttonContainer) => {
-                        const aiContent = bubble;
-                        const paymentModal = window.PaymentModal;
-                        paymentModal.showPaymentModal('pdf', async () => {
-                            await exportToPdf(aiContent, 'PureText.pdf', bubble);
-                        });
-                    };
-                    const pdfBtn = DownloadPdfButton.create(bubble, onDownloadPdf);
-                    
-                    // 将按钮添加到按钮组
-                    buttonGroup.appendChild(copyBtn);
-                    buttonGroup.appendChild(wordBtn);
-                    buttonGroup.appendChild(pdfBtn);
-                    
-                    // 插入到最后一个ds-icon-button后面
-                    parent.insertBefore(buttonGroup, iconButtons[iconButtons.length - 1].nextSibling);
-                    logger.debug('[PureText] 已插入puretext-button-group', buttonGroup, '到', parent);
+
+                    if (iconButtons && iconButtons.length > 0) {
+                        const parent = iconButtons[0].parentNode;
+                        logger.debug('[PureText] parent:', parent);
+                        if (!parent.querySelector('.puretext-button-group')) {
+                            const buttonGroup = buildGroup();
+                            parent.insertBefore(buttonGroup, iconButtons[iconButtons.length - 1].nextSibling);
+                            logger.debug('[PureText] 已插入puretext-button-group', buttonGroup, '到', parent);
+                        }
+                    } else {
+                        // 找不到操作区时，直接把按钮插到气泡内部（右上角）
+                        if (!bubble.querySelector('.puretext-button-group')) {
+                            const buttonGroup = buildGroup();
+                            // 尽量不破坏排版，将按钮放到右上角
+                            buttonGroup.style.marginLeft = '8px';
+                            buttonGroup.style.float = 'right';
+                            bubble.appendChild(buttonGroup);
+                            logger.debug('[PureText] DeepSeek未找到操作区，已退化为直接插入到bubble内部');
+                        }
+                    }
                 }
                 return;
             }
