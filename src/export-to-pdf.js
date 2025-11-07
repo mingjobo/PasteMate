@@ -202,6 +202,9 @@ function applyDeepSeekPdfStyles(element) {
  */
 function applyKimiPdfStyles(element) {
   try {
+    // 兜底清理：移除任何残留的AI思考内容
+    removeThinkingContent(element);
+
     // 为元素添加一个唯一的类名，用于样式作用域
     const pdfContainerClass = 'puretext-kimi-pdf-container-' + Date.now();
     element.classList.add(pdfContainerClass);
@@ -358,8 +361,75 @@ function applyKimiPdfStyles(element) {
     });
     
     logger.debug('Kimi PDF 样式应用完成');
-    
+
   } catch (error) {
     logger.error('应用Kimi PDF样式失败:', error);
+  }
+}
+
+/**
+ * 移除思考内容（兜底清理函数）
+ * @param {HTMLElement} element - 要处理的DOM元素
+ */
+function removeThinkingContent(element) {
+  try {
+    // 移除思考相关的容器和元素
+    const thinkingSelectors = [
+      '.think-stage',
+      '.toolcall-container',
+      '.toolcall-content',
+      '.toolcall-title',
+      '.toolcall-title-status',
+      '.toolcall-content-text',
+      '.thinking-container',
+      '.thought-process',
+      '.reasoning-box',
+      '.thinking-box',
+      '.ai-thinking',
+      '.thought-bubble',
+      '.internal-thought',
+      '.cognitive-process',
+      '[data-thinking="true"]',
+      '[data-thought="true"]',
+      '[data-reasoning="true"]',
+      '[data-internal="true"]',
+      '[data-process="true"]',
+      '.thinking',
+      '.analysis-box'
+    ];
+
+    let removedCount = 0;
+    thinkingSelectors.forEach(selector => {
+      const elements = element.querySelectorAll(selector);
+      elements.forEach(el => {
+        el.remove();
+        removedCount++;
+      });
+    });
+
+    // 移除包含"思考已完成"等文本的元素
+    const allElements = element.querySelectorAll('*');
+    allElements.forEach(el => {
+      const text = el.textContent?.trim() || '';
+      if (text.includes('思考已完成') ||
+          text.includes('思考过程') ||
+          text.includes('思路分析') ||
+          text.includes('推理过程')) {
+        // 检查是否是思考标题或状态指示器
+        if (el.classList.contains('toolcall-title-status') ||
+            el.classList.contains('toolcall-title') ||
+            el.closest('.toolcall-title')) {
+          el.remove();
+          removedCount++;
+        }
+      }
+    });
+
+    if (removedCount > 0) {
+      logger.debug(`兜底清理：移除了 ${removedCount} 个思考相关元素`);
+    }
+
+  } catch (error) {
+    logger.error('移除思考内容失败:', error);
   }
 } 

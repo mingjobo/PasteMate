@@ -25,7 +25,198 @@ class KimiHtmlFormatter extends HtmlFormatter {
       return '';
     }
   }
-  
+
+  /**
+   * 检测节点是否为思考内容
+   * @param {Node} node - 要检测的节点
+   * @returns {boolean} 如果是思考内容返回true
+   */
+  isThinkingContent(node) {
+    if (!node || node.nodeType !== Node.ELEMENT_NODE) {
+      return false;
+    }
+
+    const className = this.safeClassName(node);
+    const textContent = node.textContent?.trim() || '';
+    const tagName = node.tagName?.toLowerCase() || '';
+
+    // 1. 检测思考相关的类名
+    const thinkingClasses = [
+      'thinking', 'thought-process', 'reasoning', 'analysis',
+      'thought-container', 'thinking-box', 'ai-thinking',
+      'internal-thought', 'thought-bubble', 'cognitive-process',
+      'think-stage', 'toolcall-container', 'toolcall-content'
+    ];
+
+    const hasThinkingClass = thinkingClasses.some(cls =>
+      className.toLowerCase().includes(cls)
+    );
+
+    if (hasThinkingClass) {
+      logger.debug(`[KimiHtmlFormatter] 检测到思考类名: ${className}`);
+      return true;
+    }
+
+    // 2. 检测思考相关的data属性
+    const thinkingDataAttrs = [
+      'data-thinking', 'data-thought', 'data-reasoning',
+      'data-internal', 'data-process'
+    ];
+
+    const hasThinkingDataAttr = thinkingDataAttrs.some(attr =>
+      node.hasAttribute && node.hasAttribute(attr)
+    );
+
+    if (hasThinkingDataAttr) {
+      logger.debug(`[KimiHtmlFormatter] 检测到思考属性: ${thinkingDataAttrs.filter(attr => node.hasAttribute(attr)).join(', ')}`);
+      return true;
+    }
+
+    // 3. 检测特定的Vue组件data-v属性模式（Kimi特有）
+    const dataVAttr = Array.from(node.attributes || []).find(attr =>
+      attr.name.startsWith('data-v-')
+    );
+
+    if (dataVAttr && className.includes('markdown')) {
+      // 对markdown容器进行更细致的文本内容检测
+      if (this.isThinkingTextContent(textContent)) {
+        logger.debug(`[KimiHtmlFormatter] 检测到思考文本内容: "${textContent.substring(0, 50)}..."`);
+        return true;
+      }
+    }
+
+    // 4. 检测父级容器是否为思考内容
+    let parent = node.parentElement;
+    let depth = 0;
+    const maxDepth = 3; // 最多检查3层父元素
+
+    while (parent && depth < maxDepth) {
+      if (this.isThinkingContent(parent)) {
+        logger.debug(`[KimiHtmlFormatter] 父级元素包含思考内容: ${this.safeClassName(parent)}`);
+        return true;
+      }
+      parent = parent.parentElement;
+      depth++;
+    }
+
+    return false;
+  }
+
+  /**
+   * 检测文本内容是否为思考过程
+   * @param {string} text - 要检测的文本
+   * @returns {boolean} 如果是思考文本返回true
+   */
+  isThinkingTextContent(text) {
+    if (!text || text.length < 10) return false;
+
+    // 思考过程的特征模式
+    const thinkingPatterns = [
+      // 思考动作词开头
+      /^(让我|我来|我需要|我应该|我要|让我先|让我试着)思考/,
+      /^(分析|推断|考虑|认为|判断|琢磨|反思)/,
+      /^(首先|其次|然后|最后|综合来看|从.*角度)/,
+
+      // 思考过程表述
+      /思考过程|思路分析|逻辑推断|推理过程/,
+      /内部思考|AI思考|认知过程|思维过程/,
+      /让我想想|我在想|我正在思考/,
+
+      // 条件分析和推理
+      /如果.*那么|因为.*所以|考虑到.*因此/,
+      /可能的原因|可能的解释|综合判断/,
+
+      // 自我指涉的思考
+      /.*(这个|该)问题(让我|使我)思考/,
+      /我需要(先|首先|再次)(分析|考虑|检查)/
+    ];
+
+    // 检查是否匹配思考模式
+    const matchesThinkingPattern = thinkingPatterns.some(pattern =>
+      pattern.test(text)
+    );
+
+    if (matchesThinkingPattern) {
+      return true;
+    }
+
+    // 检查是否包含多个思考相关的词汇（提高准确性）
+    const thinkingKeywords = [
+      '思考', '分析', '推断', '考虑', '认为', '判断',
+      '思路', '逻辑', '推理', '琢磨', '反思', '权衡',
+      '首先', '其次', '然后', '最后', '综合'
+    ];
+
+    const keywordCount = thinkingKeywords.filter(keyword =>
+      text.includes(keyword)
+    ).length;
+
+    // 如果包含3个以上思考关键词，可能是思考内容
+    if (keywordCount >= 3) {
+      logger.debug(`[KimiHtmlFormatter] 检测到思考关键词数量: ${keywordCount}`);
+      return true;
+    }
+
+    // 检查是否为纯思考过程（无实质性的回答内容）
+    if (this.isPureThinkingProcess(text)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 检测是否为纯思考过程（非正式回答）
+   * @param {string} text - 要检测的文本
+   * @returns {boolean} 如果是纯思考过程返回true
+   */
+  isPureThinkingProcess(text) {
+    if (!text || text.length < 20) return false;
+
+    // 思考过程特征：自我分析、内部决策过程
+    const thinkingProcessPatterns = [
+      /用户说.*这是一个.*请求/,
+      /根据现有语境.*可能代表/,
+      /我需要先通过.*来确认/,
+      /回应策略：/,
+      /这样既体现了.*也展现了/,
+      /需要先.*再.*最后/,
+      /首先分析.*然后.*最后/,
+      /让我先.*然后.*再/,
+      /我应该.*还是.*需要/,
+      /这个请求可能有几种理解/,
+      /我需要澄清用户的真实意图/,
+      /试探性回应.*确认.*理解深度/
+    ];
+
+    // 思考过程中的自我指导特征
+    const selfGuidancePatterns = [
+      /避免过早假设/,
+      /保持.*性.*性/,
+      /以.*开始/,
+      /提供.*方向/,
+      /邀请用户澄清/,
+      /展示.*灵活性/,
+      /体现.*尊重/,
+      /处理.*输入/
+    ];
+
+    const hasThinkingProcess = thinkingProcessPatterns.some(pattern => pattern.test(text));
+    const hasSelfGuidance = selfGuidancePatterns.some(pattern => pattern.test(text));
+
+    // 如果包含思考过程或自我指导特征，且文本较短，很可能是思考内容
+    if (hasThinkingProcess || hasSelfGuidance) {
+      const textLength = text.length;
+      // 思考过程通常不会太长（相对于完整的正式回答）
+      if (textLength < 500) {
+        logger.debug(`[KimiHtmlFormatter] 检测到思考过程模式: 长度${textLength}, hasProcess: ${hasThinkingProcess}, hasGuidance: ${hasSelfGuidance}`);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /**
    * 格式化Kimi的DOM元素为标准HTML
    * @param {HTMLElement} element - 要格式化的DOM元素
@@ -143,9 +334,15 @@ class KimiHtmlFormatter extends HtmlFormatter {
       const tag = node.tagName;
       const className = this.safeClassName(node);
       logger.debug(`${indent}[KimiHtmlFormatter] ELEMENT: <${tag}> class="${className}"`);
-      
+
+      // 检测并跳过思考内容
+      if (this.isThinkingContent(node)) {
+        logger.debug(`${indent}[KimiHtmlFormatter] 跳过思考内容: <${tag}> class="${className}"`);
+        return '';
+      }
+
       // 跳过按钮和界面元素
-      if (className.includes('simple-button') || 
+      if (className.includes('simple-button') ||
           className.includes('puretext-copy-btn') ||
           className.includes('puretext-button-container') ||
           className.includes('segment-assistant-actions') ||

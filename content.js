@@ -716,7 +716,24 @@ class ButtonInjector {
                     return false;
                 }
 
-                const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+                // 修正：优先获取正式回复内容，排除AI思考内容
+                let aiContent = segmentAssistant.querySelector('.segment-content-box > .markdown-container:not(.toolcall-content-text)');
+                if (!aiContent) {
+                    // 备选方案：获取所有markdown-container然后过滤掉思考内容
+                    const allContainers = segmentAssistant.querySelectorAll('.segment-content-box .markdown-container');
+                    for (const container of allContainers) {
+                        // 排除思考相关的容器
+                        if (!container.closest('.think-stage, .toolcall-container, .toolcall-content') &&
+                            !container.classList.contains('toolcall-content-text')) {
+                            aiContent = container;
+                            break;
+                        }
+                    }
+                }
+                if (!aiContent) {
+                    // 最后备选：使用原有的选择器作为降级
+                    aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+                }
                 if (!aiContent) {
                     logger.error('❌ 未找到 AI 回复内容');
                     return false;
@@ -758,8 +775,27 @@ class ButtonInjector {
         const onDownloadWord = async (buttonContainer) => {
             const segmentAssistant = buttonContainer.closest('.segment-assistant');
             if (!segmentAssistant) return;
-            const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+
+            // 修正：优先获取正式回复内容，排除AI思考内容
+            let aiContent = segmentAssistant.querySelector('.segment-content-box > .markdown-container:not(.toolcall-content-text)');
+            if (!aiContent) {
+                // 备选方案：获取所有markdown-container然后过滤掉思考内容
+                const allContainers = segmentAssistant.querySelectorAll('.segment-content-box .markdown-container');
+                for (const container of allContainers) {
+                    // 排除思考相关的容器
+                    if (!container.closest('.think-stage, .toolcall-container, .toolcall-content') &&
+                        !container.classList.contains('toolcall-content-text')) {
+                        aiContent = container;
+                        break;
+                    }
+                }
+            }
+            if (!aiContent) {
+                // 最后备选：使用原有的选择器作为降级
+                aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+            }
             if (!aiContent) return;
+
             const paymentModal = window.PaymentModal;
             paymentModal.showPaymentModal('word', async () => {
                 await exportToWord(aiContent, 'PureText.docx', aiContent, 'kimi');
@@ -770,8 +806,27 @@ class ButtonInjector {
         const onDownloadPdf = async (buttonContainer) => {
             const segmentAssistant = buttonContainer.closest('.segment-assistant');
             if (!segmentAssistant) return;
-            const aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+
+            // 修正：优先获取正式回复内容，排除AI思考内容
+            let aiContent = segmentAssistant.querySelector('.segment-content-box > .markdown-container:not(.toolcall-content-text)');
+            if (!aiContent) {
+                // 备选方案：获取所有markdown-container然后过滤掉思考内容
+                const allContainers = segmentAssistant.querySelectorAll('.segment-content-box .markdown-container');
+                for (const container of allContainers) {
+                    // 排除思考相关的容器
+                    if (!container.closest('.think-stage, .toolcall-container, .toolcall-content') &&
+                        !container.classList.contains('toolcall-content-text')) {
+                        aiContent = container;
+                        break;
+                    }
+                }
+            }
+            if (!aiContent) {
+                // 最后备选：使用原有的选择器作为降级
+                aiContent = segmentAssistant.querySelector('.segment-content-box .markdown-container');
+            }
             if (!aiContent) return;
+
             const paymentModal = window.PaymentModal;
             paymentModal.showPaymentModal('pdf', async () => {
                 await exportToPdf(aiContent, 'PureText.pdf', aiContent);

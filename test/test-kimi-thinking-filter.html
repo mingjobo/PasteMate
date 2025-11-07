@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi思考内容过滤测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .thinking-container {
+            background-color: #f0f8ff;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 10px;
+        }
+        .final-answer {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kimi思考内容过滤测试</h1>
+
+    <div class="controls">
+        <button onclick="testNormalContent()">测试正常内容</button>
+        <button onclick="testThinkingContent()">测试思考内容</button>
+        <button onclick="testMixedContent()">测试混合内容</button>
+        <button onclick="clearOutput()">清空输出</button>
+    </div>
+
+    <div id="output"></div>
+
+    <!-- 测试场景1: 正常内容（无思考过程） -->
+    <div class="test-section" id="normal-content">
+        <h2>测试场景1: 正常内容</h2>
+        <div data-v-0280b052="" class="segment-container">
+            <div data-v-0280b052="" class="segment-content">
+                <div data-v-0280b052="" class="segment-content-box">
+                    <div data-v-3a4aba44="" data-v-47a25a29="" class="markdown-container">
+                        <div data-v-3a4aba44="" class="markdown">
+                            <h1>实验报告：2025 年 8 月 8 日</h1>
+                            <div class="paragraph">本报告旨在验证<strong>牛顿第二定律</strong>在实验中的适用性。</div>
+                            <h2>1 研究背景</h2>
+                            <div class="paragraph">通过小车滑轨实验验证理论公式的正确性。</div>
+                            <h2>2 实验数据</h2>
+                            <ul start="1">
+                                <li><div class="paragraph">合约价值: 10吨 × 4000元/吨 = 4万元</div></li>
+                                <li><div class="paragraph">保证金比例: 10%，所以你只交了 4000元保证金</div></li>
+                            </ul>
+                            <h2>3 结论</h2>
+                            <div class="paragraph">实验结果与理论预期相符。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试场景2: 包含思考内容 -->
+    <div class="test-section" id="thinking-content">
+        <h2>测试场景2: 包含思考内容</h2>
+        <div data-v-0280b052="" class="segment-container">
+            <div data-v-0280b052="" class="segment-content">
+                <div data-v-0280b052="" class="segment-content-box">
+                    <!-- 思考过程内容 -->
+                    <div class="thinking-container" data-thinking="true">
+                        <div class="paragraph">让我思考一下用户的问题。</div>
+                        <div class="paragraph">首先，我需要分析用户提到的实验场景。</div>
+                        <div class="paragraph">这可以有几种理解方向，用户更倾向哪一种？</div>
+                        <div class="paragraph"><strong>1. 理论分析</strong></div>
+                        <div class="paragraph"><strong>2. 实际应用</strong></div>
+                    </div>
+
+                    <!-- 正式回答内容 -->
+                    <div data-v-3a4aba44="" data-v-47a25a29="" class="markdown-container">
+                        <div data-v-3a4aba44="" class="markdown">
+                            <h1>详细解答</h1>
+                            <div class="paragraph">基于您的实验需求，我提供以下详细解答：</div>
+                            <h2>实验方案设计</h2>
+                            <div class="paragraph">为了验证牛顿第二定律，建议采用以下方案：</div>
+                            <ul start="1">
+                                <li><div class="paragraph">使用小车滑轨装置</div></li>
+                                <li><div class="paragraph">测量不同质量下的加速度</div></li>
+                                <li><div class="paragraph">记录并分析数据</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试场景3: 混合内容（思考标记为markdown） -->
+    <div class="test-section" id="mixed-content">
+        <h2>测试场景3: 混合内容（思考标记为markdown）</h2>
+        <div data-v-0280b052="" class="segment-container">
+            <div data-v-0280b052="" class="segment-content">
+                <div data-v-0280b052="" class="segment-content-box">
+                    <!-- 思考过程（使用markdown类） -->
+                    <div data-v-8f962163="" class="markdown">
+                        <div class="paragraph">你提出了一个<strong>自我指涉的命题</strong>——让我思考"思考"本身。</div>
+                        <div class="paragraph">这可以有几种理解方向，你更倾向哪一种？</div>
+                        <div class="paragraph"><strong>1. 哲学的追问</strong></div>
+                        <ul start="1">
+                            <li><div class="paragraph">思考是否可能完全认知自身？就像眼睛能否看见眼睛？</div></li>
+                            <li><div class="paragraph">"我思故我在"的边界在哪里？当我们思考"思考"时，那个"我"是否发生了递归？</div></li>
+                        </ul>
+                        <div class="paragraph"><strong>请告诉我，你想在哪个维度上展开这场元思考？</strong></div>
+                    </div>
+
+                    <!-- 正式回答 -->
+                    <div data-v-3a4aba44="" class="markdown-container">
+                        <div data-v-3a4aba44="" class="markdown">
+                            <h1>实用答案</h1>
+                            <div class="paragraph">基于对您问题的理解，我提供以下实用建议：</div>
+                            <h2>具体解决方案</h2>
+                            <div class="paragraph">这个问题的解决方案包括以下几个步骤：</div>
+                            <ol start="1">
+                                <li><div class="paragraph">首先分析问题的核心需求</div></li>
+                                <li><div class="paragraph">然后制定可行的执行方案</div></li>
+                                <li><div class="paragraph">最后验证结果的准确性</div></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let output = document.getElementById('output');
+
+        function clearOutput() {
+            output.textContent = '';
+        }
+
+        function log(message) {
+            output.textContent += message + '\n';
+        }
+
+        async function testNormalContent() {
+            clearOutput();
+            log('=== 测试正常内容（应保留所有内容） ===');
+
+            const element = document.querySelector('#normal-content .segment-container');
+
+            try {
+                // 模拟KimiHtmlFormatter的处理
+                const result = await simulateKimiFormatter(element);
+                log('处理结果:');
+                log(result);
+                log('测试完成: 应该包含所有正常内容');
+            } catch (error) {
+                log('测试失败: ' + error.message);
+            }
+        }
+
+        async function testThinkingContent() {
+            clearOutput();
+            log('=== 测试包含思考内容（应过滤思考部分） ===');
+
+            const element = document.querySelector('#thinking-content .segment-container');
+
+            try {
+                // 模拟KimiHtmlFormatter的处理
+                const result = await simulateKimiFormatter(element);
+                log('处理结果:');
+                log(result);
+                log('测试完成: 应该过滤掉思考内容，保留正式回答');
+            } catch (error) {
+                log('测试失败: ' + error.message);
+            }
+        }
+
+        async function testMixedContent() {
+            clearOutput();
+            log('=== 测试混合内容（思考标记为markdown） ===');
+
+            const element = document.querySelector('#mixed-content .segment-container');
+
+            try {
+                // 模拟KimiHtmlFormatter的处理
+                const result = await simulateKimiFormatter(element);
+                log('处理结果:');
+                log(result);
+                log('测试完成: 第一个markdown应被过滤，保留正式回答');
+            } catch (error) {
+                log('测试失败: ' + error.message);
+            }
+        }
+
+        // 模拟KimiHtmlFormatter的处理逻辑
+        async function simulateKimiFormatter(element) {
+            if (!element) {
+                throw new Error('Element not found');
+            }
+
+            // 简化版的格式化器
+            let html = '<div>';
+            html += processNode(element, 0);
+            html += '</div>';
+            return html;
+        }
+
+        function processNode(node, depth) {
+            if (!node) return '';
+
+            // 文本节点
+            if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.textContent?.trim();
+                if (!text) return '';
+                return escapeHtml(text);
+            }
+
+            // 元素节点
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const tag = node.tagName.toLowerCase();
+                const className = getClassName(node);
+
+                // 检测思考内容
+                if (isThinkingContent(node)) {
+                    return `<!-- 过滤思考内容: ${tag}.${className} -->`;
+                }
+
+                // 跳过按钮和界面元素
+                if (className.includes('simple-button') ||
+                    className.includes('pure-text-copy-btn') ||
+                    className.includes('segment-assistant-actions') ||
+                    tag === 'button') {
+                    return '';
+                }
+
+                // 处理不同类型的元素
+                switch (tag) {
+                    case 'h1':
+                    case 'h2':
+                    case 'h3':
+                    case 'h4':
+                    case 'h5':
+                    case 'h6':
+                        const content = processChildren(node, depth);
+                        return `<${tag}>${content}</${tag}>`;
+
+                    case 'p':
+                    case 'div':
+                        if (className.includes('paragraph')) {
+                            const content = processChildren(node, depth);
+                            if (!content.trim()) return '';
+                            return `<p>${content}</p>`;
+                        }
+                        return processChildren(node, depth);
+
+                    case 'ul':
+                    case 'ol':
+                        const startAttr = node.getAttribute('start');
+                        const startValue = startAttr ? ` start="${startAttr}"` : '';
+                        let listHtml = `<${tag}${startValue}>`;
+                        for (const child of node.children) {
+                            if (child.tagName === 'LI') {
+                                listHtml += processListItem(child, depth);
+                            }
+                        }
+                        listHtml += `</${tag}>`;
+                        return listHtml;
+
+                    case 'li':
+                        return processListItem(node, depth);
+
+                    case 'strong':
+                    case 'b':
+                        const strongContent = processChildren(node, depth);
+                        return `<strong>${strongContent}</strong>`;
+
+                    default:
+                        return processChildren(node, depth);
+                }
+            }
+
+            return '';
+        }
+
+        function processChildren(node, depth) {
+            let html = '';
+            for (const child of node.childNodes) {
+                html += processNode(child, depth + 1);
+            }
+            return html;
+        }
+
+        function processListItem(node, depth) {
+            let html = '<li>';
+            let hasP = false;
+
+            for (const child of node.children) {
+                if (child.classList && child.classList.contains('paragraph')) {
+                    hasP = true;
+                    html += processChildren(child, depth);
+                } else {
+                    html += processNode(child, depth + 1);
+                }
+            }
+
+            if (!hasP) {
+                for (const child of node.childNodes) {
+                    if (child.nodeType === Node.TEXT_NODE ||
+                        (child.nodeType === Node.ELEMENT_NODE &&
+                         child.tagName !== 'UL' && child.tagName !== 'OL')) {
+                        html += processNode(child, depth + 1);
+                    }
+                }
+            }
+
+            html += '</li>';
+            return html;
+        }
+
+        function getClassName(node) {
+            try {
+                const cn = node?.className;
+                if (!cn) return '';
+                if (typeof cn === 'string') return cn;
+                if (typeof cn.baseVal === 'string') return cn.baseVal;
+                return String(cn);
+            } catch (_) {
+                return '';
+            }
+        }
+
+        function isThinkingContent(node) {
+            if (!node || node.nodeType !== Node.ELEMENT_NODE) {
+                return false;
+            }
+
+            const className = getClassName(node).toLowerCase();
+            const textContent = node.textContent?.trim() || '';
+
+            // 检测思考相关的类名
+            const thinkingClasses = [
+                'thinking', 'thought-process', 'reasoning', 'analysis',
+                'thought-container', 'thinking-box', 'ai-thinking',
+                'internal-thought', 'thought-bubble', 'cognitive-process'
+            ];
+
+            const hasThinkingClass = thinkingClasses.some(cls => className.includes(cls));
+            if (hasThinkingClass) {
+                return true;
+            }
+
+            // 检测思考相关的属性
+            const thinkingDataAttrs = [
+                'data-thinking', 'data-thought', 'data-reasoning',
+                'data-internal', 'data-process'
+            ];
+
+            const hasThinkingDataAttr = thinkingDataAttrs.some(attr =>
+                node.hasAttribute && node.hasAttribute(attr)
+            );
+
+            if (hasThinkingDataAttr) {
+                return true;
+            }
+
+            // 检测特定的Vue组件和markdown组合
+            const dataVAttr = Array.from(node.attributes || []).find(attr =>
+                attr.name.startsWith('data-v-')
+            );
+
+            if (dataVAttr && className.includes('markdown')) {
+                if (isThinkingTextContent(textContent)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function isThinkingTextContent(text) {
+            if (!text || text.length < 10) return false;
+
+            const thinkingPatterns = [
+                /^(让我|我来|我需要|我应该|我要|让我先|让我试着)思考/,
+                /^(分析|推断|考虑|认为|判断|琢磨|反思)/,
+                /^(首先|其次|然后|最后|综合来看|从.*角度)/,
+                /思考过程|思路分析|逻辑推断|推理过程/,
+                /内部思考|AI思考|认知过程|思维过程/,
+                /让我想想|我在想|我正在思考/,
+                /如果.*那么|因为.*所以|考虑到.*因此/,
+                /可能的原因|可能的解释|综合判断/,
+                /.*(这个|该)问题(让我|使我)思考/,
+                /我需要(先|首先|再次)(分析|考虑|检查)/
+            ];
+
+            const matchesThinkingPattern = thinkingPatterns.some(pattern =>
+                pattern.test(text)
+            );
+
+            if (matchesThinkingPattern) {
+                return true;
+            }
+
+            const thinkingKeywords = [
+                '思考', '分析', '推断', '考虑', '认为', '判断',
+                '思路', '逻辑', '推理', '琢磨', '反思', '权衡',
+                '首先', '其次', '然后', '最后', '综合'
+            ];
+
+            const keywordCount = thinkingKeywords.filter(keyword =>
+                text.includes(keyword)
+            ).length;
+
+            if (keywordCount >= 3) {
+                return true;
+            }
+
+            // 检测纯思考过程
+            const analysisPatterns = [
+                /这可以有几种理解方向/,
+                /可以从以下几个方面来分析/,
+                /让我从不同角度来思考/,
+                /需要考虑以下几个方面/,
+                /这里涉及的关键因素是/
+            ];
+
+            const nonAnswerPatterns = [
+                /你更倾向哪一种/,
+                /你想在哪个维度上展开/,
+                /请告诉我你的具体需求/,
+                /你希望我重点分析哪个方面/
+            ];
+
+            const isAnalysis = analysisPatterns.some(pattern => pattern.test(text));
+            const isNonAnswer = nonAnswerPatterns.some(pattern => pattern.test(text));
+
+            return isAnalysis && isNonAnswer;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

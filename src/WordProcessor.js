@@ -147,23 +147,32 @@ class WordProcessor {
   static convertKimiHtmlToStandard(html) {
     const container = document.createElement('div');
     container.innerHTML = html;
+
+    // 兜底清理：移除任何残留的AI思考内容
+    removeThinkingContent(container);
+
     let result = '';
 
     const walk = (node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         return node.textContent;
       }
-      
+
       if (node.nodeType !== Node.ELEMENT_NODE) return '';
-      
+
       const tag = node.tagName.toLowerCase();
       const className = WordProcessor.safeClassName(node);
-      
+
       // 跳过按钮和UI元素
-      if (className.includes('simple-button') || 
+      if (className.includes('simple-button') ||
           className.includes('puretext-') ||
           className.includes('table-actions') ||
           tag === 'button') {
+        return '';
+      }
+
+      // 额外检查：跳过思考相关内容
+      if (isThinkingContent(node)) {
         return '';
       }
       
@@ -1732,6 +1741,132 @@ ${bodyHtml}
 
     Array.from(container.childNodes).forEach(node => walk(node));
     return paragraphs;
+  }
+}
+
+/**
+ * 检测节点是否为思考内容（兼容性函数）
+ * @param {Node} node - 要检测的节点
+ * @returns {boolean} 如果是思考内容返回true
+ */
+function isThinkingContent(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) {
+    return false;
+  }
+
+  const className = WordProcessor.safeClassName(node);
+
+  // 检测思考相关的类名
+  const thinkingClasses = [
+    'thinking', 'thought-process', 'reasoning', 'analysis',
+    'thought-container', 'thinking-box', 'ai-thinking',
+    'internal-thought', 'thought-bubble', 'cognitive-process',
+    'think-stage', 'toolcall-container', 'toolcall-content',
+    'toolcall-content-text'
+  ];
+
+  const hasThinkingClass = thinkingClasses.some(cls =>
+    className.toLowerCase().includes(cls)
+  );
+
+  if (hasThinkingClass) {
+    return true;
+  }
+
+  // 检测思考相关的data属性
+  const thinkingDataAttrs = [
+    'data-thinking', 'data-thought', 'data-reasoning',
+    'data-internal', 'data-process'
+  ];
+
+  const hasThinkingDataAttr = thinkingDataAttrs.some(attr =>
+    node.hasAttribute && node.hasAttribute(attr)
+  );
+
+  if (hasThinkingDataAttr) {
+    return true;
+  }
+
+  // 检测父级容器是否为思考内容
+  let parent = node.parentElement;
+  let depth = 0;
+  const maxDepth = 3; // 最多检查3层父元素
+
+  while (parent && depth < maxDepth) {
+    if (isThinkingContent(parent)) {
+      return true;
+    }
+    parent = parent.parentElement;
+    depth++;
+  }
+
+  return false;
+}
+
+/**
+ * 移除思考内容（兼容性函数）
+ * @param {HTMLElement} element - 要处理的DOM元素
+ */
+function removeThinkingContent(element) {
+  try {
+    // 移除思考相关的容器和元素
+    const thinkingSelectors = [
+      '.think-stage',
+      '.toolcall-container',
+      '.toolcall-content',
+      '.toolcall-title',
+      '.toolcall-title-status',
+      '.toolcall-content-text',
+      '.thinking-container',
+      '.thought-process',
+      '.reasoning-box',
+      '.thinking-box',
+      '.ai-thinking',
+      '.thought-bubble',
+      '.internal-thought',
+      '.cognitive-process',
+      '[data-thinking="true"]',
+      '[data-thought="true"]',
+      '[data-reasoning="true"]',
+      '[data-internal="true"]',
+      '[data-process="true"]',
+      '.thinking',
+      '.analysis-box'
+    ];
+
+    let removedCount = 0;
+    thinkingSelectors.forEach(selector => {
+      const elements = element.querySelectorAll(selector);
+      elements.forEach(el => {
+        el.remove();
+        removedCount++;
+      });
+    });
+
+    // 移除包含"思考已完成"等文本的元素
+    const allElements = element.querySelectorAll('*');
+    allElements.forEach(el => {
+      const text = el.textContent?.trim() || '';
+      if (text.includes('思考已完成') ||
+          text.includes('思考过程') ||
+          text.includes('思路分析') ||
+          text.includes('推理过程')) {
+        // 检查是否是思考标题或状态指示器
+        if (el.classList.contains('toolcall-title-status') ||
+            el.classList.contains('toolcall-title') ||
+            el.closest('.toolcall-title')) {
+          el.remove();
+          removedCount++;
+        }
+      }
+    });
+
+    if (removedCount > 0) {
+      logger.debug(`WordProcessor兜底清理：移除了 ${removedCount} 个思考相关元素`);
+    }
+
+  } catch (error) {
+    logger.error('WordProcessor移除思考内容失败:', error);
   }
 }
 
