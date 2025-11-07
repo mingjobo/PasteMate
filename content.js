@@ -544,6 +544,17 @@ class ButtonInjector {
                     }
                 }
                 for (const bubble of bubbles) {
+                    // 检查是否已经注入过按钮
+                    if (this.injectedButtons.has(bubble)) {
+                        continue;
+                    }
+
+                    // 排除AI思考内容容器
+                    if (bubble.closest('.ds-think-content') || bubble.classList.contains('ds-think-content')) {
+                        logger.debug('[PureText] 跳过思考内容容器');
+                        continue;
+                    }
+
                     // 1. 优先在bubble的下一个兄弟节点查找.ds-icon-button
                     let opArea = bubble.nextElementSibling;
                     let iconButtons = opArea ? opArea.querySelectorAll('.ds-icon-button') : [];
